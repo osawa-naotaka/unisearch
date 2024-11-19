@@ -1,0 +1,18 @@
+{
+    "name": "unisearch",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc && vite build",
+        "preview": "vite preview",
+        "check": "biome check ./src",
+        "check-write": "biome check --write ./src"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "1.9.4",
+        "typescript": "~5.6.2",
+        "vite": "^5.4.10"
+    }
+}
