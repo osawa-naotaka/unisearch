@@ -19,7 +19,7 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
-        "noUncheckedSideEffectImports": true,
+        // "noUncheckedSideEffectImports": true,
 
         /* Paths */
         "baseUrl": ".",
@@ -29,6 +29,6 @@
             "@test/*": ["test/*"]
         }
     },
-    "include": ["src", "app", "test"],
-    "exclude": ["dist"]
+    "include": ["src"],
+    "exclude": ["dist", "app", "test"]
 }

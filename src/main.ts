@@ -1,3 +1,171 @@
-const app = document.querySelector<HTMLDivElement>("#app");
-if (!app) throw new Error("div#app does not found.");
-app.innerText = "hello, typescript!";
+export function forceQuerySelector<T extends HTMLElement>(selector: string, parent?: HTMLElement): T {
+    const elem = parent ? parent.querySelector<T>(selector) : document.querySelector<T>(selector);
+    if (elem) {
+        return elem;
+    }
+    throw new Error(`cannot find selector ${selector}`);
+}
+
+export function compose<T>(...fns: ((arg: T) => T)[]) : (arg: T) => T {
+    return (arg: T) =>
+        fns.reduce((val, f) => f(val), arg);
+}
+
+
+// 全角文字 → 半角文字
+const fullWidthToHalfWidth = (input: string) =>
+    input.replace(/[\uFF01-\uFF5E]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+         .replace(/\u3000/g, ' '); // 全角スペース → 半角スペース
+
+// Unicode正規化 (濁点・半濁点の分離)
+const normalizeUnicode = (input: string) =>
+    input.normalize('NFKC');
+
+
+// 半角カタカナ → 全角カタカナ変換
+const halfWidthKanaToFullWidthKana = (input: string) =>
+    input.replace(/[\uFF65-\uFF9F]/g, c => {
+      const map: { [key: string]: string } = {
+        '｡': '。', '､': '、', '･': '・', 'ｦ': 'ヲ',
+        'ｧ': 'ァ', 'ｨ': 'ィ', 'ｩ': 'ゥ', 'ｪ': 'ェ', 'ｫ': 'ォ',
+        'ｱ': 'ア', 'ｲ': 'イ', 'ｳ': 'ウ', 'ｴ': 'エ', 'ｵ': 'オ',
+        'ｶ': 'カ', 'ｷ': 'キ', 'ｸ': 'ク', 'ｹ': 'ケ', 'ｺ': 'コ',
+        'ｻ': 'サ', 'ｼ': 'シ', 'ｽ': 'ス', 'ｾ': 'セ', 'ｿ': 'ソ',
+        'ﾀ': 'タ', 'ﾁ': 'チ', 'ﾂ': 'ツ', 'ﾃ': 'テ', 'ﾄ': 'ト',
+        'ﾅ': 'ナ', 'ﾆ': 'ニ', 'ﾇ': 'ヌ', 'ﾈ': 'ネ', 'ﾉ': 'ノ',
+        'ﾊ': 'ハ', 'ﾋ': 'ヒ', 'ﾌ': 'フ', 'ﾍ': 'ヘ', 'ﾎ': 'ホ',
+        'ﾏ': 'マ', 'ﾐ': 'ミ', 'ﾑ': 'ム', 'ﾒ': 'メ', 'ﾓ': 'モ',
+        'ｬ': 'ャ', 'ｭ': 'ュ', 'ｮ': 'ョ', 'ｯ': 'ッ', 'ｰ': 'ー',
+        'ﾔ': 'ヤ', 'ﾕ': 'ユ', 'ﾖ': 'ヨ', 'ﾗ': 'ラ', 'ﾘ': 'リ',
+        'ﾙ': 'ル', 'ﾚ': 'レ', 'ﾛ': 'ロ', 'ﾜ': 'ワ', 'ﾝ': 'ン',
+        'ﾞ': '゛', 'ﾟ': '゜'
+      };
+      return map[c] || c;
+    });
+
+// アルファベットの大文字化
+const toUpperCase = (input: string) => 
+    input.toUpperCase();
+
+
+export const normalizeText = (text: string) =>
+    compose(
+        fullWidthToHalfWidth,
+        normalizeUnicode,
+        halfWidthKanaToFullWidthKana,
+        toUpperCase
+    )(text);
+
+// カタカナで文字列を分割
+function splitByKatakana(text: string[]): string[] {
+    // カタカナ（全角）の範囲: \u30A0-\u30FF
+    const regex = /[\u30A0-\u30FF]+|[^ \u30A0-\u30FF]+/g;
+
+    // matchがnullを返した場合は削除する
+    const matches = text.flatMap(t => t.match(regex)).filter(x => x !== null);
+
+    return matches;
+}
+
+function splitByDelimiter(text: string[]): string[] {
+    const separators = /[ \n\t\r,.;:?!(){}[\]<>「」『』`'’"“”\-—–‒‐/\\+=*%&|$#@^_~～｡､･。、「」・]/;
+    return text.flatMap(t => t.split(separators).filter(Boolean));
+}
+
+function splitByHalfAndFullWidth(text: string[]): string[] {
+    // 半角文字の正規表現: ASCII範囲、半角カタカナなど
+    const halfWidthRegex = /[\u0020-\u007E\uFF61-\uFFDC\uFFE8-\uFFEE]+|[^ \u0020-\u007E\uFF61-\uFFDC\uFFE8-\uFFEE]+/g;
+
+    // matchがnullを返した場合は削除する
+    const matches = text.flatMap(t => t.match(halfWidthRegex)).filter(x => x !== null);
+
+    return matches;    
+}
+
+export const tokenizeTexts = (text: string[]) =>
+    compose(
+        splitByKatakana,
+        splitByHalfAndFullWidth,
+        splitByDelimiter
+    )(text);
+
+function hashChar(char: string) : number {
+    const hashConst = 48271;
+    const modConst = 65535; // 16 bit
+
+    const unicodeValue = char.codePointAt(0) ?? 0;
+    return (unicodeValue * hashConst) % modConst;
+}
+
+function split8bit(char: number) : number[] {
+    const high = (char >> 8) & 0xff;
+    const low = char & 0xff;
+    return [low, high];    
+}
+
+function concat8bit(high: number, low: number) : number {
+    return (high << 8) | low;
+}
+
+export type Bigram = number;
+export type DocId  = number;
+
+
+export function generateBiram(text: string) : Bigram[] {
+    const hashed = [...text].map(hashChar).flatMap(split8bit);
+    const grams = [];
+    for(let i = 0; i < hashed.length - 1; i++) {
+        grams.push(concat8bit(hashed[i+1], hashed[i]));
+    }
+
+    return grams;
+}
+
+export type BigramIndex = Record<Bigram, DocId[]>;
+
+function addToSet<T>(item: T, array?: T[]) : T[] {
+    return Array.from(new Set(array ? [...array, item] : [item]));
+}
+
+export function docToBigrams(doc: string[]) : Set<Bigram> {
+    const normalized = doc.map(normalizeText);
+    const tokenized  = tokenizeTexts(normalized);
+    const grams      = tokenized.flatMap(generateBiram);
+    const uniq_grams = new Set(grams);
+
+    return uniq_grams;
+}
+
+export function docToBigramIndex(docid: DocId, doc: string[], index: BigramIndex) : BigramIndex {
+    for (const bigram of docToBigrams(doc)) {
+        index[bigram] = addToSet(docid, index[bigram]);
+    }
+    return index;
+}
+
+function intersect<T>(a: T[], b: T[]) : T[] {
+    const result = [];
+    for(const x of a) {
+        if(b.includes(x)) {
+            result.push(x);
+        }
+    }
+    return result;
+}
+
+export function searchBigram(query: string, index: BigramIndex) : DocId[] {
+    let result : DocId[] | null = null;
+    for (const bigram of docToBigrams([query])) {
+        const docs = index[bigram];
+        if(docs) {
+            if(result) {
+                result = intersect(result, docs);
+            } else {
+                result = docs;
+            }
+        } else {
+            return [];
+        }
+    }
+    return result || [];
+}
