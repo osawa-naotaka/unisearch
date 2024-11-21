@@ -1,5 +1,5 @@
 import { docToBigramIndex, docToBigrams } from "@src/bigram";
-import type { BigramIndex } from "@src/bigram";
+import type { BigramIndex } from "@src/types";
 import { wikipedia_articles } from "@test/wikipedia_articles";
 
 const index : BigramIndex = {};

@@ -1,5 +1,6 @@
 import { normalizeText, tokenizeTexts } from "@src/preprocess";
 import { intersect } from "@src/util";
+import type { DocId, Bigram, BigramIndex } from "@src/types";
 
 function hashChar(char: string) : number {
     const hashConst = 48271;
@@ -19,10 +20,6 @@ function concat8bit(high: number, low: number) : number {
     return (high << 8) | low;
 }
 
-type Bigram = number;
-type DocId  = number;
-
-
 function generateBiram(text: string) : Bigram[] {
     const hashed = [...text].map(hashChar).flatMap(split8bit);
     const grams = [];
@@ -32,8 +29,6 @@ function generateBiram(text: string) : Bigram[] {
 
     return grams;
 }
-
-export type BigramIndex = Record<Bigram, DocId[]>;
 
 function addToSet<T>(item: T, array?: T[]) : T[] {
     return Array.from(new Set(array ? [...array, item] : [item]));
