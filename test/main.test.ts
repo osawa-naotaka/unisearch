@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { normalizeText, tokenizeTexts } from '@src/main';
+import { normalizeText, tokenizeTexts } from '@src/bigram';
 import { testdocs } from '@test/testdocs';
 
 test('unicode text nomrmalization test No.1', () => {
