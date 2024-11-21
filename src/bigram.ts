@@ -20,7 +20,7 @@ function concat8bit(high: number, low: number) : number {
     return (high << 8) | low;
 }
 
-function generateBiram(text: string) : Bigram[] {
+function generateBigram(text: string) : Bigram[] {
     const hashed = [...text].map(hashChar).flatMap(split8bit);
     const grams = [];
     for(let i = 0; i < hashed.length - 1; i++) {
@@ -37,7 +37,7 @@ function addToSet<T>(item: T, array?: T[]) : T[] {
 export function docToBigrams(doc: string[]) : Set<Bigram> {
     const normalized = doc.map(normalizeText);
     const tokenized  = tokenizeTexts(normalized);
-    const grams      = tokenized.flatMap(generateBiram);
+    const grams      = tokenized.flatMap(generateBigram);
     const uniq_grams = new Set(grams);
 
     return uniq_grams;
