@@ -35,6 +35,13 @@ export class MSet<T> extends Set<T> {
     }
 }
 
+export function addLikeSet<T>(item: T, array?: T[]) : T[] {
+    return array ? Array.from(new Set([...array, item])) : [item];
+}
+
+
+
+
 type UnicodeRange = [number, number];
 
 /**
@@ -75,3 +82,17 @@ export function isNonSpaceSeparatedChar(char: string): boolean {
   return nonSpaceSeparatedRanges.some(([start, end]) => codePoint >= start && codePoint <= end);
 }
 
+/**
+ * JSON文字列のサイズをバイト単位で計算する関数
+ * @param record - サイズを計算したいRecord
+ * @returns バイトサイズ
+ */
+export function calculateJsonSize(record: Object): number {
+    // RecordをJSON文字列化
+    const jsonString = JSON.stringify(record);
+    if (jsonString === undefined) {
+        throw new Error("Failed to convert record to JSON string");
+    }
+    // 文字列をバイト単位で計算
+    return new Blob([jsonString]).size;
+}

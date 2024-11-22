@@ -1,5 +1,5 @@
 import { normalizeText, tokenizeTexts } from "@src/preprocess";
-import { intersect } from "@src/util";
+import { intersect, addLikeSet } from "@src/util";
 import type { DocId, Bigram, BigramIndex } from "@src/types";
 
 function hashChar(char: string) : number {
@@ -30,22 +30,18 @@ function generateBigram(text: string) : Bigram[] {
     return grams;
 }
 
-function addToSet<T>(item: T, array?: T[]) : T[] {
-    return Array.from(new Set(array ? [...array, item] : [item]));
-}
-
 export function docToBigrams(doc: string[]) : Set<Bigram> {
-    const normalized = doc.map(normalizeText);
-    const tokenized  = tokenizeTexts(normalized);
-    const grams      = tokenized.flatMap(generateBigram);
-    const uniq_grams = new Set(grams);
+    const normalized   = doc.map(normalizeText);
+    const tokenized    = tokenizeTexts(normalized);
+    const bigrams      = tokenized.flatMap(generateBigram);
+    const uniq_bigrams = new Set(bigrams);
 
-    return uniq_grams;
+    return uniq_bigrams;
 }
 
 export function docToBigramIndex(docid: DocId, doc: string[], index: BigramIndex) : BigramIndex {
     for (const bigram of docToBigrams(doc)) {
-        index[bigram] = addToSet(docid, index[bigram]);
+        index[bigram] = addLikeSet(docid, index[bigram]);
     }
     return index;
 }
