@@ -1,4 +1,4 @@
-export const wikipedia_articles =
+export const wikipedia_articles_ja = 
 [
     {
         "title": "クエール",
