@@ -1,4 +1,4 @@
-import { compose, MSet } from "@src/util";
+import { compose } from "@src/util";
 
 // 全角文字 → 半角文字
 const fullWidthToHalfWidth = (input: string) =>
