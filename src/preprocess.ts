@@ -1,4 +1,4 @@
-import { compose } from "@src/util";
+import { compose, MSet } from "@src/util";
 
 // 全角文字 → 半角文字
 const fullWidthToHalfWidth = (input: string) =>
@@ -36,7 +36,7 @@ const toUpperCase = (input: string) =>
     input.toLocaleUpperCase("en-US");
 
 
-export const normalizeText = (text: string) =>
+const normalizeText = (text: string) =>
     compose(
         fullWidthToHalfWidth,
         normalizeUnicode,
@@ -70,9 +70,16 @@ function splitByHalfAndFullWidth(text: string[]): string[] {
     return matches;    
 }
 
-export const tokenizeTexts = (text: string[]) =>
+const tokenizeTexts = (text: string[]) =>
     compose(
         splitByKatakana,
         splitByHalfAndFullWidth,
         splitByDelimiter
     )(text);
+
+export function docToWords(doc: string[]) : string[] {
+    const normalized = doc.map(normalizeText);
+    const tokenized  = tokenizeTexts(normalized);
+
+    return tokenized;
+}

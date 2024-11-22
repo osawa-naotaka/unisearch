@@ -1,4 +1,4 @@
-import { normalizeText, tokenizeTexts } from "@src/preprocess";
+import { docToWords } from "@src/preprocess";
 import { intersect, addLikeSet } from "@src/util";
 import type { DocId, Bigram, BigramIndex } from "@src/types";
 
@@ -31,9 +31,8 @@ function generateBigram(text: string) : Bigram[] {
 }
 
 export function docToBigrams(doc: string[]) : Set<Bigram> {
-    const normalized   = doc.map(normalizeText);
-    const tokenized    = tokenizeTexts(normalized);
-    const bigrams      = tokenized.flatMap(generateBigram);
+    const words        = docToWords(doc);
+    const bigrams      = words.flatMap(generateBigram);
     const uniq_bigrams = new Set(bigrams);
 
     return uniq_bigrams;

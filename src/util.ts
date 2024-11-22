@@ -30,8 +30,11 @@ export class MSet<T> extends Set<T> {
     constructor(init?: T[]) {
         super(init);
     }
-    map<R>(fn: (value: T, index:number, array: T[]) => R) {
+    map<R>(fn: (value: T, index:number, array: T[]) => R) : R[] {
         return Array.from(this).map(fn);
+    }
+    flatMap<R>(fn: (value: T, index:number, array: T[]) => R[]) : R[] {
+        return Array.from(this).flatMap(fn);
     }
 }
 
