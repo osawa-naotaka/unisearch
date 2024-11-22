@@ -20,3 +20,58 @@ export function intersect<T>(a: T[], b: T[]) : T[] {
     }
     return result;
 }
+
+const encoder = new TextEncoder();
+export function toUtf8(text: string) {
+    return encoder.encode(text);
+}
+
+export class MSet<T> extends Set<T> {
+    constructor(init?: T[]) {
+        super(init);
+    }
+    map<R>(fn: (value: T, index:number, array: T[]) => R) {
+        return Array.from(this).map(fn);
+    }
+}
+
+type UnicodeRange = [number, number];
+
+/**
+ * 結合された空白で単語が区切られない言語のUnicode範囲
+ */
+const nonSpaceSeparatedRanges: UnicodeRange[] = [
+  // CJK関連ブロックと接続可能な範囲
+  [0x2E80, 0x31FF], // CJK Radicals Supplement ～ CJK Symbols and Punctuation, Hiragana, Katakana, Katakana Extensions
+  [0x3400, 0x9FFF], // CJK Unified Ideographs Extension A, CJK Unified Ideographs
+  [0xAC00, 0xD7AF], // Hangul Syllables
+  [0xF900, 0xFAFF], // CJK Compatibility Ideographs
+  [0x20000, 0x2CEAF], // CJK Unified Ideographs Extensions B～E
+
+  // Southeast AsianとSouth Asianブロック
+  [0x0E00, 0x17FF], // Thai, Lao, Tibetan, Myanmar, Khmer
+  [0x1A00, 0x1B7F], // Tai Tham, Balinese, Lontara
+  [0xA980, 0xAA5F], // Javanese, Cham
+
+  // South Asianとその他のブロック (少量の空白を結合)
+  [0x0D80, 0x0DFF], // Sinhala
+];
+
+/**
+ * 指定した文字が空白で単語が区切られない言語の範囲に属するか確認する
+ * @param char 判定対象の文字
+ * @returns boolean (true: 属している, false: 属していない)
+ */
+export function isNonSpaceSeparatedChar(char: string): boolean {
+  if (char.length !== 1) {
+    throw new Error("Input must be a single character.");
+  }
+
+  const codePoint = char.codePointAt(0);
+  if (codePoint === undefined) {
+    return false;
+  }
+
+  return nonSpaceSeparatedRanges.some(([start, end]) => codePoint >= start && codePoint <= end);
+}
+

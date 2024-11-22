@@ -33,7 +33,7 @@ const halfWidthKanaToFullWidthKana = (input: string) =>
 
 // アルファベットの大文字化
 const toUpperCase = (input: string) => 
-    input.toUpperCase();
+    input.toLocaleUpperCase("en-US");
 
 
 export const normalizeText = (text: string) =>
