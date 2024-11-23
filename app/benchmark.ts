@@ -1,10 +1,11 @@
-import type { DocId, LinearIndex, BigramIndex, NgramIndex } from "@src/types";
+import type { DocId, LinearIndex, BigramIndex, NgramIndex, TrieIndex } from "@src/types";
 import { wikipedia_keyword_ja } from "@test/wikipedia_keyword.ja";
 import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
 import { calculateJsonSize } from "@src/util";
 import { docToLinearIndex, searchLinear } from "@src/linear";
 import { docToBigramIndex, searchBigram } from "@src/bigram";
 import { docToNgramIndex,  searchNgram  } from "@src/ngram";
+import { invertedIndexaLikeToTrieIndex, searchTrie } from "@src/trie";
 
 function benchmark(fn: (args: any) => any, args: any[]) {
     const start = performance.now();
@@ -62,7 +63,7 @@ function execBenchmark<T extends Object>(
     console.log("begin benchmark...");
     const result_search = benchmark((key) =>
         search_fn(key, index), keywords);
-    console.log(`time: ${result_search.time}`);
+    console.log(`time: ${result_search.time} ms`);
 
     return result_search.results;
 }
@@ -98,3 +99,21 @@ const bigram_results = execBenchmark<NgramIndex>(
     (query, index) => searchNgram(2, query, index),
     bigram_index, keywords, wikipedia_articles_ja);
 console.log(bigram_results);
+
+// normal trigram
+console.log("NORMAL TRIGRAM SEARCH");
+const trigram_index : NgramIndex = {};
+const trigram_results = execBenchmark<NgramIndex>(
+    (docid, contents, index) => docToNgramIndex(3, false, docid, contents, index),
+    (query, index) => searchNgram(3, query, index),
+    trigram_index, keywords, wikipedia_articles_ja);
+console.log(trigram_results);
+
+// Trie: normal trigram
+console.log("TRIE NORMAL TRIGRAM SEARCH");
+const trie_trigram_index = invertedIndexaLikeToTrieIndex(trigram_index);
+const trie_trigram_results = execBenchmark<TrieIndex>(
+    () => trie_trigram_index,
+    (query, index) => searchTrie(3, query, index),
+    trie_trigram_index, keywords, wikipedia_articles_ja);
+console.log(trie_trigram_results);
