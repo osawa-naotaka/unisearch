@@ -21,6 +21,29 @@ export function intersect<T>(a: T[], b: T[]) : T[] {
     return result;
 }
 
+export function union<T>(a: T[], b?: T[]) : T[] {
+    return b ? Array.from(new Set([...a, ...b])) : a;
+}
+
+export function difference<T>(a: T[], b: T[]): T[] {
+    return a.filter(e => !b.includes(e));
+}
+
+export function addLikeSet<T>(item: T, array?: T[]) : T[] {
+    return array ? Array.from(new Set([...array, item])) : [item];
+}
+
+export function zipWith<T, U, V>(a: T[], b: U[], combine: (a: T, b: U) => V): V[] {
+    const minLength = Math.min(a.length, b.length);
+    const result: V[] = [];
+    
+    for (let i = 0; i < minLength; i++) {
+      result.push(combine(a[i], b[i]));
+    }
+    
+    return result;
+}
+
 const encoder = new TextEncoder();
 export function toUtf8(text: string) {
     return encoder.encode(text);
@@ -36,14 +59,6 @@ export class MSet<T> extends Set<T> {
     flatMap<R>(fn: (value: T, index:number, array: T[]) => R[]) : R[] {
         return Array.from(this).flatMap(fn);
     }
-}
-
-export function union<T>(a: T[], b?: T[]) : T[] {
-    return b ? Array.from(new Set([...a, ...b])) : a;
-}
-
-export function addLikeSet<T>(item: T, array?: T[]) : T[] {
-    return array ? Array.from(new Set([...array, item])) : [item];
 }
 
 export function firstLetter(s: string) {

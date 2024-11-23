@@ -1,13 +1,18 @@
 import type { DocId, LinearIndex, BigramIndex, NgramIndex, TrieIndex } from "@src/types";
 import { wikipedia_keyword_ja } from "@test/wikipedia_keyword.ja";
 import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
-import { calculateJsonSize } from "@src/util";
+import { calculateJsonSize, intersect, difference, zipWith } from "@src/util";
 import { docToLinearIndex, searchLinear } from "@src/linear";
 import { docToBigramIndex, searchBigram } from "@src/bigram";
 import { docToNgramIndex,  searchNgram  } from "@src/ngram";
 import { invertedIndexaLikeToTrieIndex, searchTrie } from "@src/trie";
 
-function benchmark(fn: (args: any) => any, args: any[]) {
+type BenchmarkResult<T> = {
+    time: number,
+    results: T[]
+}
+
+function benchmark<T, R>(fn: (args: T) => R, args: T[]) : BenchmarkResult<R> {
     const start = performance.now();
     const results = args.map((arg) => fn(arg))
     const end = performance.now();
@@ -44,12 +49,12 @@ function getRandomKeywords(num: number, keyword_array: WikipediaKeyword[]) : str
     return keywords;
 }
 
-function execBenchmark<T extends Object>(
+function execBenchmark<T extends Object> (
     index_fn:  (idx: number, contents: string[], index: T) => T,
     search_fn: (text: string, index: T) => DocId[],
     index: T,
     keywords: string[],
-    articles: WikipediaArticle[]) : string[] {
+    articles: WikipediaArticle[]) : DocId[][] {
 
     console.log("creating index...");
 
@@ -68,6 +73,33 @@ function execBenchmark<T extends Object>(
     return result_search.results;
 }
 
+type SearchCorrectness<T> = {
+    match: T,
+    false_positive: T,
+    false_negative: T
+}
+
+function checkResult(correct: DocId[], test: DocId[]) : SearchCorrectness<DocId[]> {
+    return {
+        match: intersect(correct, test),
+        false_positive: difference(test, correct),
+        false_negative: difference(correct, test)
+    };
+}
+
+function countResults(results: SearchCorrectness<DocId[]>[]) : SearchCorrectness<number> {
+    const count : SearchCorrectness<number> = {
+        match: 0,
+        false_positive: 0,
+        false_negative: 0
+    };
+    for(let i = 0; i < results.length; i++) {
+        count.match          = count.match          + results[i].match.length;
+        count.false_positive = count.false_positive + results[i].false_positive.length;
+        count.false_negative = count.false_negative + results[i].false_negative.length;
+    }
+    return count;
+}
 
 const num_keywords = 10000;
 console.log("initializing benchmark...");
@@ -83,13 +115,12 @@ console.log("articles size: " + calculateJsonSize(wikipedia_articles_ja))
 console.log("LINEAR SEARCH");
 const linear_index : LinearIndex = [];
 const ref_results = execBenchmark<LinearIndex>(docToLinearIndex, searchLinear, linear_index, keywords, wikipedia_articles_ja);
-console.log(ref_results);
 
 // 8-bit bigram
 console.log("8BIT BIGRAM SEARCH");
 const bigram8bit_index : BigramIndex = {};
 const bigram8bit_results = execBenchmark<BigramIndex>(docToBigramIndex, searchBigram, bigram8bit_index, keywords, wikipedia_articles_ja);
-console.log(bigram8bit_results);
+console.log(countResults(zipWith(ref_results, bigram8bit_results, checkResult)));
 
 // normal bigram
 console.log("NORMAL BIGRAM SEARCH");
@@ -98,7 +129,7 @@ const bigram_results = execBenchmark<NgramIndex>(
     (docid, contents, index) => docToNgramIndex(2, false, docid, contents, index),
     (query, index) => searchNgram(2, query, index),
     bigram_index, keywords, wikipedia_articles_ja);
-console.log(bigram_results);
+console.log(countResults(zipWith(ref_results, bigram_results, checkResult)));
 
 // normal trigram
 console.log("NORMAL TRIGRAM SEARCH");
@@ -107,7 +138,8 @@ const trigram_results = execBenchmark<NgramIndex>(
     (docid, contents, index) => docToNgramIndex(3, false, docid, contents, index),
     (query, index) => searchNgram(3, query, index),
     trigram_index, keywords, wikipedia_articles_ja);
-console.log(trigram_results);
+console.log(countResults(zipWith(ref_results, trigram_results, checkResult)));
+
 
 // Trie: normal trigram
 console.log("TRIE NORMAL TRIGRAM SEARCH");
@@ -116,4 +148,4 @@ const trie_trigram_results = execBenchmark<TrieIndex>(
     () => trie_trigram_index,
     (query, index) => searchTrie(3, query, index),
     trie_trigram_index, keywords, wikipedia_articles_ja);
-console.log(trie_trigram_results);
+console.log(countResults(zipWith(ref_results, trie_trigram_results, checkResult)));
