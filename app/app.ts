@@ -5,6 +5,7 @@ import { docToBigramIndex, searchBigram } from "@src/bigram";
 import { docToInvertedIndex, searchInvertedIndex } from "@src/invertedindex";
 import { docToNgramIndex, searchNgram } from "@src/ngram";
 import { docToLinearIndex, searchLinear } from "@src/linear";
+import { invertedIndexaLikeToTrieIndex, searchTrie } from "@src/trie";
 
 // article size
 console.log("articles size: " + calculateJsonSize(wikipedia_articles_ja));
@@ -76,3 +77,9 @@ console.log("extended quadgram index size: " + calculateJsonSize(ex_quadgram_ind
 console.log(searchNgram(4, "John Lam", ex_quadgram_index));
 console.log(searchNgram(4, "歩く", ex_quadgram_index));
 
+
+// Trie: normal trigram
+const trie_normal_trigram_index = invertedIndexaLikeToTrieIndex(trigram_index);
+console.log("trie normal trigram index size: " + calculateJsonSize(trie_normal_trigram_index));
+console.log(searchTrie(3, "John Lam", trie_normal_trigram_index));
+console.log(searchTrie(3, "歩く", trie_normal_trigram_index));

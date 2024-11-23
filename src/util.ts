@@ -38,11 +38,23 @@ export class MSet<T> extends Set<T> {
     }
 }
 
+export function union<T>(a: T[], b?: T[]) : T[] {
+    return b ? Array.from(new Set([...a, ...b])) : a;
+}
+
 export function addLikeSet<T>(item: T, array?: T[]) : T[] {
     return array ? Array.from(new Set([...array, item])) : [item];
 }
 
+export function firstLetter(s: string) {
+    return Array.from(s)[0];
+}
 
+export function restString(s: string): string {
+    const unicode_str = Array.from(s);
+    unicode_str.shift();
+    return unicode_str.join("");
+}
 
 
 type UnicodeRange = [number, number];
