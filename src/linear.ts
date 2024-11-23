@@ -1,9 +1,9 @@
 import type { DocId, LinearIndex } from "@src/types";
-import { docToWords } from "@src/preprocess";
+import { docToWords, normalizeText } from "@src/preprocess";
 import { intersect } from "@src/util";
 
 export function docToLinearIndex(docid: DocId, doc: string[], index: LinearIndex) : LinearIndex {
-    index.push({docid: docid, content: docToWords(doc)});
+    index.push({docid: docid, content: doc.map(normalizeText)});
     return index;
 }
 

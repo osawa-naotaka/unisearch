@@ -36,7 +36,7 @@ const toUpperCase = (input: string) =>
     input.toLocaleUpperCase("en-US");
 
 
-const normalizeText = (text: string) =>
+export const normalizeText = (text: string) =>
     compose(
         fullWidthToHalfWidth,
         normalizeUnicode,
@@ -70,7 +70,7 @@ function splitByHalfAndFullWidth(text: string[]): string[] {
     return matches;    
 }
 
-const tokenizeTexts = (text: string[]) =>
+export const tokenizeTexts = (text: string[]) =>
     compose(
         splitByKatakana,
         splitByHalfAndFullWidth,
