@@ -1,4 +1,4 @@
-import type { DocId, LinearIndex, BigramIndex, NgramIndex, TrieIndex, HybridIndex } from "@src/types";
+import type { DocId, LinearIndex, BigramIndex, NgramIndex, TrieIndex, HybridIndex, BloomIndex } from "@src/types";
 import { wikipedia_keyword_ja } from "@test/wikipedia_keyword.ja";
 import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
 import { wikipedia_keyword_en } from "@test/wikipedia_keyword.en";
@@ -9,6 +9,7 @@ import { docToBigramIndex, searchBigram } from "@src/bigram";
 import { docToNgramIndex,  searchNgram, generateNgramForIndex, generateNgramForSearch } from "@src/ngram";
 import { invertedIndexLikeToTrieIndex, searchTrie } from "@src/trie";
 import { docToHybridIndex, searchHybrid } from "@src/hybrid";
+import { docToBloomIndex, searchBloom } from "@src/bloom";
 
 type BenchmarkResult<T> = {
     time: number,
@@ -189,6 +190,18 @@ const hybrid_trigram_results = execBenchmark<HybridIndex>(
 console.log(zipWith3(keywords, ref_results, hybrid_trigram_results, checkResult));
 console.log(countResults(zipWith3(keywords, ref_results, hybrid_trigram_results, checkResult)));
 
+// bloom quadgram
+console.log("BLOOM QUADGRAM SEARCH");
+const bloom_quadgram_index : BloomIndex = {index: {}, bits: 1024*1024, hashes: 100};
+const bloom_quadgram_results = execBenchmark<BloomIndex>(
+    (docid, contents, index) => docToBloomIndex(quadgram_fn, docid, contents, index),
+    (query, index) => searchBloom(quadgram_search_fn, query, index),
+    bloom_quadgram_index, keywords, wikipedia_articles_ja);
+console.log(zipWith3(keywords, ref_results, bloom_quadgram_results, checkResult));
+console.log(countResults(zipWith3(keywords, ref_results, bloom_quadgram_results, checkResult)));
+console.log(calculateJsonSize(bloom_quadgram_index));
+console.log(bloom_quadgram_index);
+
 
 // english test
 console.log("ENGLISH test.");
@@ -225,3 +238,5 @@ const en_quadgram_results = execBenchmark<NgramIndex>(
     en_quadgram_index, en_keywords, wikipedia_articles_en);
 console.log(zipWith3(en_keywords, en_ref_results, en_quadgram_results, checkResult));
 console.log(countResults(zipWith3(en_keywords, en_ref_results, en_quadgram_results, checkResult)));
+
+

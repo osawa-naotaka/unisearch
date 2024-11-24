@@ -24,3 +24,9 @@ export type HybridIndex   = {
 
 
 export type NgramFn = (text: string) => string[];
+
+export type BloomIndex = {
+    index: Record<number, number[]>,
+    bits: number,
+    hashes: number
+};
