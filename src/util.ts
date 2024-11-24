@@ -99,6 +99,27 @@ const nonSpaceSeparatedRanges: UnicodeRange[] = [
   [0x0D80, 0x0DFF], // Sinhala
 ];
 
+const delimiter: UnicodeRange[] = [
+    [0x0000, 0x002F],  // 制御文字・約物・記号
+    [0x003A, 0x0040],  // 約物・記号
+    [0x005B, 0x0060],  // 約物・記号
+    [0x007B, 0x007F],  // 制御文字・約物・記号
+    [0x0080, 0x00BF],  // 制御文字・句読点・記号
+    [0x02B0, 0x02FF],  // 前進を伴う修飾文字
+  
+    [0x2000, 0x206F],  // 一般句読点
+  
+    [0x3000, 0x3004],  // CJKの記号及び句読点
+    [0x3007, 0x303F],  // CJKの記号及び句読点
+  
+    [0xFF00, 0xFF0F],  // 半角・全角形 
+    [0xFF1A, 0xFF20],
+    [0xFF3B, 0xFF40],
+    [0xFF5B, 0xFF65],
+    [0xFFE0, 0xFFFF],
+  ];
+  
+
 /**
  * 指定した文字が空白で単語が区切られない言語の範囲に属するか確認する
  * @param char 判定対象の文字

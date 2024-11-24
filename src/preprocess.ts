@@ -44,37 +44,22 @@ export const normalizeText = (text: string) =>
         toUpperCase
     )(text);
 
-// カタカナで文字列を分割
-function splitByKatakana(text: string[]): string[] {
-    // カタカナ（全角）の範囲: \u30A0-\u30FF
-    const regex = /[\u30A0-\u30FF]+|[^ \u30A0-\u30FF]+/g;
+function splitByDelimiter(text: string[]): string[] {
+    const separators = /[\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007F\u0080-\u00BF\u02B0-\u02FF\u2000-\u206F\u3000-\u3004\u3007-\u303F\uFF00-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\uFFE0-\uFFFF]/;
+    return text.flatMap(t => t.split(separators).filter(Boolean));
+}
 
-    // matchがnullを返した場合は削除する
-    const matches = text.flatMap(t => t.match(regex)).filter(x => x !== null);
+function splitByNonSpaceSeparatedChar(text: string[]): string[] {
+    const nonSpaceSeparatedCharRegex = /[\u2E80-\u31FF\u3400-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF\u0E00-\u17FF\u1A00-\u1B7F\uA980-\uAA5F\u0D80-\u0DFF\u{20000}-\u{2CEAF}]+|[^\u2E80-\u31FF\u3400-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF\u0E00-\u17FF\u1A00-\u1B7F\uA980-\uAA5F\u0D80-\u0DFF\u{20000}-\u{2CEAF}]+/gu;
+    const matches = text.flatMap(t => t.match(nonSpaceSeparatedCharRegex)).filter(x => x !== null);
 
     return matches;
 }
 
-function splitByDelimiter(text: string[]): string[] {
-    const separators = /[ \n\t\r,.;:?!(){}[\]<>「」『』`'’"“”\-—–‒‐/\\+=*%&|$#@^_~～｡､･。、「」・]/;
-    return text.flatMap(t => t.split(separators).filter(Boolean));
-}
-
-function splitByHalfAndFullWidth(text: string[]): string[] {
-    // 半角文字の正規表現: ASCII範囲、半角カタカナなど
-    const halfWidthRegex = /[\u0020-\u007E\uFF61-\uFFDC\uFFE8-\uFFEE]+|[^ \u0020-\u007E\uFF61-\uFFDC\uFFE8-\uFFEE]+/g;
-
-    // matchがnullを返した場合は削除する
-    const matches = text.flatMap(t => t.match(halfWidthRegex)).filter(x => x !== null);
-
-    return matches;    
-}
-
 export const tokenizeTexts = (text: string[]) =>
     compose(
-        splitByKatakana,
-        splitByHalfAndFullWidth,
-        splitByDelimiter
+        splitByDelimiter,
+        splitByNonSpaceSeparatedChar,
     )(text);
 
 export function docToWords(doc: string[]) : string[] {

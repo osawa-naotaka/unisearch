@@ -5,7 +5,7 @@ import { calculateJsonSize, intersect, difference, zipWith3 } from "@src/util";
 import { docToLinearIndex, searchLinear } from "@src/linear";
 import { docToBigramIndex, searchBigram } from "@src/bigram";
 import { docToNgramIndex,  searchNgram, generateNgramForIndex, generateNgramForSearch } from "@src/ngram";
-import { invertedIndexaLikeToTrieIndex, searchTrie } from "@src/trie";
+import { invertedIndexLikeToTrieIndex, searchTrie } from "@src/trie";
 import { docToHybridIndex, searchHybrid } from "@src/hybrid";
 
 type BenchmarkResult<T> = {
@@ -154,10 +154,22 @@ console.log(countResults(zipWith3(keywords, ref_results, trigram_results, checkR
 
 // Trie: normal trigram
 console.log("TRIE NORMAL TRIGRAM SEARCH");
-const trie_trigram_index = invertedIndexaLikeToTrieIndex(trigram_index);
+const trie_trigram_index = invertedIndexLikeToTrieIndex(trigram_index);
 const trie_trigram_results = execBenchmark<TrieIndex>(
     () => trie_trigram_index,
     (query, index) => searchTrie(trigram_search_fn, query, index),
     trie_trigram_index, keywords, wikipedia_articles_ja);
 console.log(zipWith3(keywords, ref_results, trie_trigram_results, checkResult));
 console.log(countResults(zipWith3(keywords, ref_results, trie_trigram_results, checkResult)));
+
+
+// Hybrid: normal trigram
+console.log("HYBRID NORMAL TRIGRAM SEARCH");
+const hybrid_trigram_index : HybridIndex = { trie: {ids: [], children: {} }, ngram: {} };
+
+const hybrid_trigram_results = execBenchmark<HybridIndex>(
+    (docid, contents, index) => docToHybridIndex(trigram_fn, docid, contents, index),
+    (query, index) => searchHybrid(trigram_search_fn, query, index),
+    hybrid_trigram_index, keywords, wikipedia_articles_ja);
+console.log(zipWith3(keywords, ref_results, hybrid_trigram_results, checkResult));
+console.log(countResults(zipWith3(keywords, ref_results, hybrid_trigram_results, checkResult)));

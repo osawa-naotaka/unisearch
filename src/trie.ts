@@ -24,7 +24,7 @@ function createTrieNode(token: string, ids: DocId[], node: TrieNode): TrieNode {
     return node;
 }
 
-export function invertedIndexaLikeToTrieIndex<T extends keyof any>(iidx: InvertedIndexBase<T>) : TrieIndex {
+export function invertedIndexLikeToTrieIndex<T extends keyof any>(iidx: InvertedIndexBase<T>) : TrieIndex {
     const index : TrieIndex = {
         ids: [],
         children: {}
@@ -34,6 +34,11 @@ export function invertedIndexaLikeToTrieIndex<T extends keyof any>(iidx: Inverte
         createTrieNode(token, docids, index);
     }
     
+    return index;
+}
+
+export function docToTrieIndex(docid: DocId, doc: string[], index: TrieIndex) : TrieIndex {
+    doc.map(d => createTrieNode(d, [docid], index));
     return index;
 }
 
