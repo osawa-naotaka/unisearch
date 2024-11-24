@@ -16,3 +16,5 @@ export type TrieNode = {
 };
 
 export type TrieIndex = TrieNode;
+
+export type NgramFn = (text: string) => string[];

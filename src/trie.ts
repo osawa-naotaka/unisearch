@@ -1,6 +1,5 @@
-import type { DocId, TrieNode, TrieIndex, InvertedIndexBase } from "@src/types";
+import type { DocId, TrieNode, TrieIndex, InvertedIndexBase, NgramFn } from "@src/types";
 import { firstLetter, restString, union, intersect } from "@src/util";
-import { generateNgram } from "@src/ngram";
 import { docToWords } from "@src/preprocess";
 
 function createTrieNode(token: string, ids: DocId[], node: TrieNode): TrieNode {
@@ -50,9 +49,9 @@ function searchTrieNode(token: string, node: TrieIndex): number[] {
     return searchTrieNode(restString(token), child);
 }
 
-export function searchTrie(n: number, query: string, index: TrieIndex) : DocId[] {
+export function searchTrie(fn: NgramFn, query: string, index: TrieIndex) : DocId[] {
     let result : DocId[] | null = null;
-    for (const gram of docToWords([query]).flatMap(w => generateNgram(n, false, w))) {
+    for (const gram of docToWords([query]).flatMap(w => fn(w))) {
         const docs = searchTrieNode(gram, index);
         if(docs) {
             if(result) {

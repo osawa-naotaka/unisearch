@@ -1,4 +1,4 @@
-import type { DocId, Ngram, NgramIndex } from "@src/types";
+import type { DocId, Ngram, NgramIndex, NgramFn } from "@src/types";
 import { docToWords } from "@src/preprocess";
 import { addLikeSet, intersect } from "@src/util";
 
@@ -37,24 +37,43 @@ export function generateNgram(n: number, generate_lesser: boolean, text: string)
     return grams;
 }
 
-export function docToNgrams(n: number, generate_lesser: boolean, doc: string[]) : Set<Ngram> {
+export function generateNgramTrie(n: number, text: string): Ngram[] {
+    if (n <= 0) {
+        throw new Error("Invalid value of n. It must be greater than 0.");
+    }
+
+    if (text.length === 0) {
+        return [];
+    }
+
+    const grams: Ngram[] = [];
+
+    for (let i = 0; i <= text.length; i++) {
+        grams.push(text.slice(i, i + n));
+    }
+
+    return grams;
+}
+
+
+export function docToNgrams(fn: NgramFn, doc: string[]) : Set<Ngram> {
     const words      = docToWords(doc);
-    const grams      = words.flatMap(t => generateNgram(n, generate_lesser, t));
+    const grams      = words.flatMap(t => fn(t));
     const uniq_grams = new Set(grams);
 
     return uniq_grams;
 }
 
-export function docToNgramIndex(n: number, generate_lesser: boolean, docid: DocId, doc: string[], index: NgramIndex) : NgramIndex {
-    for (const ngram of docToNgrams(n, generate_lesser, doc)) {
+export function docToNgramIndex(fn: NgramFn, docid: DocId, doc: string[], index: NgramIndex) : NgramIndex {
+    for (const ngram of docToNgrams(fn, doc)) {
         index[ngram] = addLikeSet(docid, index[ngram]);
     }
     return index;
 }
 
-export function searchNgram(n: number, query: string, index: NgramIndex) : DocId[] {
+export function searchNgram(fn: NgramFn, query: string, index: NgramIndex) : DocId[] {
     let result : DocId[] | null = null;
-    const words = docToWords([query]).flatMap(w => generateNgram(n, false, w));
+    const words = docToWords([query]).flatMap(w => fn(w));
     for (const word of words) {
         const docs = index[word];
         if(docs) {

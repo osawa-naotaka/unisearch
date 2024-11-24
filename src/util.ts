@@ -1,10 +1,3 @@
-export function forceQuerySelector<T extends HTMLElement>(selector: string, parent?: HTMLElement): T {
-    const elem = parent ? parent.querySelector<T>(selector) : document.querySelector<T>(selector);
-    if (elem) {
-        return elem;
-    }
-    throw new Error(`cannot find selector ${selector}`);
-}
 
 export function compose<T>(...fns: ((arg: T) => T)[]) : (arg: T) => T {
     return (arg: T) =>
@@ -43,6 +36,18 @@ export function zipWith<T, U, V>(a: T[], b: U[], combine: (a: T, b: U) => V): V[
     
     return result;
 }
+
+export function zipWith3<T, U, V, R>(a: T[], b: U[], c: V[], combine: (a: T, b: U, c: V) => R): R[] {
+    const minLength = Math.min(a.length, b.length);
+    const result: R[] = [];
+    
+    for (let i = 0; i < minLength; i++) {
+      result.push(combine(a[i], b[i], c[i]));
+    }
+    
+    return result;
+}
+
 
 const encoder = new TextEncoder();
 export function toUtf8(text: string) {

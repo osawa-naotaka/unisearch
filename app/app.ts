@@ -3,7 +3,7 @@ import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
 import { calculateJsonSize } from "@src/util";
 import { docToBigramIndex, searchBigram } from "@src/bigram";
 import { docToInvertedIndex, searchInvertedIndex } from "@src/invertedindex";
-import { docToNgramIndex, searchNgram } from "@src/ngram";
+import { docToNgramIndex, searchNgram, generateNgram } from "@src/ngram";
 import { docToLinearIndex, searchLinear } from "@src/linear";
 import { invertedIndexaLikeToTrieIndex, searchTrie } from "@src/trie";
 
@@ -38,48 +38,53 @@ console.log(searchInvertedIndex("歩く", inverted_index));
 
 // normal bigram
 const bigram_index : NgramIndex = {};
-wikipedia_articles_ja.map((x, idx) => docToNgramIndex(2, false, idx, [x.title, x.content], bigram_index));
+const bigram_fn = (text: string) => generateNgram(2, false, text); 
+wikipedia_articles_ja.map((x, idx) => docToNgramIndex(bigram_fn, idx, [x.title, x.content], bigram_index));
 
 console.log("normal bigram index size: " + calculateJsonSize(bigram_index));
-console.log(searchNgram(2, "John Lam", bigram_index));
-console.log(searchNgram(2, "歩く", bigram_index));
+console.log(searchNgram(bigram_fn, "John Lam", bigram_index));
+console.log(searchNgram(bigram_fn, "歩く", bigram_index));
 
 // normal trigram
 const trigram_index : NgramIndex = {};
-wikipedia_articles_ja.map((x, idx) => docToNgramIndex(3, false, idx, [x.title, x.content], trigram_index));
+const trigram_fn = (text: string) => generateNgram(3, false, text); 
+wikipedia_articles_ja.map((x, idx) => docToNgramIndex(trigram_fn, idx, [x.title, x.content], trigram_index));
 
 console.log("normal trigram index size: " + calculateJsonSize(trigram_index));
-console.log(searchNgram(3, "John Lam", trigram_index));
-console.log(searchNgram(3, "歩く", trigram_index));
+console.log(searchNgram(trigram_fn, "John Lam", trigram_index));
+console.log(searchNgram(trigram_fn, "歩く", trigram_index));
 
 // extended trigram
 const ex_trigram_index : NgramIndex = {};
-wikipedia_articles_ja.map((x, idx) => docToNgramIndex(3, true, idx, [x.title, x.content], ex_trigram_index));
+const ex_trigram_fn = (text: string) => generateNgram(3, true, text); 
+wikipedia_articles_ja.map((x, idx) => docToNgramIndex(ex_trigram_fn, idx, [x.title, x.content], ex_trigram_index));
 
 console.log("extended trigram index size: " + calculateJsonSize(ex_trigram_index));
-console.log(searchNgram(3, "John Lam", ex_trigram_index));
-console.log(searchNgram(3, "歩く", ex_trigram_index));
+console.log(searchNgram(trigram_fn, "John Lam", ex_trigram_index));
+console.log(searchNgram(trigram_fn, "歩く", ex_trigram_index));
 
 // quadgram
 const quadgram_index : NgramIndex = {};
-wikipedia_articles_ja.map((x, idx) => docToNgramIndex(4, false, idx, [x.title, x.content], quadgram_index));
+const quadgram_fn = (text: string) => generateNgram(4, false, text); 
+wikipedia_articles_ja.map((x, idx) => docToNgramIndex(quadgram_fn, idx, [x.title, x.content], quadgram_index));
 
 console.log("quadgram index size: " + calculateJsonSize(quadgram_index));
-console.log(searchNgram(4, "John Lam", quadgram_index));
-console.log(searchNgram(4, "歩く", quadgram_index));
+console.log(searchNgram(quadgram_fn, "John Lam", quadgram_index));
+console.log(searchNgram(quadgram_fn, "歩く", quadgram_index));
 
 
-// quadgram
+// extended quadgram
 const ex_quadgram_index : NgramIndex = {};
-wikipedia_articles_ja.map((x, idx) => docToNgramIndex(4, true, idx, [x.title, x.content], ex_quadgram_index));
+const ex_quadgram_fn = (text: string) => generateNgram(4, true, text); 
+wikipedia_articles_ja.map((x, idx) => docToNgramIndex(ex_quadgram_fn, idx, [x.title, x.content], ex_quadgram_index));
 
 console.log("extended quadgram index size: " + calculateJsonSize(ex_quadgram_index));
-console.log(searchNgram(4, "John Lam", ex_quadgram_index));
-console.log(searchNgram(4, "歩く", ex_quadgram_index));
+console.log(searchNgram(quadgram_fn, "John Lam", ex_quadgram_index));
+console.log(searchNgram(quadgram_fn, "歩く", ex_quadgram_index));
 
 
 // Trie: normal trigram
 const trie_normal_trigram_index = invertedIndexaLikeToTrieIndex(trigram_index);
 console.log("trie normal trigram index size: " + calculateJsonSize(trie_normal_trigram_index));
-console.log(searchTrie(3, "John Lam", trie_normal_trigram_index));
-console.log(searchTrie(3, "歩く", trie_normal_trigram_index));
+console.log(searchTrie(trigram_fn, "John Lam", trie_normal_trigram_index));
+console.log(searchTrie(trigram_fn, "歩く", trie_normal_trigram_index));
