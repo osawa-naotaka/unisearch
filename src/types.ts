@@ -17,4 +17,10 @@ export type TrieNode = {
 
 export type TrieIndex = TrieNode;
 
+export type HybridIndex   = {
+    inverted: InvertedIndex,
+    ngram: NgramIndex    
+};
+
+
 export type NgramFn = (text: string) => string[];

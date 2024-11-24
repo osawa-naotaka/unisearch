@@ -1,4 +1,4 @@
-import type { DocId, LinearIndex, BigramIndex, NgramIndex, TrieIndex } from "@src/types";
+import type { DocId, LinearIndex, BigramIndex, NgramIndex, TrieIndex, HybridIndex } from "@src/types";
 import { wikipedia_keyword_ja } from "@test/wikipedia_keyword.ja";
 import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
 import { calculateJsonSize, intersect, difference, zipWith3 } from "@src/util";
@@ -6,6 +6,7 @@ import { docToLinearIndex, searchLinear } from "@src/linear";
 import { docToBigramIndex, searchBigram } from "@src/bigram";
 import { docToNgramIndex,  searchNgram, generateNgramForIndex, generateNgramForSearch } from "@src/ngram";
 import { invertedIndexaLikeToTrieIndex, searchTrie } from "@src/trie";
+import { docToHybridIndex, searchHybrid } from "@src/hybrid";
 
 type BenchmarkResult<T> = {
     time: number,
