@@ -1,6 +1,8 @@
 import type { DocId, LinearIndex, BigramIndex, NgramIndex, TrieIndex, HybridIndex } from "@src/types";
 import { wikipedia_keyword_ja } from "@test/wikipedia_keyword.ja";
 import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
+import { wikipedia_keyword_en } from "@test/wikipedia_keyword.en";
+import { wikipedia_articles_en } from "@test/wikipedia_articles.en";
 import { calculateJsonSize, intersect, difference, zipWith3 } from "@src/util";
 import { docToLinearIndex, searchLinear } from "@src/linear";
 import { docToBigramIndex, searchBigram } from "@src/bigram";
@@ -105,7 +107,8 @@ function countResults(results: SearchCorrectness<DocId[]>[]) : SearchCorrectness
     return count;
 }
 
-const num_keywords = 1000;
+const num_keywords = 100;
+console.log("JAPANESE test.");
 console.log("initializing benchmark...");
 console.log(`select random ${num_keywords} keywords...`);
 const keywords = getRandomKeywords(num_keywords, wikipedia_keyword_ja);
@@ -113,7 +116,7 @@ console.log("selected keywords are:");
 console.log(keywords);    
 
 // article size
-console.log("articles size: " + calculateJsonSize(wikipedia_articles_ja))
+console.log("articles size: " + calculateJsonSize(wikipedia_articles_ja));
 
 // linear search
 console.log("LINEAR SEARCH");
@@ -151,6 +154,18 @@ const trigram_results = execBenchmark<NgramIndex>(
 console.log(zipWith3(keywords, ref_results, trigram_results, checkResult));
 console.log(countResults(zipWith3(keywords, ref_results, trigram_results, checkResult)));
 
+// normal quadgram
+console.log("NORMAL QUADGRAM SEARCH");
+const quadgram_index : NgramIndex = {};
+const quadgram_fn = (text: string) => generateNgramForIndex(4, text); 
+const quadgram_search_fn = (text: string) => generateNgramForSearch(4, text); 
+const quadgram_results = execBenchmark<NgramIndex>(
+    (docid, contents, index) => docToNgramIndex(quadgram_fn, docid, contents, index),
+    (query, index) => searchNgram(quadgram_search_fn, query, index),
+    quadgram_index, keywords, wikipedia_articles_ja);
+console.log(zipWith3(keywords, ref_results, quadgram_results, checkResult));
+console.log(countResults(zipWith3(keywords, ref_results, quadgram_results, checkResult)));
+
 
 // Trie: normal trigram
 console.log("TRIE NORMAL TRIGRAM SEARCH");
@@ -173,3 +188,40 @@ const hybrid_trigram_results = execBenchmark<HybridIndex>(
     hybrid_trigram_index, keywords, wikipedia_articles_ja);
 console.log(zipWith3(keywords, ref_results, hybrid_trigram_results, checkResult));
 console.log(countResults(zipWith3(keywords, ref_results, hybrid_trigram_results, checkResult)));
+
+
+// english test
+console.log("ENGLISH test.");
+console.log(`select random ${num_keywords} keywords...`);
+const en_keywords = getRandomKeywords(num_keywords, wikipedia_keyword_en);
+console.log("selected keywords are:");
+console.log(en_keywords);    
+
+// article size
+console.log("articles size: " + calculateJsonSize(wikipedia_articles_en));
+
+// linear search
+console.log("LINEAR SEARCH");
+const en_linear_index : LinearIndex = [];
+const en_ref_results = execBenchmark<LinearIndex>(docToLinearIndex, searchLinear, en_linear_index, en_keywords, wikipedia_articles_en);
+
+
+// normal trigram
+console.log("NORMAL TRIGRAM SEARCH");
+const en_trigram_index : NgramIndex = {};
+const en_trigram_results = execBenchmark<NgramIndex>(
+    (docid, contents, index) => docToNgramIndex(trigram_fn, docid, contents, index),
+    (query, index) => searchNgram(trigram_search_fn, query, index),
+    en_trigram_index, en_keywords, wikipedia_articles_en);
+console.log(zipWith3(en_keywords, en_ref_results, en_trigram_results, checkResult));
+console.log(countResults(zipWith3(en_keywords, en_ref_results, en_trigram_results, checkResult)));
+
+// normal quadgram
+console.log("NORMAL QUADGRAM SEARCH");
+const en_quadgram_index : NgramIndex = {};
+const en_quadgram_results = execBenchmark<NgramIndex>(
+    (docid, contents, index) => docToNgramIndex(quadgram_fn, docid, contents, index),
+    (query, index) => searchNgram(quadgram_search_fn, query, index),
+    en_quadgram_index, en_keywords, wikipedia_articles_en);
+console.log(zipWith3(en_keywords, en_ref_results, en_quadgram_results, checkResult));
+console.log(countResults(zipWith3(en_keywords, en_ref_results, en_quadgram_results, checkResult)));
