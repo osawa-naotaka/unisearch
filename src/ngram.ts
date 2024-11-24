@@ -2,59 +2,30 @@ import type { DocId, Ngram, NgramIndex, NgramFn } from "@src/types";
 import { docToWords } from "@src/preprocess";
 import { addLikeSet, intersect } from "@src/util";
 
-export function generateNgram(n: number, generate_lesser: boolean, text: string): Ngram[] {
-    if (n <= 0) {
-        throw new Error("Invalid value of n. It must be greater than 0.");
-    }
+export function generateNgramForIndex(n: number, text: string): Ngram[] {
+    return [...Array(n).keys()].flatMap(x => generateNgram(x + 1, text));
+}
 
-    if (text.length === 0) {
-        return [];
-    }
-
-    if (n > text.length && !generate_lesser) {
+export function generateNgramForSearch(n: number, text: string): Ngram[] {
+    if(text.length < n) {
         return [text];
-    }
-
-    const grams: Ngram[] = [];
-    const maxLength = Math.min(n, text.length);
-    
-    if (generate_lesser) {
-        for (let len = 1; len <= maxLength; len++) {
-            grams.push(text.slice(0, len));
-        }
-        
-        if (text.length > n) {
-            for (let i = 1; i <= text.length - n; i++) {
-                grams.push(text.slice(i, i + n));
-            }
-        }
     } else {
+        return generateNgram(n, text);
+    }
+}
+
+function generateNgram(n: number, text: string): Ngram[] {
+    if(text.length === 0) throw new Error("call generateNgram with null string.");
+    if(text.length < n) {
+        return [];
+    } else {
+        const grams: Ngram[] = [];
         for (let i = 0; i <= text.length - n; i++) {
             grams.push(text.slice(i, i + n));
         }
+        return grams;
     }
-
-    return grams;
 }
-
-export function generateNgramTrie(n: number, text: string): Ngram[] {
-    if (n <= 0) {
-        throw new Error("Invalid value of n. It must be greater than 0.");
-    }
-
-    if (text.length === 0) {
-        return [];
-    }
-
-    const grams: Ngram[] = [];
-
-    for (let i = 0; i <= text.length; i++) {
-        grams.push(text.slice(i, i + n));
-    }
-
-    return grams;
-}
-
 
 export function docToNgrams(fn: NgramFn, doc: string[]) : Set<Ngram> {
     const words      = docToWords(doc);

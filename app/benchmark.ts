@@ -4,7 +4,7 @@ import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
 import { calculateJsonSize, intersect, difference, zipWith3 } from "@src/util";
 import { docToLinearIndex, searchLinear } from "@src/linear";
 import { docToBigramIndex, searchBigram } from "@src/bigram";
-import { docToNgramIndex,  docToNgrams,  searchNgram, generateNgram, generateNgramTrie } from "@src/ngram";
+import { docToNgramIndex,  searchNgram, generateNgramForIndex, generateNgramForSearch } from "@src/ngram";
 import { invertedIndexaLikeToTrieIndex, searchTrie } from "@src/trie";
 
 type BenchmarkResult<T> = {
@@ -129,10 +129,11 @@ console.log(countResults(zipWith3(keywords, ref_results, bigram8bit_results, che
 // normal bigram
 console.log("NORMAL BIGRAM SEARCH");
 const bigram_index : NgramIndex = {};
-const bigram_fn = (text: string) => generateNgram(2, false, text); 
+const bigram_fn = (text: string) => generateNgramForIndex(2, text); 
+const bigram_search_fn = (text: string) => generateNgramForSearch(2, text);
 const bigram_results = execBenchmark<NgramIndex>(
     (docid, contents, index) => docToNgramIndex(bigram_fn, docid, contents, index),
-    (query, index) => searchNgram(bigram_fn, query, index),
+    (query, index) => searchNgram(bigram_search_fn, query, index),
     bigram_index, keywords, wikipedia_articles_ja);
 console.log(zipWith3(keywords, ref_results, bigram_results, checkResult));
 console.log(countResults(zipWith3(keywords, ref_results, bigram_results, checkResult)));
@@ -140,8 +141,8 @@ console.log(countResults(zipWith3(keywords, ref_results, bigram_results, checkRe
 // normal trigram
 console.log("NORMAL TRIGRAM SEARCH");
 const trigram_index : NgramIndex = {};
-const trigram_fn = (text: string) => generateNgramTrie(3, text); 
-const trigram_search_fn = (text: string) => generateNgram(3, false, text); 
+const trigram_fn = (text: string) => generateNgramForIndex(3, text); 
+const trigram_search_fn = (text: string) => generateNgramForSearch(3, text); 
 const trigram_results = execBenchmark<NgramIndex>(
     (docid, contents, index) => docToNgramIndex(trigram_fn, docid, contents, index),
     (query, index) => searchNgram(trigram_search_fn, query, index),
