@@ -39,7 +39,7 @@ export function generateHybridIndexFn<T, U>(
 ) : HybridIndexFn<T, U> {
     return (docid: DocId, doc: string, index: HybridIndex<T, U>) : HybridIndex<T, U> => {
         for(const word of docToWords([doc])) {
-            if(isNonSpaceSeparatedChar(doc[0])) {
+            if(isNonSpaceSeparatedChar(word[0])) {
                 for(const w of idxjapre(word)) {
                     index.ja = idxjafn(docid, w, index.ja);
                 }
