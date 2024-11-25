@@ -24,11 +24,6 @@ function createTrieNode(token: string, ids: DocId[], node: TrieNode): TrieNode {
     return node;
 }
 
-export function docToTrieIndex(docid: DocId, doc: string[], index: TrieIndex) : TrieIndex {
-    doc.map(d => createTrieNode(d, [docid], index));
-    return index;
-}
-
 function searchTrieNode(token: string, node: TrieIndex): number[] {
     if (token.length === 0) {
         return node.ids;
@@ -41,21 +36,13 @@ function searchTrieNode(token: string, node: TrieIndex): number[] {
     return searchTrieNode(restString(token), child);
 }
 
-export function searchTrie(fn: NgramFn, query: string, index: TrieIndex) : DocId[] {
-    let result : DocId[] | null = null;
-    for (const gram of docToWords([query]).flatMap(w => fn(w))) {
-        const docs = searchTrieNode(gram, index);
-        if(docs) {
-            if(result) {
-                result = intersect(result, docs);
-            } else {
-                result = docs;
-            }
-        } else {
-            return [];
-        }
-    }
-    return result || [];
+export function docToTrieIndex(docid: DocId, doc: string, index: TrieIndex) : TrieIndex {
+    createTrieNode(doc, [docid], index);
+    return index;
+}
+
+export function searchTrie(query: string, index: TrieIndex) : DocId[] {
+    return searchTrieNode(query, index);
 }
 
 

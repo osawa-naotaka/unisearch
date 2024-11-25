@@ -20,7 +20,7 @@ function concat8bit(high: number, low: number) : number {
     return (high << 8) | low;
 }
 
-function generateBigram(text: string) : Bigram[] {
+export function generateBigram(text: string) : Bigram[] {
     const hashed = [...text].map(hashChar).flatMap(split8bit);
     const grams = [];
     for(let i = 0; i < hashed.length - 1; i++) {

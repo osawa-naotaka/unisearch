@@ -31,3 +31,7 @@ export type BloomIndex = {
     bits: number,
     hashes: number
 };
+
+export type IndexFn<T> = (docid: DocId, doc: string, index: T) => T;
+export type SearchFn<T> = (query: string, index: T) => DocId[];
+export type PreprocessFn = (text: string) => string[];

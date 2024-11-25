@@ -1,4 +1,4 @@
-import type { DocId, LinearIndex, BigramIndex, NgramIndex, TrieIndex, HybridIndex, BloomIndex } from "@src/types";
+import type { DocId, LinearIndex, BigramIndex, NgramIndex, TrieIndex, HybridIndex, BloomIndex, IndexFn, SearchFn, PreprocessFn } from "@src/types";
 import { wikipedia_keyword_ja } from "@test/wikipedia_keyword.ja";
 import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
 import { wikipedia_keyword_en } from "@test/wikipedia_keyword.en";
@@ -6,20 +6,21 @@ import { wikipedia_articles_en } from "@test/wikipedia_articles.en";
 import { calculateJsonSize, intersect, difference, zipWith3 } from "@src/util";
 import { docToLinearIndex, searchLinear } from "@src/linear";
 import { docToBigramIndex, searchBigram } from "@src/bigram";
-import { docToNgramIndex,  searchNgram, generateNgramForIndex, generateNgramForSearch } from "@src/ngram";
+import { docToNgramIndex,  searchNgram, generateNgramForIndex, generateNgramForSearch, generateNgram } from "@src/ngram";
 import { docToTrieIndex, searchTrie } from "@src/trie";
 import { docToHybridIndex, searchHybrid } from "@src/hybrid";
 import { docToBloomIndex, searchBloom } from "@src/bloom";
 import { docToWords } from "@src/preprocess";
+import { generateIndexFn, generateSearchFn } from "@src/common";
 
 type BenchmarkResult<T> = {
     time: number,
     results: T[]
 }
 
-function benchmark<T, R>(fn: (args: T) => R, args: T[]) : BenchmarkResult<R> {
+function benchmark<T, R>(fn: (args: T, idx: number) => R, args: T[]) : BenchmarkResult<R> {
     const start = performance.now();
-    const results = args.map((arg) => fn(arg))
+    const results = args.map((arg, idx) => fn(arg, idx));
     const end = performance.now();
     return {
         time: end - start,
@@ -55,17 +56,18 @@ function getRandomKeywords(num: number, keyword_array: WikipediaKeyword[]) : str
 }
 
 function execBenchmark<T extends Object> (
-    index_fn:  (idx: number, contents: string[], index: T) => T,
-    search_fn: (text: string, index: T) => DocId[],
+    index_fn: IndexFn<T>,
+    search_fn: SearchFn<T>,
     index: T,
     keywords: string[],
     articles: WikipediaArticle[]) : DocId[][] {
 
     console.log("creating index...");
 
-    const result_create_index = benchmark(() =>
-        articles.map((x, idx) => index_fn(idx, [x.title, x.content], index)),
-        [""]);
+    const result_create_index = benchmark((doc, docid) => {
+        index = index_fn(docid, doc.title, index);
+        index = index_fn(docid, doc.content, index);
+    }, articles);
     
     console.log(`time: ${result_create_index.time}`);
     console.log(`index size in byte: ${calculateJsonSize(index)}`);
@@ -109,145 +111,117 @@ function countResults(results: SearchCorrectness<DocId[]>[]) : SearchCorrectness
     return count;
 }
 
-const num_keywords = 100;
+type Results = number[][];
+
+function prepareAndExecBenchmark<T extends Object>(
+    name: string,
+    articles: WikipediaArticle[],
+    keywords: string[],
+    ref_results: Results,
+    index_fn: IndexFn<T>,
+    search_fn: SearchFn<T>,
+    index: T
+) : Results {
+    console.log(`${name} SEARCH`);
+    const results = execBenchmark<T>(index_fn, search_fn, index, keywords, articles);
+    console.log(zipWith3(keywords, ref_results, results, checkResult));
+    console.log(countResults(zipWith3(keywords, ref_results, results, checkResult)));
+
+    return results;
+}
+
+
+function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[]) {
+    const num_keywords = 100;
+    console.log("initializing benchmark...");
+    console.log(`select random ${num_keywords} keywords...`);
+    const keywords = getRandomKeywords(num_keywords, wikipedia_keyword);
+    console.log("selected keywords are:");
+    console.log(keywords);    
+    
+    // article size
+    console.log("articles size: " + calculateJsonSize(wikipedia_articles));
+    
+    // linear search
+    console.log("LINEAR SEARCH");
+    const linear_index : LinearIndex = [];
+    const ref_results = execBenchmark(docToLinearIndex, generateSearchFn(searchLinear), linear_index, keywords, wikipedia_articles);
+    
+    // normal bigram
+    const bigram_index : NgramIndex = {};
+    prepareAndExecBenchmark(
+        "NORMAL BIGRAM",
+        wikipedia_articles,
+        keywords,
+        ref_results,
+        generateIndexFn(docToNgramIndex, (x) => generateNgramForIndex(2, x)),
+        generateSearchFn(searchNgram, (x) => generateNgramForSearch(2, x)),
+        bigram_index
+    );
+    
+    // normal trigram
+    const trigram_index : NgramIndex = {};
+    prepareAndExecBenchmark(
+        "NORMAL TRIGRAM",
+        wikipedia_articles,
+        keywords,
+        ref_results,
+        generateIndexFn(docToNgramIndex, (x) => generateNgramForIndex(3, x)),
+        generateSearchFn(searchNgram, (x) => generateNgramForSearch(3, x)),
+        trigram_index
+    );
+    
+    // normal quadgram
+    const quadgram_index : NgramIndex = {};
+    prepareAndExecBenchmark(
+        "NORMAL QUADGRAM",
+        wikipedia_articles,
+        keywords,
+        ref_results,
+        generateIndexFn(docToNgramIndex, (x) => generateNgramForIndex(4, x)),
+        generateSearchFn(searchNgram, (x) => generateNgramForSearch(4, x)),
+        quadgram_index
+    );
+    
+    // Trie: normal trigram
+    const trie_trigram_index : TrieIndex = {ids: [], children: {}};
+    prepareAndExecBenchmark(
+        "TRIE NORMAL TRIGRAM",
+        wikipedia_articles,
+        keywords,
+        ref_results,
+        generateIndexFn(docToTrieIndex, (x) => generateNgramForSearch(3, x)),
+        generateSearchFn(searchTrie, (x) => generateNgramForSearch(3, x)),
+        trie_trigram_index
+    );
+    
+    // Hybrid: inverted index, normal bigram
+    const hybrid_bigram_index : HybridIndex = { trie: {ids: [], children: {} }, ngram: {}, inverted: {} };
+    prepareAndExecBenchmark(
+        "HYBRID INVERTED-INDEX NORMAL-BIGRAM",
+        wikipedia_articles,
+        keywords,
+        ref_results,
+        generateIndexFn(docToHybridIndex, (x) => generateNgramForSearch(2, x)),
+        generateSearchFn(searchHybrid, (x) => generateNgramForSearch(2, x)),
+        hybrid_bigram_index
+    );
+    
+    // bloom quadgram
+    const bloom_quadgram_index : BloomIndex = {index: {}, bits: 1024*64, hashes: 10};
+    prepareAndExecBenchmark(
+        "BLOOM QUADGRAM SEARCH",
+        wikipedia_articles,
+        keywords,
+        ref_results,
+        generateIndexFn(docToBloomIndex, (x) => generateNgramForIndex(4, x)),
+        generateSearchFn(searchBloom, (x) => generateNgramForSearch(4, x)),
+        bloom_quadgram_index
+    );
+}
+
+
 console.log("JAPANESE test.");
-console.log("initializing benchmark...");
-console.log(`select random ${num_keywords} keywords...`);
-const keywords = getRandomKeywords(num_keywords, wikipedia_keyword_ja);
-console.log("selected keywords are:");
-console.log(keywords);    
-
-// article size
-console.log("articles size: " + calculateJsonSize(wikipedia_articles_ja));
-
-// linear search
-console.log("LINEAR SEARCH");
-const linear_index : LinearIndex = [];
-const ref_results = execBenchmark<LinearIndex>(docToLinearIndex, searchLinear, linear_index, keywords, wikipedia_articles_ja);
-
-// 8-bit bigram
-console.log("8BIT BIGRAM SEARCH");
-const bigram8bit_index : BigramIndex = {};
-const bigram8bit_results = execBenchmark<BigramIndex>(docToBigramIndex, searchBigram, bigram8bit_index, keywords, wikipedia_articles_ja);
-console.log(zipWith3(keywords, ref_results, bigram8bit_results, checkResult));
-console.log(countResults(zipWith3(keywords, ref_results, bigram8bit_results, checkResult)));
-
-// normal bigram
-console.log("NORMAL BIGRAM SEARCH");
-const bigram_index : NgramIndex = {};
-const bigram_fn = (text: string) => generateNgramForIndex(2, text); 
-const bigram_search_fn = (text: string) => generateNgramForSearch(2, text);
-const bigram_results = execBenchmark<NgramIndex>(
-    (docid, contents, index) => docToNgramIndex(bigram_fn, docid, contents, index),
-    (query, index) => searchNgram(bigram_search_fn, query, index),
-    bigram_index, keywords, wikipedia_articles_ja);
-console.log(zipWith3(keywords, ref_results, bigram_results, checkResult));
-console.log(countResults(zipWith3(keywords, ref_results, bigram_results, checkResult)));
-
-// normal trigram
-console.log("NORMAL TRIGRAM SEARCH");
-const trigram_index : NgramIndex = {};
-const trigram_fn = (text: string) => generateNgramForIndex(3, text); 
-const trigram_search_fn = (text: string) => generateNgramForSearch(3, text); 
-const trigram_results = execBenchmark<NgramIndex>(
-    (docid, contents, index) => docToNgramIndex(trigram_fn, docid, contents, index),
-    (query, index) => searchNgram(trigram_search_fn, query, index),
-    trigram_index, keywords, wikipedia_articles_ja);
-console.log(zipWith3(keywords, ref_results, trigram_results, checkResult));
-console.log(countResults(zipWith3(keywords, ref_results, trigram_results, checkResult)));
-
-// normal quadgram
-console.log("NORMAL QUADGRAM SEARCH");
-const quadgram_index : NgramIndex = {};
-const quadgram_fn = (text: string) => generateNgramForIndex(4, text); 
-const quadgram_search_fn = (text: string) => generateNgramForSearch(4, text); 
-const quadgram_results = execBenchmark<NgramIndex>(
-    (docid, contents, index) => docToNgramIndex(quadgram_fn, docid, contents, index),
-    (query, index) => searchNgram(quadgram_search_fn, query, index),
-    quadgram_index, keywords, wikipedia_articles_ja);
-console.log(zipWith3(keywords, ref_results, quadgram_results, checkResult));
-console.log(countResults(zipWith3(keywords, ref_results, quadgram_results, checkResult)));
-
-
-// Trie: normal trigram
-console.log("TRIE NORMAL TRIGRAM SEARCH");
-const trie_trigram_index = {ids: [], children: {}};
-const trie_trigram_results = execBenchmark<TrieIndex>(
-    (docid, contents, index) => docToTrieIndex(docid, docToWords(contents).flatMap(trigram_search_fn), index),
-    (query, index) => searchTrie(trigram_search_fn, query, index),
-    trie_trigram_index, keywords, wikipedia_articles_ja);
-console.log(zipWith3(keywords, ref_results, trie_trigram_results, checkResult));
-console.log(countResults(zipWith3(keywords, ref_results, trie_trigram_results, checkResult)));
-
-
-// Hybrid: inverted index, normal biigram
-console.log("HYBRID INVERTED-INDEX NORMAL-BIGRAM SEARCH");
-const hybrid_bigram_index : HybridIndex = { trie: {ids: [], children: {} }, ngram: {}, inverted: {} };
-
-const hybrid_bigram_results = execBenchmark<HybridIndex>(
-    (docid, contents, index) => docToHybridIndex(bigram_search_fn, docid, contents, index),
-    (query, index) => searchHybrid(bigram_search_fn, query, index),
-    hybrid_bigram_index, keywords, wikipedia_articles_ja);
-console.log(zipWith3(keywords, ref_results, hybrid_bigram_results, checkResult));
-console.log(countResults(zipWith3(keywords, ref_results, hybrid_bigram_results, checkResult)));
-
-// bloom quadgram
-console.log("BLOOM QUADGRAM SEARCH");
-const bloom_quadgram_index : BloomIndex = {index: {}, bits: 1024*64, hashes: 10};
-const bloom_quadgram_results = execBenchmark<BloomIndex>(
-    (docid, contents, index) => docToBloomIndex(quadgram_fn, docid, contents, index),
-    (query, index) => searchBloom(quadgram_search_fn, query, index),
-    bloom_quadgram_index, keywords, wikipedia_articles_ja);
-console.log(zipWith3(keywords, ref_results, bloom_quadgram_results, checkResult));
-console.log(countResults(zipWith3(keywords, ref_results, bloom_quadgram_results, checkResult)));
-console.log(bloom_quadgram_index);
-
-
-// english test
+runAll(wikipedia_articles_ja, wikipedia_keyword_ja);
 console.log("ENGLISH test.");
-console.log(`select random ${num_keywords} keywords...`);
-const en_keywords = getRandomKeywords(num_keywords, wikipedia_keyword_en);
-console.log("selected keywords are:");
-console.log(en_keywords);    
-
-// article size
-console.log("articles size: " + calculateJsonSize(wikipedia_articles_en));
-
-// linear search
-console.log("LINEAR SEARCH");
-const en_linear_index : LinearIndex = [];
-const en_ref_results = execBenchmark<LinearIndex>(docToLinearIndex, searchLinear, en_linear_index, en_keywords, wikipedia_articles_en);
-
-
-// normal trigram
-console.log("NORMAL TRIGRAM SEARCH");
-const en_trigram_index : NgramIndex = {};
-const en_trigram_results = execBenchmark<NgramIndex>(
-    (docid, contents, index) => docToNgramIndex(trigram_fn, docid, contents, index),
-    (query, index) => searchNgram(trigram_search_fn, query, index),
-    en_trigram_index, en_keywords, wikipedia_articles_en);
-console.log(zipWith3(en_keywords, en_ref_results, en_trigram_results, checkResult));
-console.log(countResults(zipWith3(en_keywords, en_ref_results, en_trigram_results, checkResult)));
-
-// normal quadgram
-console.log("NORMAL QUADGRAM SEARCH");
-const en_quadgram_index : NgramIndex = {};
-const en_quadgram_results = execBenchmark<NgramIndex>(
-    (docid, contents, index) => docToNgramIndex(quadgram_fn, docid, contents, index),
-    (query, index) => searchNgram(quadgram_search_fn, query, index),
-    en_quadgram_index, en_keywords, wikipedia_articles_en);
-console.log(zipWith3(en_keywords, en_ref_results, en_quadgram_results, checkResult));
-console.log(countResults(zipWith3(en_keywords, en_ref_results, en_quadgram_results, checkResult)));
-
-// Hybrid: inverted index, normal biigram
-console.log("HYBRID INVERTED-INDEX NORMAL-BIGRAM SEARCH");
-const en_hybrid_bigram_index : HybridIndex = { trie: {ids: [], children: {} }, ngram: {}, inverted: {} };
-
-const en_hybrid_bigram_results = execBenchmark<HybridIndex>(
-    (docid, contents, index) => docToHybridIndex(bigram_search_fn, docid, contents, index),
-    (query, index) => searchHybrid(bigram_search_fn, query, index),
-    en_hybrid_bigram_index, en_keywords, wikipedia_articles_en);
-console.log(zipWith3(en_keywords, en_ref_results, en_hybrid_bigram_results, checkResult));
-console.log(countResults(zipWith3(en_keywords, en_ref_results, en_hybrid_bigram_results, checkResult)));
-
-
+runAll(wikipedia_articles_en, wikipedia_keyword_en);

@@ -14,7 +14,7 @@ export function generateNgramForSearch(n: number, text: string): Ngram[] {
     }
 }
 
-function generateNgram(n: number, text: string): Ngram[] {
+export function generateNgram(n: number, text: string): Ngram[] {
     if(text.length === 0) throw new Error("call generateNgram with null string.");
     if(text.length < n) {
         return [];
@@ -35,27 +35,12 @@ export function docToNgrams(fn: NgramFn, doc: string[]) : Set<Ngram> {
     return uniq_grams;
 }
 
-export function docToNgramIndex(fn: NgramFn, docid: DocId, doc: string[], index: NgramIndex) : NgramIndex {
-    for (const ngram of docToNgrams(fn, doc)) {
-        index[ngram] = appendIfNotExists(docid, index[ngram]);
-    }
+export function docToNgramIndex(docid: DocId, doc: string, index: NgramIndex) : NgramIndex {
+    index[doc] = appendIfNotExists(docid, index[doc]);
     return index;
 }
 
-export function searchNgram(fn: NgramFn, query: string, index: NgramIndex) : DocId[] {
-    let result : DocId[] | null = null;
-    const words = docToWords([query]).flatMap(w => fn(w));
-    for (const word of words) {
-        const docs = index[word];
-        if(docs) {
-            if(result) {
-                result = intersect(result, docs);
-            } else {
-                result = docs;
-            }
-        } else {
-            return [];
-        }
-    }
-    return result || [];
+
+export function searchNgram(query: string, index: NgramIndex) : DocId[] {
+    return index[query] || [];
 }
