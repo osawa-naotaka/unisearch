@@ -1,4 +1,4 @@
-import type { DocId, LinearIndex, NgramIndex, TrieIndex, HybridIndex, BloomIndex, IndexFn, SearchFn } from "@src/types";
+import type { DocId, LinearIndex, NgramIndex, TrieIndex, HybridIndex, BloomIndex, IndexFn, SearchFn, InvertedIndex } from "@src/types";
 import { wikipedia_keyword_ja } from "@test/wikipedia_keyword.ja";
 import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
 import { wikipedia_keyword_en } from "@test/wikipedia_keyword.en";
@@ -7,9 +7,9 @@ import { calculateJsonSize, intersect, difference, zipWith3 } from "@src/util";
 import { docToLinearIndex, searchLinear } from "@src/linear";
 import { docToNgramIndex,  searchNgram, generate1ToNgram, generateNgram, generateNgramTrie } from "@src/ngram";
 import { docToTrieIndex, searchTrie } from "@src/trie";
-import { docToHybridIndex, searchHybrid } from "@src/hybrid";
 import { docToBloomIndex, searchBloom } from "@src/bloom";
-import { generateIndexFn, generateSearchFn } from "@src/common";
+import { generateIndexFn, generateSearchFn, generateHybridIndexFn, generateHybridSearchFn } from "@src/common";
+import { docToInvertedIndex, searchInvertedIndex } from "@src/invertedindex";
 
 type BenchmarkResult<T> = {
     time: number,
@@ -180,17 +180,23 @@ function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: Wikip
     );
     
     // Hybrid: inverted index, normal bigram
-    const hybrid_bigram_index : HybridIndex = { ngram: {}, inverted: {} };
+    const hybrid_bigram_index : HybridIndex<NgramIndex, InvertedIndex> = { ja: {}, en: {} };
     prepareAndExecBenchmark(
         "HYBRID INVERTED-INDEX NORMAL-BIGRAM",
         wikipedia_articles,
         keywords,
         ref_results,
-        generateIndexFn(docToHybridIndex, (x) => generateNgram(2, x)),
-        generateSearchFn(searchHybrid, (x) => generateNgram(2, x)),
+        generateHybridIndexFn(
+            docToNgramIndex, (x) => generateNgram(2, x),
+            docToInvertedIndex, (x) => [x],
+        ),
+        generateHybridSearchFn(
+            searchNgram, (x) => generateNgram(2, x),
+            searchInvertedIndex, (x) => [x]
+        ),
         hybrid_bigram_index
     );
-    
+
     // bloom quadgram
     const bloom_quadgram_index : BloomIndex = {index: {}, bits: 1024*64, hashes: 1};
     prepareAndExecBenchmark(
@@ -204,7 +210,7 @@ function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: Wikip
     );
 }
 
-
+console.log(wikipedia_articles_ja[3]);
 console.log("JAPANESE test.");
 runAll(wikipedia_articles_ja, wikipedia_keyword_ja);
 console.log("ENGLISH test.");
