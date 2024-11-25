@@ -179,27 +179,26 @@ console.log(zipWith3(keywords, ref_results, trie_trigram_results, checkResult));
 console.log(countResults(zipWith3(keywords, ref_results, trie_trigram_results, checkResult)));
 
 
-// Hybrid: normal trigram
-console.log("HYBRID NORMAL TRIGRAM SEARCH");
-const hybrid_trigram_index : HybridIndex = { trie: {ids: [], children: {} }, ngram: {} };
+// Hybrid: inverted index, normal biigram
+console.log("HYBRID INVERTED-INDEX NORMAL-BIGRAM SEARCH");
+const hybrid_bigram_index : HybridIndex = { trie: {ids: [], children: {} }, ngram: {}, inverted: {} };
 
-const hybrid_trigram_results = execBenchmark<HybridIndex>(
-    (docid, contents, index) => docToHybridIndex(trigram_fn, docid, contents, index),
-    (query, index) => searchHybrid(trigram_search_fn, query, index),
-    hybrid_trigram_index, keywords, wikipedia_articles_ja);
-console.log(zipWith3(keywords, ref_results, hybrid_trigram_results, checkResult));
-console.log(countResults(zipWith3(keywords, ref_results, hybrid_trigram_results, checkResult)));
+const hybrid_bigram_results = execBenchmark<HybridIndex>(
+    (docid, contents, index) => docToHybridIndex(bigram_search_fn, docid, contents, index),
+    (query, index) => searchHybrid(bigram_search_fn, query, index),
+    hybrid_bigram_index, keywords, wikipedia_articles_ja);
+console.log(zipWith3(keywords, ref_results, hybrid_bigram_results, checkResult));
+console.log(countResults(zipWith3(keywords, ref_results, hybrid_bigram_results, checkResult)));
 
 // bloom quadgram
 console.log("BLOOM QUADGRAM SEARCH");
-const bloom_quadgram_index : BloomIndex = {index: {}, bits: 1024*1024, hashes: 100};
+const bloom_quadgram_index : BloomIndex = {index: {}, bits: 1024*64, hashes: 10};
 const bloom_quadgram_results = execBenchmark<BloomIndex>(
     (docid, contents, index) => docToBloomIndex(quadgram_fn, docid, contents, index),
     (query, index) => searchBloom(quadgram_search_fn, query, index),
     bloom_quadgram_index, keywords, wikipedia_articles_ja);
 console.log(zipWith3(keywords, ref_results, bloom_quadgram_results, checkResult));
 console.log(countResults(zipWith3(keywords, ref_results, bloom_quadgram_results, checkResult)));
-console.log(calculateJsonSize(bloom_quadgram_index));
 console.log(bloom_quadgram_index);
 
 
@@ -238,5 +237,16 @@ const en_quadgram_results = execBenchmark<NgramIndex>(
     en_quadgram_index, en_keywords, wikipedia_articles_en);
 console.log(zipWith3(en_keywords, en_ref_results, en_quadgram_results, checkResult));
 console.log(countResults(zipWith3(en_keywords, en_ref_results, en_quadgram_results, checkResult)));
+
+// Hybrid: inverted index, normal biigram
+console.log("HYBRID INVERTED-INDEX NORMAL-BIGRAM SEARCH");
+const en_hybrid_bigram_index : HybridIndex = { trie: {ids: [], children: {} }, ngram: {}, inverted: {} };
+
+const en_hybrid_bigram_results = execBenchmark<HybridIndex>(
+    (docid, contents, index) => docToHybridIndex(bigram_search_fn, docid, contents, index),
+    (query, index) => searchHybrid(bigram_search_fn, query, index),
+    en_hybrid_bigram_index, en_keywords, wikipedia_articles_en);
+console.log(zipWith3(en_keywords, en_ref_results, en_hybrid_bigram_results, checkResult));
+console.log(countResults(zipWith3(en_keywords, en_ref_results, en_hybrid_bigram_results, checkResult)));
 
 
