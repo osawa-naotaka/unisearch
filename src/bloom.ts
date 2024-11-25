@@ -1,4 +1,4 @@
-import type { BloomIndex, NgramFn, DocId } from "@src/types";
+import type { BloomIndex, DocId } from "@src/types";
 import { intersect, union } from "@src/util";
 import { murmurhash2_32_gc } from "@src/murmurhash2_gc";
 

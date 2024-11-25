@@ -1,6 +1,5 @@
-import type { DocId, TrieNode, TrieIndex, NgramFn } from "@src/types";
-import { firstLetter, restString, union, intersect } from "@src/util";
-import { docToWords } from "@src/preprocess";
+import type { DocId, TrieNode, TrieIndex } from "@src/types";
+import { firstLetter, restString, union } from "@src/util";
 
 function createTrieNode(token: string, ids: DocId[], node: TrieNode): TrieNode {
     if (token.length === 0) {
@@ -44,6 +43,3 @@ export function docToTrieIndex(docid: DocId, doc: string, index: TrieIndex) : Tr
 export function searchTrie(query: string, index: TrieIndex) : DocId[] {
     return searchTrieNode(query, index);
 }
-
-
-

@@ -1,16 +1,14 @@
-import type { DocId, LinearIndex, BigramIndex, NgramIndex, TrieIndex, HybridIndex, BloomIndex, IndexFn, SearchFn, PreprocessFn } from "@src/types";
+import type { DocId, LinearIndex, NgramIndex, TrieIndex, HybridIndex, BloomIndex, IndexFn, SearchFn } from "@src/types";
 import { wikipedia_keyword_ja } from "@test/wikipedia_keyword.ja";
 import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
 import { wikipedia_keyword_en } from "@test/wikipedia_keyword.en";
 import { wikipedia_articles_en } from "@test/wikipedia_articles.en";
 import { calculateJsonSize, intersect, difference, zipWith3 } from "@src/util";
 import { docToLinearIndex, searchLinear } from "@src/linear";
-import { docToBigramIndex, searchBigram } from "@src/bigram";
-import { docToNgramIndex,  searchNgram, generateNgramForIndex, generateNgramForSearch, generateNgram } from "@src/ngram";
+import { docToNgramIndex,  searchNgram, generateNgramForIndex, generateNgramForSearch } from "@src/ngram";
 import { docToTrieIndex, searchTrie } from "@src/trie";
 import { docToHybridIndex, searchHybrid } from "@src/hybrid";
 import { docToBloomIndex, searchBloom } from "@src/bloom";
-import { docToWords } from "@src/preprocess";
 import { generateIndexFn, generateSearchFn } from "@src/common";
 
 type BenchmarkResult<T> = {
@@ -196,7 +194,7 @@ function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: Wikip
     );
     
     // Hybrid: inverted index, normal bigram
-    const hybrid_bigram_index : HybridIndex = { trie: {ids: [], children: {} }, ngram: {}, inverted: {} };
+    const hybrid_bigram_index : HybridIndex = { ngram: {}, inverted: {} };
     prepareAndExecBenchmark(
         "HYBRID INVERTED-INDEX NORMAL-BIGRAM",
         wikipedia_articles,
