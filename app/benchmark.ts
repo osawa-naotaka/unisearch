@@ -5,7 +5,7 @@ import { wikipedia_keyword_en } from "@test/wikipedia_keyword.en";
 import { wikipedia_articles_en } from "@test/wikipedia_articles.en";
 import { calculateJsonSize, intersect, difference, zipWith3 } from "@src/util";
 import { docToLinearIndex, searchLinear } from "@src/linear";
-import { docToNgramIndex,  searchNgram, generateNgramForIndex, generateNgramForSearch } from "@src/ngram";
+import { docToNgramIndex,  searchNgram, generate1ToNgram, generateNgram, generateNgramTrie } from "@src/ngram";
 import { docToTrieIndex, searchTrie } from "@src/trie";
 import { docToHybridIndex, searchHybrid } from "@src/hybrid";
 import { docToBloomIndex, searchBloom } from "@src/bloom";
@@ -14,22 +14,6 @@ import { generateIndexFn, generateSearchFn } from "@src/common";
 type BenchmarkResult<T> = {
     time: number,
     results: T[]
-}
-
-function benchmark<T, R>(fn: (args: T, idx: number) => R, args: T[]) : BenchmarkResult<R> {
-    const start = performance.now();
-    const results = args.map((arg, idx) => fn(arg, idx));
-    const end = performance.now();
-    return {
-        time: end - start,
-        results: results
-    };
-}
-
-let rand_state = 1;   // fixed seed
-function rand() : number {
-    rand_state = (rand_state * 48271) & 0x7fffffff; // positive value
-    return rand_state;
 }
 
 type WikipediaKeyword = {
@@ -42,15 +26,27 @@ type WikipediaArticle = {
     content: string
 }
 
-function getRandomKeywords(num: number, keyword_array: WikipediaKeyword[]) : string[] {
-    const keywords = [];
-    const num_entry = keyword_array.length;
-    for(let i = 0; i < num; i++) {
-        const entry = keyword_array[rand() % num_entry];
-        const num_keywords = entry.keywords.length;
-        keywords.push(entry.keywords[rand() % num_keywords])
-    }
-    return keywords;
+type SearchCorrectness<T> = {
+    keyword: string,
+    match: T,
+    false_positive: T,
+    false_negative: T
+}
+
+type Results = number[][];
+
+function benchmark<T, R>(fn: (args: T, idx: number) => R, args: T[]) : BenchmarkResult<R> {
+    const start = performance.now();
+    const results = args.map((arg, idx) => fn(arg, idx));
+    const end = performance.now();
+    return {
+        time: end - start,
+        results: results
+    };
+}
+
+function getAllKeywords(keyword_array: WikipediaKeyword[]): string[] {
+    return keyword_array.flatMap(k => k.keywords);
 }
 
 function execBenchmark<T extends Object> (
@@ -78,13 +74,6 @@ function execBenchmark<T extends Object> (
     return result_search.results;
 }
 
-type SearchCorrectness<T> = {
-    keyword: string,
-    match: T,
-    false_positive: T,
-    false_negative: T
-}
-
 function checkResult(keyword: string, correct: DocId[], test: DocId[]) : SearchCorrectness<DocId[]> {
     return {
         keyword: keyword,
@@ -109,8 +98,6 @@ function countResults(results: SearchCorrectness<DocId[]>[]) : SearchCorrectness
     return count;
 }
 
-type Results = number[][];
-
 function prepareAndExecBenchmark<T extends Object>(
     name: string,
     articles: WikipediaArticle[],
@@ -130,12 +117,11 @@ function prepareAndExecBenchmark<T extends Object>(
 
 
 function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[]) {
-    const num_keywords = 100;
     console.log("initializing benchmark...");
-    console.log(`select random ${num_keywords} keywords...`);
-    const keywords = getRandomKeywords(num_keywords, wikipedia_keyword);
+    const keywords = getAllKeywords(wikipedia_keyword);
+    console.log(`select all ${keywords.length} keywords...`);
     console.log("selected keywords are:");
-    console.log(keywords);    
+    console.log(keywords);
     
     // article size
     console.log("articles size: " + calculateJsonSize(wikipedia_articles));
@@ -144,7 +130,7 @@ function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: Wikip
     console.log("LINEAR SEARCH");
     const linear_index : LinearIndex = [];
     const ref_results = execBenchmark(docToLinearIndex, generateSearchFn(searchLinear), linear_index, keywords, wikipedia_articles);
-    
+
     // normal bigram
     const bigram_index : NgramIndex = {};
     prepareAndExecBenchmark(
@@ -152,8 +138,8 @@ function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: Wikip
         wikipedia_articles,
         keywords,
         ref_results,
-        generateIndexFn(docToNgramIndex, (x) => generateNgramForIndex(2, x)),
-        generateSearchFn(searchNgram, (x) => generateNgramForSearch(2, x)),
+        generateIndexFn(docToNgramIndex, (x) => generate1ToNgram(2, x)),
+        generateSearchFn(searchNgram, (x) => generateNgram(2, x)),
         bigram_index
     );
     
@@ -164,8 +150,8 @@ function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: Wikip
         wikipedia_articles,
         keywords,
         ref_results,
-        generateIndexFn(docToNgramIndex, (x) => generateNgramForIndex(3, x)),
-        generateSearchFn(searchNgram, (x) => generateNgramForSearch(3, x)),
+        generateIndexFn(docToNgramIndex, (x) => generate1ToNgram(3, x)),
+        generateSearchFn(searchNgram, (x) => generateNgram(3, x)),
         trigram_index
     );
     
@@ -176,8 +162,8 @@ function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: Wikip
         wikipedia_articles,
         keywords,
         ref_results,
-        generateIndexFn(docToNgramIndex, (x) => generateNgramForIndex(4, x)),
-        generateSearchFn(searchNgram, (x) => generateNgramForSearch(4, x)),
+        generateIndexFn(docToNgramIndex, (x) => generate1ToNgram(4, x)),
+        generateSearchFn(searchNgram, (x) => generateNgram(4, x)),
         quadgram_index
     );
     
@@ -188,8 +174,8 @@ function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: Wikip
         wikipedia_articles,
         keywords,
         ref_results,
-        generateIndexFn(docToTrieIndex, (x) => generateNgramForSearch(3, x)),
-        generateSearchFn(searchTrie, (x) => generateNgramForSearch(3, x)),
+        generateIndexFn(docToTrieIndex, (x) => generateNgramTrie(3, x)),
+        generateSearchFn(searchTrie, (x) => generateNgram(3, x)),
         trie_trigram_index
     );
     
@@ -200,20 +186,20 @@ function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: Wikip
         wikipedia_articles,
         keywords,
         ref_results,
-        generateIndexFn(docToHybridIndex, (x) => generateNgramForSearch(2, x)),
-        generateSearchFn(searchHybrid, (x) => generateNgramForSearch(2, x)),
+        generateIndexFn(docToHybridIndex, (x) => generateNgram(2, x)),
+        generateSearchFn(searchHybrid, (x) => generateNgram(2, x)),
         hybrid_bigram_index
     );
     
     // bloom quadgram
     const bloom_quadgram_index : BloomIndex = {index: {}, bits: 1024*64, hashes: 1};
     prepareAndExecBenchmark(
-        "BLOOM QUADGRAM SEARCH",
+        "BLOOM QUADGRAM",
         wikipedia_articles,
         keywords,
         ref_results,
-        generateIndexFn(docToBloomIndex, (x) => generateNgramForIndex(4, x)),
-        generateSearchFn(searchBloom, (x) => generateNgramForSearch(4, x)),
+        generateIndexFn(docToBloomIndex, (x) => generate1ToNgram(4, x)),
+        generateSearchFn(searchBloom, (x) => generateNgram(4, x)),
         bloom_quadgram_index
     );
 }
