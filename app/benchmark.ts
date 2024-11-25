@@ -7,9 +7,10 @@ import { calculateJsonSize, intersect, difference, zipWith3 } from "@src/util";
 import { docToLinearIndex, searchLinear } from "@src/linear";
 import { docToBigramIndex, searchBigram } from "@src/bigram";
 import { docToNgramIndex,  searchNgram, generateNgramForIndex, generateNgramForSearch } from "@src/ngram";
-import { invertedIndexLikeToTrieIndex, searchTrie } from "@src/trie";
+import { docToTrieIndex, searchTrie } from "@src/trie";
 import { docToHybridIndex, searchHybrid } from "@src/hybrid";
 import { docToBloomIndex, searchBloom } from "@src/bloom";
+import { docToWords } from "@src/preprocess";
 
 type BenchmarkResult<T> = {
     time: number,
@@ -170,9 +171,9 @@ console.log(countResults(zipWith3(keywords, ref_results, quadgram_results, check
 
 // Trie: normal trigram
 console.log("TRIE NORMAL TRIGRAM SEARCH");
-const trie_trigram_index = invertedIndexLikeToTrieIndex(trigram_index);
+const trie_trigram_index = {ids: [], children: {}};
 const trie_trigram_results = execBenchmark<TrieIndex>(
-    () => trie_trigram_index,
+    (docid, contents, index) => docToTrieIndex(docid, docToWords(contents).flatMap(trigram_search_fn), index),
     (query, index) => searchTrie(trigram_search_fn, query, index),
     trie_trigram_index, keywords, wikipedia_articles_ja);
 console.log(zipWith3(keywords, ref_results, trie_trigram_results, checkResult));

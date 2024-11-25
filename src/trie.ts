@@ -1,4 +1,4 @@
-import type { DocId, TrieNode, TrieIndex, InvertedIndexBase, NgramFn } from "@src/types";
+import type { DocId, TrieNode, TrieIndex, NgramFn } from "@src/types";
 import { firstLetter, restString, union, intersect } from "@src/util";
 import { docToWords } from "@src/preprocess";
 
@@ -22,19 +22,6 @@ function createTrieNode(token: string, ids: DocId[], node: TrieNode): TrieNode {
 
     node.children[first_letter] = createTrieNode(restString(token), ids, new_child);
     return node;
-}
-
-export function invertedIndexLikeToTrieIndex<T extends keyof any>(iidx: InvertedIndexBase<T>) : TrieIndex {
-    const index : TrieIndex = {
-        ids: [],
-        children: {}
-    };
-
-    for(const [token, docids] of Object.entries(iidx)) {
-        createTrieNode(token, docids, index);
-    }
-    
-    return index;
 }
 
 export function docToTrieIndex(docid: DocId, doc: string[], index: TrieIndex) : TrieIndex {

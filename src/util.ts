@@ -22,7 +22,7 @@ export function difference<T>(a: T[], b: T[]): T[] {
     return a.filter(e => !b.includes(e));
 }
 
-export function addLikeSet<T>(item: T, array?: T[]) : T[] {
+export function appendIfNotExists<T>(item: T, array?: T[]) : T[] {
     return array ? Array.from(new Set([...array, item])) : [item];
 }
 

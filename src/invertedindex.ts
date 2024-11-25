@@ -1,11 +1,11 @@
 import { DocId } from "@src/types";
 import { docToWords } from "@src/preprocess";
-import { addLikeSet, intersect } from "@src/util";
+import { appendIfNotExists, intersect } from "@src/util";
 import type { InvertedIndex } from "@src/types";
 
 export function docToInvertedIndex(docid: DocId, doc: string[], index: InvertedIndex) : InvertedIndex {
     for (const word of docToWords(doc)) {
-        index[word] = addLikeSet(docid, index[word])
+        index[word] = appendIfNotExists(docid, index[word])
     }
 
     return index;

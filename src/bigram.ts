@@ -1,5 +1,5 @@
 import { docToWords } from "@src/preprocess";
-import { intersect, addLikeSet } from "@src/util";
+import { intersect, appendIfNotExists } from "@src/util";
 import type { DocId, Bigram, BigramIndex } from "@src/types";
 
 function hashChar(char: string) : number {
@@ -40,7 +40,7 @@ export function docToBigrams(doc: string[]) : Set<Bigram> {
 
 export function docToBigramIndex(docid: DocId, doc: string[], index: BigramIndex) : BigramIndex {
     for (const bigram of docToBigrams(doc)) {
-        index[bigram] = addLikeSet(docid, index[bigram]);
+        index[bigram] = appendIfNotExists(docid, index[bigram]);
     }
     return index;
 }

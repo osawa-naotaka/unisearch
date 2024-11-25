@@ -1,6 +1,6 @@
 import type { DocId, Ngram, NgramIndex, NgramFn } from "@src/types";
 import { docToWords } from "@src/preprocess";
-import { addLikeSet, intersect } from "@src/util";
+import { appendIfNotExists, intersect } from "@src/util";
 
 export function generateNgramForIndex(n: number, text: string): Ngram[] {
     return [...Array(n).keys()].flatMap(x => generateNgram(x + 1, text));
@@ -37,7 +37,7 @@ export function docToNgrams(fn: NgramFn, doc: string[]) : Set<Ngram> {
 
 export function docToNgramIndex(fn: NgramFn, docid: DocId, doc: string[], index: NgramIndex) : NgramIndex {
     for (const ngram of docToNgrams(fn, doc)) {
-        index[ngram] = addLikeSet(docid, index[ngram]);
+        index[ngram] = appendIfNotExists(docid, index[ngram]);
     }
     return index;
 }
