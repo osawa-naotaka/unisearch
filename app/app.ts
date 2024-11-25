@@ -9,6 +9,6 @@ console.log("articles size: " + calculateJsonSize(wikipedia_articles_ja))
 // linear search
 console.log("LINEAR SEARCH");
 const linear_index : LinearIndex = [];
-wikipedia_articles_ja.map((x, idx) => docToLinearIndex(idx, [x.title, x.content], linear_index));
+wikipedia_articles_ja.map((x, idx) => docToLinearIndex(idx, x.content, linear_index));
 const ref_result = searchLinear("ナイター", linear_index);
 console.log(ref_result);

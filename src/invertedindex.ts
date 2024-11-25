@@ -1,6 +1,5 @@
-import { DocId } from "@src/types";
+import type { DocId, InvertedIndex } from "@src/types";
 import { appendIfNotExists } from "@src/util";
-import type { InvertedIndex } from "@src/types";
 
 export function docToInvertedIndex(docid: DocId, doc: string, index: InvertedIndex) : InvertedIndex {
     index[doc] = appendIfNotExists(docid, index[doc]);

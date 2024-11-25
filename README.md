@@ -1,5 +1,5 @@
-# ts-template
- typescript develop environment with vite.
+# uniserch.js
+a lightweight search engine for static site.
 
 ```
 npm install

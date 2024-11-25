@@ -99,6 +99,7 @@ const nonSpaceSeparatedRanges: UnicodeRange[] = [
   [0x0D80, 0x0DFF], // Sinhala
 ];
 
+// @ts-ignore
 const delimiter: UnicodeRange[] = [
     [0x0000, 0x002F],  // 制御文字・約物・記号
     [0x003A, 0x0040],  // 約物・記号

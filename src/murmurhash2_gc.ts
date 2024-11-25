@@ -39,8 +39,12 @@ export function murmurhash2_32_gc(seed: number, str: string) : number {
   }
   
   switch (l) {
+  // @ts-ignore
   case 3: h ^= (s[i + 2] & 0xff) << 16;
+  // FALLS THROUGH to 2
+  // @ts-ignore
   case 2: h ^= (s[i + 1] & 0xff) << 8;
+  // FALLS THROUGH to 1
   case 1: h ^= (s[i] & 0xff);
           h = (((h & 0xffff) * 0x5bd1e995) + ((((h >>> 16) * 0x5bd1e995) & 0xffff) << 16));
   }
