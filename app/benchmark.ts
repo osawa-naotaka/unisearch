@@ -206,7 +206,7 @@ function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: Wikip
     );
     
     // bloom quadgram
-    const bloom_quadgram_index : BloomIndex = {index: {}, bits: 1024*64, hashes: 10};
+    const bloom_quadgram_index : BloomIndex = {index: {}, bits: 1024*64, hashes: 1};
     prepareAndExecBenchmark(
         "BLOOM QUADGRAM SEARCH",
         wikipedia_articles,
