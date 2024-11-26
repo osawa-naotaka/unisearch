@@ -232,31 +232,7 @@ async function runBloom() {
     }    
 }
 
-// console.log("JAPANESE test.");
-// await runAll(wikipedia_articles_ja, wikipedia_keyword_ja);
-// console.log("ENGLISH test.");
-// await runAll(wikipedia_articles_en, wikipedia_keyword_en);
-
-console.log("LINEAR SEARCH");
-const linear_index : LinearIndex = [];
-const ref_results = await execBenchmark(docToLinearIndex, generateSearchFn(searchLinear), linear_index, getAllKeywords(wikipedia_keyword_ja), wikipedia_articles_ja);
-
-    // Hybrid: inverted index, normal bigram
-    const hybrid_bigram_index : HybridIndex<NgramIndex, InvertedIndex> = { ja: {}, en: {} };
-    await prepareAndExecBenchmark(
-        "HYBRID INVERTED-INDEX NORMAL-BIGRAM",
-        wikipedia_articles_ja,
-        ["シリーズ"],
-        ref_results,
-        generateHybridIndexFn(
-            docToNgramIndex, (x) => generateNgram(2, x),
-            docToInvertedIndex, (x) => [x],
-        ),
-        generateHybridSearchFn(
-            searchNgram, (x) => generateNgram(2, x),
-            searchInvertedIndex, (x) => [x]
-        ),
-        hybrid_bigram_index
-    );
-
-
+console.log("JAPANESE test.");
+await runAll(wikipedia_articles_ja, wikipedia_keyword_ja);
+console.log("ENGLISH test.");
+await runAll(wikipedia_articles_en, wikipedia_keyword_en);

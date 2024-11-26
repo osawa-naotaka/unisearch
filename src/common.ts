@@ -45,9 +45,12 @@ export function generateHybridSearchFn<T, U>(
     return (query: string, index: HybridIndex<T, U>) =>
         foldl1Array(
             docToWords([query]).map((word) =>
-                isNonSpaceSeparatedChar(word[0])
-                    ? searchjapre(word).flatMap((w) => searchjafn(w, index.ja))
-                    : searchenpre(word).flatMap((w) => searchenfn(w, index.en)),
+                foldl1Array(
+                    isNonSpaceSeparatedChar(word[0])
+                        ? searchjapre(word).map((w) => searchjafn(w, index.ja))
+                        : searchenpre(word).map((w) => searchenfn(w, index.en)),
+                    intersect,
+                ),
             ),
             intersect,
         );
