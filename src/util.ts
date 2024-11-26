@@ -61,7 +61,7 @@ export function foldl1<T>(array: T[], fn: (acc: T, cur: T) => T): T {
     return acc;
 }
 
-export function accumulateArray<T>(array: T[][], fn: (acc: T[], cur: T[]) => T[]) : T[] {
+export function foldl1Array<T>(array: T[][], fn: (acc: T[], cur: T[]) => T[]) : T[] {
     if(array.length == 0) {
         return [];
     } else if(array.length == 1) {

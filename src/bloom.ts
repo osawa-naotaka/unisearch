@@ -1,5 +1,5 @@
 import type { BloomIndex, DocId } from "@src/types";
-import { accumulateArray, intersect, union } from "@src/util";
+import { foldl1Array, intersect, union } from "@src/util";
 import { murmurhash3_32_gc } from "@src/murmurhash3_gc";
 
 function addBloom(docid: DocId, text: string, index: BloomIndex) {
@@ -7,7 +7,7 @@ function addBloom(docid: DocId, text: string, index: BloomIndex) {
 }
 
 function isExists(query: string, index: BloomIndex) : DocId[] {
-    return accumulateArray([...Array(index.hashes).keys()].map(id => index.index[murmurhash3_32_gc(query, id + 1) % index.bits] || []), intersect);
+    return foldl1Array([...Array(index.hashes).keys()].map(id => index.index[murmurhash3_32_gc(query, id + 1) % index.bits] || []), intersect);
 }
 
 export function docToBloomIndex(docid: DocId, doc: string, index: BloomIndex) {

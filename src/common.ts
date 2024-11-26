@@ -1,6 +1,6 @@
 import type { DocId, HybridIndex, IndexFn, PreprocessFn, SearchFn, HybridIndexFn, HybridSearchFn } from "@src/types";
 import { docToWords } from "@src/preprocess";
-import { accumulateArray, intersect, isNonSpaceSeparatedChar } from "@src/util";
+import { foldl1Array, intersect, isNonSpaceSeparatedChar } from "@src/util";
 
 export function generateIndexFn<T>(idxfn: IndexFn<T>, pre: PreprocessFn = x => [x]) : IndexFn<T> {
     return (docid: DocId, doc: string, index: T) =>
@@ -9,7 +9,7 @@ export function generateIndexFn<T>(idxfn: IndexFn<T>, pre: PreprocessFn = x => [
 
 export function generateSearchFn<T>(search: SearchFn<T>, pre: PreprocessFn = x => [x]) : SearchFn<T> {
     return (query: string, index: T) =>
-        accumulateArray(docToWords([query]).flatMap(w => pre(w)).map(w => search(w, index)), intersect);
+        foldl1Array(docToWords([query]).flatMap(w => pre(w)).map(w => search(w, index)), intersect);
 }
 
 
@@ -33,7 +33,7 @@ export function generateHybridSearchFn<T, U>(
     searchenfn: SearchFn<U>, searchenpre: PreprocessFn
 ) : HybridSearchFn<T, U> {
     return (query: string, index: HybridIndex<T, U>) =>
-        accumulateArray(docToWords([query]).map(word =>
+        foldl1Array(docToWords([query]).map(word =>
             isNonSpaceSeparatedChar(word[0]) ?
                 searchjapre(word).flatMap(w => searchjafn(w, index.ja)) :
                 searchenpre(word).flatMap(w => searchenfn(w, index.en))
