@@ -5,6 +5,6 @@ export function docToInvertedIndex(docid: DocId, doc: string, index: InvertedInd
     index[doc] = appendIfNotExists(docid, index[doc]);
 }
 
-export function searchInvertedIndex(query: string, index: InvertedIndex) : DocId[] {
+export function searchInvertedIndex(query: string, index: InvertedIndex): DocId[] {
     return index[query] || [];
 }

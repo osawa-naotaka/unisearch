@@ -1,4 +1,4 @@
-import type { DocId, TrieNode, TrieIndex } from "@src/types";
+import type { DocId, TrieIndex, TrieNode } from "@src/types";
 import { firstLetter, restString, union } from "@src/util";
 
 function createTrieNode(token: string, ids: DocId[], node: TrieNode): TrieNode {
@@ -35,11 +35,11 @@ function searchTrieNode(token: string, node: TrieIndex): number[] {
     return searchTrieNode(restString(token), child);
 }
 
-export function docToTrieIndex(docid: DocId, doc: string, index: TrieIndex) : TrieIndex {
+export function docToTrieIndex(docid: DocId, doc: string, index: TrieIndex): TrieIndex {
     createTrieNode(doc, [docid], index);
     return index;
 }
 
-export function searchTrie(query: string, index: TrieIndex) : DocId[] {
+export function searchTrie(query: string, index: TrieIndex): DocId[] {
     return searchTrieNode(query, index);
 }
