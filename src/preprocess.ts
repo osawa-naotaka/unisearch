@@ -1,51 +1,31 @@
 import { compose } from "@src/util";
 
-// 全角文字 → 半角文字
-const fullWidthToHalfWidth = (input: string) =>
-    input.replace(/[\uFF01-\uFF5E]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
-         .replace(/\u3000/g, ' '); // 全角スペース → 半角スペース
+// 日本語正規化
+const normalizeJapanese = (input: string) =>
+    input.replace(/[\uFF66-\uFF9D]/gu, c => String.fromCharCode(c.charCodeAt(0) + 0x60)) // 半角カナ → 全角カナ
+         .replace(/[\uFF01-\uFF5E]/gu, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)) // 全角文字 → 半角文字
+         .replace(/\uFF9E/gu, '゛') // 半角濁点 → 全角濁点
+         .replace(/\uFF9F/gu, '゜') // 半角半濁点 → 全角半濁点
+         .replace(/[ー]/gu, 'ー') // 既存の長音符の正規化
+         .replace(/\u3000/gu, ' '); // 全角スペース → 半角スペース
 
 // Unicode正規化 (濁点・半濁点の分離)
 const normalizeUnicode = (input: string) =>
     input.normalize('NFKC');
 
-
-// 半角カタカナ → 全角カタカナ変換
-const halfWidthKanaToFullWidthKana = (input: string) =>
-    input.replace(/[\uFF65-\uFF9F]/g, c => {
-      const map: { [key: string]: string } = {
-        '｡': '。', '､': '、', '･': '・', 'ｦ': 'ヲ',
-        'ｧ': 'ァ', 'ｨ': 'ィ', 'ｩ': 'ゥ', 'ｪ': 'ェ', 'ｫ': 'ォ',
-        'ｱ': 'ア', 'ｲ': 'イ', 'ｳ': 'ウ', 'ｴ': 'エ', 'ｵ': 'オ',
-        'ｶ': 'カ', 'ｷ': 'キ', 'ｸ': 'ク', 'ｹ': 'ケ', 'ｺ': 'コ',
-        'ｻ': 'サ', 'ｼ': 'シ', 'ｽ': 'ス', 'ｾ': 'セ', 'ｿ': 'ソ',
-        'ﾀ': 'タ', 'ﾁ': 'チ', 'ﾂ': 'ツ', 'ﾃ': 'テ', 'ﾄ': 'ト',
-        'ﾅ': 'ナ', 'ﾆ': 'ニ', 'ﾇ': 'ヌ', 'ﾈ': 'ネ', 'ﾉ': 'ノ',
-        'ﾊ': 'ハ', 'ﾋ': 'ヒ', 'ﾌ': 'フ', 'ﾍ': 'ヘ', 'ﾎ': 'ホ',
-        'ﾏ': 'マ', 'ﾐ': 'ミ', 'ﾑ': 'ム', 'ﾒ': 'メ', 'ﾓ': 'モ',
-        'ｬ': 'ャ', 'ｭ': 'ュ', 'ｮ': 'ョ', 'ｯ': 'ッ', 'ｰ': 'ー',
-        'ﾔ': 'ヤ', 'ﾕ': 'ユ', 'ﾖ': 'ヨ', 'ﾗ': 'ラ', 'ﾘ': 'リ',
-        'ﾙ': 'ル', 'ﾚ': 'レ', 'ﾛ': 'ロ', 'ﾜ': 'ワ', 'ﾝ': 'ン',
-        'ﾞ': '゛', 'ﾟ': '゜'
-      };
-      return map[c] || c;
-    });
-
 // アルファベットの大文字化
 const toUpperCase = (input: string) => 
     input.toLocaleUpperCase("en-US");
 
-
 export const normalizeText = (text: string) =>
     compose(
-        fullWidthToHalfWidth,
+        normalizeJapanese,
         normalizeUnicode,
-        halfWidthKanaToFullWidthKana,
         toUpperCase
     )(text);
 
 function splitByDelimiter(text: string[]): string[] {
-    const separators = /[\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007F\u0080-\u00BF\u02B0-\u02FF\u2000-\u206F\u3000-\u3004\u3007-\u303F\uFF00-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\uFFE0-\uFFFF]/;
+    const separators = /[\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007F\u0080-\u00BF\u02B0-\u02FF\u2000-\u206F\u3000-\u3004\u3007-\u303F\uFF00-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\uFFE0-\uFFFF]/u;
     return text.flatMap(t => t.split(separators).filter(Boolean));
 }
 
