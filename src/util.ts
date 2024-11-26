@@ -60,13 +60,7 @@ export function foldl1<T>(array: T[], fn: (acc: T, cur: T) => T): T {
 }
 
 export function foldl1Array<T>(array: T[][], fn: (acc: T[], cur: T[]) => T[]): T[] {
-    if (array.length == 0) {
-        return [];
-    } else if (array.length == 1) {
-        return array[0];
-    } else {
-        return foldl1(array, fn);
-    }
+    return array.length === 0 ? [] : array.length === 1 ? array[0] : foldl1(array, fn);
 }
 
 const encoder = new TextEncoder();
@@ -75,9 +69,6 @@ export function toUtf8(text: string) {
 }
 
 export class MSet<T> extends Set<T> {
-    constructor(init?: T[]) {
-        super(init);
-    }
     map<R>(fn: (value: T, index: number, array: T[]) => R): R[] {
         return Array.from(this).map(fn);
     }
@@ -162,7 +153,7 @@ export function isNonSpaceSeparatedChar(char: string): boolean {
  * @param record - サイズを計算したいRecord
  * @returns バイトサイズ
  */
-export function calculateJsonSize(obj: Object): number {
+export function calculateJsonSize<T>(obj: T): number {
     const jstr = JSON.stringify(obj);
     if (jstr === undefined) {
         throw new Error("Failed to convert record to JSON string");
@@ -170,7 +161,7 @@ export function calculateJsonSize(obj: Object): number {
     return new Blob([jstr]).size;
 }
 
-export async function calculateGzipedJsonSize(obj: Object): Promise<number> {
+export async function calculateGzipedJsonSize<T>(obj: T): Promise<number> {
     const jstr = JSON.stringify(obj);
     if (jstr === undefined) {
         throw new Error("Failed to convert record to JSON string");

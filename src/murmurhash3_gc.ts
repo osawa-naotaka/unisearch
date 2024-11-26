@@ -12,20 +12,20 @@
  */
 
 const encoder = new TextEncoder();
-function toUtf8(text: string) {
+function toUtf8(text: string): Uint8Array {
     return encoder.encode(text);
 }
 
 export function murmurhash3_32_gc(str: string, seed: number) {
-    var key, remainder, bytes, h1, h1b, c1, c2, k1, i;
-
-    key = toUtf8(str);
-    remainder = key.length & 3; // key.length % 4
-    bytes = key.length - remainder;
-    h1 = seed;
-    c1 = 0xcc9e2d51;
-    c2 = 0x1b873593;
-    i = 0;
+    const key = toUtf8(str);
+    const remainder = key.length & 3; // key.length % 4
+    const bytes = key.length - remainder;
+    const c1 = 0xcc9e2d51;
+    const c2 = 0x1b873593;
+    let h1 = seed;
+    let h1b: number;
+    let k1: number;
+    let i = 0;
 
     while (i < bytes) {
         k1 = (key[i] & 0xff) | ((key[++i] & 0xff) << 8) | ((key[++i] & 0xff) << 16) | ((key[++i] & 0xff) << 24);

@@ -15,7 +15,7 @@ export function generateNgramTrie(n: number, text: string): Ngram[] {
         for (let i = text.length - n; i < text.length - 1; i++) {
             grams.push(text.slice(i + 1));
         }
-    } else if (text.length != 1) {
+    } else if (text.length !== 1) {
         for (let i = 1; i < text.length; i++) {
             grams.push(text.slice(i));
         }
@@ -27,13 +27,13 @@ function generateNgramInternal(n: number, text: string): Ngram[] {
     if (text.length === 0) throw new Error("call generateNgram with null string.");
     if (text.length < n) {
         return [];
-    } else {
-        const grams: Ngram[] = [];
-        for (let i = 0; i <= text.length - n; i++) {
-            grams.push(text.slice(i, i + n));
-        }
-        return grams;
     }
+
+    const grams: Ngram[] = [];
+    for (let i = 0; i <= text.length - n; i++) {
+        grams.push(text.slice(i, i + n));
+    }
+    return grams;
 }
 
 export function docToNgramIndex(docid: DocId, doc: string, index: NgramIndex) {

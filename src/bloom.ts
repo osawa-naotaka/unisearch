@@ -5,7 +5,9 @@ import { foldl1Array, intersect, union } from "@src/util";
 function addBloom(docid: DocId, text: string, index: BloomIndex) {
     [...Array(index.hashes).keys()]
         .map((id) => murmurhash3_32_gc(text, id + 1) % index.bits)
-        .map((pos) => (index.index[pos] = union([docid], index.index[pos])));
+        .map((pos) => {
+            index.index[pos] = union([docid], index.index[pos]);
+        });
 }
 
 function isExists(query: string, index: BloomIndex): DocId[] {
