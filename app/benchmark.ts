@@ -59,8 +59,8 @@ function execBenchmark<T extends Object> (
     console.log("creating index...");
 
     const result_create_index = benchmark((doc, docid) => {
-        index = index_fn(docid, doc.title, index);
-        index = index_fn(docid, doc.content, index);
+        index_fn(docid, doc.title, index);
+        index_fn(docid, doc.content, index);
     }, articles);
     
     console.log(`time: ${result_create_index.time}`);

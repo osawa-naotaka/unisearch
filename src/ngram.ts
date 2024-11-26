@@ -6,13 +6,8 @@ export function generate1ToNgram(n: number, text: string): Ngram[] {
 }
 
 export function generateNgram(n: number, text: string): Ngram[] {
-    if(text.length < n) {
-        return [text];
-    } else {
-        return generateNgramInternal(n, text);
-    }
+    return text.length < n ? [text] : generateNgramInternal(n, text);
 }
-
 
 export function generateNgramTrie(n: number, text: string): Ngram[] {
     const grams = generateNgram(n, text);
@@ -42,9 +37,8 @@ function generateNgramInternal(n: number, text: string): Ngram[] {
     }
 }
 
-export function docToNgramIndex(docid: DocId, doc: string, index: NgramIndex) : NgramIndex {
+export function docToNgramIndex(docid: DocId, doc: string, index: NgramIndex) {
     index[doc] = appendIfNotExists(docid, index[doc]);
-    return index;
 }
 
 export function searchNgram(query: string, index: NgramIndex) : DocId[] {

@@ -25,7 +25,7 @@ export type BloomIndex = {
     hashes: number
 };
 
-export type IndexFn<T> = (docid: DocId, doc: string, index: T) => T;
+export type IndexFn<T> = (docid: DocId, doc: string, index: T) => void;
 export type SearchFn<T> = (query: string, index: T) => DocId[];
 export type PreprocessFn = (text: string) => string[];
 
@@ -34,5 +34,5 @@ export type HybridIndex<T, U> = {
     en: U
 }
 
-export type HybridIndexFn<T, U> = (docid: DocId, doc: string, index: HybridIndex<T, U>) => HybridIndex<T, U>;
+export type HybridIndexFn<T, U> = (docid: DocId, doc: string, index: HybridIndex<T, U>) => void;
 export type HybridSearchFn<T, U> = (query: string, index: HybridIndex<T, U>) => DocId[];

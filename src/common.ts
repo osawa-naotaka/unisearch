@@ -2,18 +2,12 @@ import type { DocId, HybridIndex, IndexFn, PreprocessFn, SearchFn, HybridIndexFn
 import { docToWords } from "@src/preprocess";
 import { accumulateArray, intersect, isNonSpaceSeparatedChar } from "@src/util";
 
-export function generateIndexFn<T>(idxfn: IndexFn<T>, pre?: PreprocessFn) : IndexFn<T> {
-    pre = pre || ((x) => [x]);
-    return (docid: DocId, doc: string, index: T) : T => {
-        for(const word of docToWords([doc]).flatMap(w => pre(w))) {
-            index = idxfn(docid, word, index);
-        }
-        return index;
-    };
+export function generateIndexFn<T>(idxfn: IndexFn<T>, pre: PreprocessFn = x => [x]) : IndexFn<T> {
+    return (docid: DocId, doc: string, index: T) =>
+        docToWords([doc]).flatMap(w => pre(w)).map(word => idxfn(docid, word, index));;
 }
 
-export function generateSearchFn<T>(search: SearchFn<T>, pre?: PreprocessFn) : SearchFn<T> {
-    pre = pre || ((x) => [x]);
+export function generateSearchFn<T>(search: SearchFn<T>, pre: PreprocessFn = x => [x]) : SearchFn<T> {
     return (query: string, index: T) =>
         accumulateArray(docToWords([query]).flatMap(w => pre(w)).map(w => search(w, index)), intersect);
 }
@@ -23,19 +17,14 @@ export function generateHybridIndexFn<T, U>(
     idxjafn: IndexFn<T>, idxjapre: PreprocessFn,
     idxenfn: IndexFn<U>, idxenpre: PreprocessFn,
 ) : HybridIndexFn<T, U> {
-    return (docid: DocId, doc: string, index: HybridIndex<T, U>) : HybridIndex<T, U> => {
+    return (docid: DocId, doc: string, index: HybridIndex<T, U>) => {
         for(const word of docToWords([doc])) {
             if(isNonSpaceSeparatedChar(word[0])) {
-                for(const w of idxjapre(word)) {
-                    index.ja = idxjafn(docid, w, index.ja);
-                }
+                idxjapre(word).map(w => idxjafn(docid, w, index.ja));
             } else {
-                for(const w of idxenpre(word)) {
-                    index.en = idxenfn(docid, w, index.en);
-                }
+                idxenpre(word).map(w => idxenfn(docid, w, index.en));
             }
         }
-       return index;
     };
 }
 
