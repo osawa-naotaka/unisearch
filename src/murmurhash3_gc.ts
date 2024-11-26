@@ -45,9 +45,11 @@ export function murmurhash3_32_gc(str: string, seed: number) {
 
     switch (remainder) {
         // @ts-ignore
+        // biome-ignore lint: expricit fall through
         case 3:
             k1 ^= (key[i + 2] & 0xff) << 16;
         // @ts-ignore
+        // biome-ignore lint: expricit fall through
         case 2:
             k1 ^= (key[i + 1] & 0xff) << 8;
         case 1:

@@ -20,6 +20,7 @@ export const normalizeText = (text: string) => compose(normalizeJapanese, normal
 
 function splitByDelimiter(text: string[]): string[] {
     const separators =
+        // biome-ignore lint: bug of biome?
         /[\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007F\u0080-\u00BF\u02B0-\u02FF\u2000-\u206F\u3000-\u3004\u3007-\u303F\uFF00-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\uFFE0-\uFFFF]/u;
     return text.flatMap((t) => t.split(separators).filter(Boolean));
 }

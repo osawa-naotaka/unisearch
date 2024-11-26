@@ -3,7 +3,7 @@ export type Bigram = number;
 export type Ngram = string;
 export type Token = string;
 
-export type InvertedIndexBase<T extends keyof any> = Record<T, DocId[] | undefined>;
+export type InvertedIndexBase<T extends string | number> = Record<T, DocId[] | undefined>;
 export type InvertedIndex = InvertedIndexBase<Token>;
 export type BigramIndex = InvertedIndexBase<Bigram>;
 export type NgramIndex = InvertedIndexBase<Ngram>;
