@@ -1,5 +1,5 @@
 import type { BloomIndex, DocId } from "@src/types";
-import { intersect, union } from "@src/util";
+import { accumulateArray, intersect, union } from "@src/util";
 import { murmurhash2_32_gc } from "@src/murmurhash2_gc";
 
 function addBloom(docid: DocId, text: string, index: BloomIndex) : BloomIndex {
@@ -11,22 +11,7 @@ function addBloom(docid: DocId, text: string, index: BloomIndex) : BloomIndex {
 }
 
 function isExists(query: string, index: BloomIndex) : DocId[] {
-    let result : DocId[] | null = null;
-
-    for(let hashid = 0; hashid < index.hashes; hashid++) {
-        const bitpos = murmurhash2_32_gc(hashid, query) % index.bits;
-        const docs = index.index[bitpos];
-        if(docs) {
-            if(result) {
-                result = intersect(result, docs);
-            } else {
-                result = docs;
-            }
-        } else {
-            return [];
-        }
-    }
-    return result || [];
+    return accumulateArray([...Array(index.hashes).keys()].map(id => index.index[murmurhash2_32_gc(id, query) % index.bits] || []), intersect);
 }
 
 export function docToBloomIndex(docid: DocId, doc: string, index: BloomIndex) : BloomIndex {

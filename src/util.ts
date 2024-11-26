@@ -48,6 +48,28 @@ export function zipWith3<T, U, V, R>(a: T[], b: U[], c: V[], combine: (a: T, b: 
     return result;
 }
 
+export function foldl1<T>(array: T[], fn: (acc: T, cur: T) => T): T {
+    if (array.length === 0) {
+        throw new Error("foldl1 cannot be called on an empty array.");
+    }
+
+    let acc = array[0];
+    for (let i = 1; i < array.length; i++) {
+        acc = fn(acc, array[i]);
+    }
+
+    return acc;
+}
+
+export function accumulateArray<T>(array: T[][], fn: (acc: T[], cur: T[]) => T[]) : T[] {
+    if(array.length == 0) {
+        return [];
+    } else if(array.length == 1) {
+        return array[0];
+    } else {
+        return foldl1(array, fn);
+    }
+}
 
 const encoder = new TextEncoder();
 export function toUtf8(text: string) {

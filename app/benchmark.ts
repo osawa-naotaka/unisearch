@@ -210,7 +210,6 @@ function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: Wikip
     );
 }
 
-console.log(wikipedia_articles_ja[3]);
 console.log("JAPANESE test.");
 runAll(wikipedia_articles_ja, wikipedia_keyword_ja);
 console.log("ENGLISH test.");
