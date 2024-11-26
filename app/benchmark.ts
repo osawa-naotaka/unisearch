@@ -64,7 +64,7 @@ function execBenchmark<T extends Object> (
     }, articles);
     
     console.log(`time: ${result_create_index.time}`);
-    console.log(`index size in byte: ${calculateJsonSize(index)}`);
+    console.log(`index size in byte: ${calculateJsonSize(index)} byte`);
 
     console.log("begin benchmark...");
     const result_search = benchmark((key) =>

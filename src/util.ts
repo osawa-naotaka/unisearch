@@ -166,12 +166,19 @@ export function isNonSpaceSeparatedChar(char: string): boolean {
  * @param record - サイズを計算したいRecord
  * @returns バイトサイズ
  */
-export function calculateJsonSize(record: Object): number {
-    // RecordをJSON文字列化
-    const jsonString = JSON.stringify(record);
-    if (jsonString === undefined) {
+export function calculateJsonSize(obj: Object): number {
+    const jstr = JSON.stringify(obj);
+    if (jstr === undefined) {
         throw new Error("Failed to convert record to JSON string");
     }
-    // 文字列をバイト単位で計算
-    return new Blob([jsonString]).size;
+    return new Blob([jstr]).size;
+}
+
+export async function calculateGzipedJsonSize(obj: Object): Promise<number> {
+    const jstr = JSON.stringify(obj);
+    if (jstr === undefined) {
+        throw new Error("Failed to convert record to JSON string");
+    }
+    const cstrm = new Blob([jstr]).stream().pipeThrough(new CompressionStream('gzip'));
+    return (await new Response(cstrm).arrayBuffer()).byteLength;
 }
