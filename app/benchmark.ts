@@ -3,7 +3,7 @@ import { wikipedia_keyword_ja } from "@test/wikipedia_keyword.ja";
 import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
 import { wikipedia_keyword_en } from "@test/wikipedia_keyword.en";
 import { wikipedia_articles_en } from "@test/wikipedia_articles.en";
-import { calculateJsonSize, intersect, difference, zipWith3 } from "@src/util";
+import { calculateJsonSize, intersect, difference, zipWith3, calculateGzipedJsonSize } from "@src/util";
 import { docToLinearIndex, searchLinear } from "@src/linear";
 import { docToNgramIndex,  searchNgram, generate1ToNgram, generateNgram, generateNgramTrie } from "@src/ngram";
 import { docToTrieIndex, searchTrie } from "@src/trie";
@@ -49,12 +49,12 @@ function getAllKeywords(keyword_array: WikipediaKeyword[]): string[] {
     return keyword_array.flatMap(k => k.keywords);
 }
 
-function execBenchmark<T extends Object> (
+async function execBenchmark<T extends Object> (
     index_fn: IndexFn<T>,
     search_fn: SearchFn<T>,
     index: T,
     keywords: string[],
-    articles: WikipediaArticle[]) : DocId[][] {
+    articles: WikipediaArticle[]) : Promise<DocId[][]> {
 
     console.log("creating index...");
 
@@ -65,6 +65,7 @@ function execBenchmark<T extends Object> (
     
     console.log(`time: ${result_create_index.time}`);
     console.log(`index size in byte: ${calculateJsonSize(index)} byte`);
+    console.log(`gziped index size in byte: ${await calculateGzipedJsonSize(index)} byte`);
 
     console.log("begin benchmark...");
     const result_search = benchmark((key) =>
@@ -98,7 +99,7 @@ function countResults(results: SearchCorrectness<DocId[]>[]) : SearchCorrectness
     return count;
 }
 
-function prepareAndExecBenchmark<T extends Object>(
+async function prepareAndExecBenchmark<T extends Object>(
     name: string,
     articles: WikipediaArticle[],
     keywords: string[],
@@ -106,9 +107,9 @@ function prepareAndExecBenchmark<T extends Object>(
     index_fn: IndexFn<T>,
     search_fn: SearchFn<T>,
     index: T
-) : Results {
+) : Promise<Results> {
     console.log(`${name} SEARCH`);
-    const results = execBenchmark<T>(index_fn, search_fn, index, keywords, articles);
+    const results = await execBenchmark<T>(index_fn, search_fn, index, keywords, articles);
     console.log(zipWith3(keywords, ref_results, results, checkResult));
     console.log(countResults(zipWith3(keywords, ref_results, results, checkResult)));
 
@@ -116,7 +117,7 @@ function prepareAndExecBenchmark<T extends Object>(
 }
 
 
-function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[]) {
+async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[]) {
     console.log("initializing benchmark...");
     const keywords = getAllKeywords(wikipedia_keyword);
     console.log(`select all ${keywords.length} keywords...`);
@@ -129,11 +130,11 @@ function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: Wikip
     // linear search
     console.log("LINEAR SEARCH");
     const linear_index : LinearIndex = [];
-    const ref_results = execBenchmark(docToLinearIndex, generateSearchFn(searchLinear), linear_index, keywords, wikipedia_articles);
+    const ref_results = await execBenchmark(docToLinearIndex, generateSearchFn(searchLinear), linear_index, keywords, wikipedia_articles);
 
     // normal bigram
     const bigram_index : NgramIndex = {};
-    prepareAndExecBenchmark(
+    await prepareAndExecBenchmark(
         "NORMAL BIGRAM",
         wikipedia_articles,
         keywords,
@@ -145,7 +146,7 @@ function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: Wikip
     
     // normal trigram
     const trigram_index : NgramIndex = {};
-    prepareAndExecBenchmark(
+    await prepareAndExecBenchmark(
         "NORMAL TRIGRAM",
         wikipedia_articles,
         keywords,
@@ -157,7 +158,7 @@ function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: Wikip
     
     // normal quadgram
     const quadgram_index : NgramIndex = {};
-    prepareAndExecBenchmark(
+    await prepareAndExecBenchmark(
         "NORMAL QUADGRAM",
         wikipedia_articles,
         keywords,
@@ -169,7 +170,7 @@ function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: Wikip
     
     // Trie: normal trigram
     const trie_trigram_index : TrieIndex = {ids: [], children: {}};
-    prepareAndExecBenchmark(
+    await prepareAndExecBenchmark(
         "TRIE NORMAL TRIGRAM",
         wikipedia_articles,
         keywords,
@@ -181,7 +182,7 @@ function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: Wikip
     
     // Hybrid: inverted index, normal bigram
     const hybrid_bigram_index : HybridIndex<NgramIndex, InvertedIndex> = { ja: {}, en: {} };
-    prepareAndExecBenchmark(
+    await prepareAndExecBenchmark(
         "HYBRID INVERTED-INDEX NORMAL-BIGRAM",
         wikipedia_articles,
         keywords,
@@ -199,7 +200,7 @@ function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: Wikip
 
     // bloom quadgram
     const bloom_quadgram_index : BloomIndex = {index: {}, bits: 1024*64, hashes: 1};
-    prepareAndExecBenchmark(
+    await prepareAndExecBenchmark(
         "BLOOM QUADGRAM",
         wikipedia_articles,
         keywords,
@@ -211,6 +212,6 @@ function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: Wikip
 }
 
 console.log("JAPANESE test.");
-runAll(wikipedia_articles_ja, wikipedia_keyword_ja);
+await runAll(wikipedia_articles_ja, wikipedia_keyword_ja);
 console.log("ENGLISH test.");
-runAll(wikipedia_articles_en, wikipedia_keyword_en);
+await runAll(wikipedia_articles_en, wikipedia_keyword_en);
