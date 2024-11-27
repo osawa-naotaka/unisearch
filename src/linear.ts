@@ -1,5 +1,5 @@
+import type { DocId } from "@src/common";
 import { normalizeText } from "@src/preprocess";
-import type { DocId } from "@src/types";
 
 export type LinearIndex = { docid: number; content: string[] }[];
 

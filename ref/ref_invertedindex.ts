@@ -1,4 +1,4 @@
-import type { DocId, Token } from "@src/types";
+import type { DocId, Token } from "@src/common";
 import { appendIfNotExists, foldl1Array, union } from "@src/util";
 
 

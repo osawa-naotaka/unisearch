@@ -1,5 +1,5 @@
+import type { DocId, Token } from "@src/common";
 import { murmurhash3_32_gc } from "@src/murmurhash3_gc";
-import type { DocId, Token } from "@src/types";
 import { foldl1Array, intersect, rangeArray, union } from "@src/util";
 
 export type BloomIndex = {

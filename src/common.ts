@@ -1,6 +1,19 @@
 import { docToWords } from "@src/preprocess";
-import type { DocId, HybridIndex, HybridIndexFn, HybridSearchFn, IndexFn, PreprocessFn, SearchFn } from "@src/types";
 import { foldl1Array, intersect, isNonSpaceSeparatedChar } from "@src/util";
+
+export type DocId = number;
+export type Token = string;
+
+export type HybridIndex<T, U> = {
+    ja: T;
+    en: U;
+};
+
+export type IndexFn<T> = (docid: DocId, token: Token, index: T) => void;
+export type SearchFn<T> = (query: Token, index: T) => DocId[];
+export type PreprocessFn = (text: string) => Token[];
+export type HybridIndexFn<T, U> = (docid: DocId, text: Token, index: HybridIndex<T, U>) => void;
+export type HybridSearchFn<T, U> = (query: Token, index: HybridIndex<T, U>) => DocId[];
 
 export function generateIndexFn<T>(idxfn: IndexFn<T>, pre: PreprocessFn = (x) => [x]): IndexFn<T> {
     return (docid: DocId, text: string, index: T) =>

@@ -1,5 +1,5 @@
 import { compose } from "@src/util";
-import type { Token } from "src/types";
+import type { Token } from "src/common";
 
 // 日本語正規化
 const normalizeJapanese = (input: string) =>

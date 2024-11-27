@@ -1,7 +1,6 @@
-import type { DocId, HybridIndex, IndexFn, SearchFn } from "@src/types";
+import type { DocId, IndexFn, SearchFn, HybridIndex } from "@src/common";
 import type { LinearIndex } from "@src/linear";
 import type { InvertedIndex } from "@src/invertedindex";
-import type { NgramIndex } from "@src/ngram";
 import type { TrieIndex } from "@src/trie";
 import type { BloomIndex } from "@src/bloom";
 import { wikipedia_keyword_ja } from "@test/wikipedia_keyword.ja";
@@ -10,11 +9,11 @@ import { wikipedia_keyword_en } from "@test/wikipedia_keyword.en";
 import { wikipedia_articles_en } from "@test/wikipedia_articles.en";
 import { calculateJsonSize, intersect, difference, zipWith3, calculateGzipedJsonSize } from "@src/util";
 import { addToLinearIndex, searchLinear } from "@src/linear";
-import { addToNgramIndex,  searchNgram, generate1ToNgram, generateNgram, generateNgramTrie } from "@src/ngram";
+import { generate1ToNgram, generateNgram, generateNgramTrie } from "@src/ngram";
 import { addToTrieIndex, searchTrie } from "@src/trie";
 import { addToBloomIndex, searchBloom } from "@src/bloom";
 import { generateIndexFn, generateSearchFn, generateHybridIndexFn, generateHybridSearchFn } from "@src/common";
-import { addToInvertedIndex, searchAllInvertedIndex } from "@src/invertedindex";
+import { addToInvertedIndex, searchInvertedIndex } from "@src/invertedindex";
 
 type BenchmarkResult<T> = {
     time: number,
@@ -138,38 +137,38 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     const ref_results = await execBenchmark(addToLinearIndex, generateSearchFn(searchLinear), linear_index, keywords, wikipedia_articles);
 
     // normal bigram
-    const bigram_index : NgramIndex = {};
+    const bigram_index : InvertedIndex = {};
     await prepareAndExecBenchmark(
         "NORMAL BIGRAM",
         wikipedia_articles,
         keywords,
         ref_results,
-        generateIndexFn(addToNgramIndex, (x) => generate1ToNgram(2, x)),
-        generateSearchFn(searchNgram, (x) => generateNgram(2, x)),
+        generateIndexFn(addToInvertedIndex, (x) => generate1ToNgram(2, x)),
+        generateSearchFn(searchInvertedIndex, (x) => generateNgram(2, x)),
         bigram_index
     );
     
     // normal trigram
-    const trigram_index : NgramIndex = {};
+    const trigram_index : InvertedIndex = {};
     await prepareAndExecBenchmark(
         "NORMAL TRIGRAM",
         wikipedia_articles,
         keywords,
         ref_results,
-        generateIndexFn(addToNgramIndex, (x) => generate1ToNgram(3, x)),
-        generateSearchFn(searchNgram, (x) => generateNgram(3, x)),
+        generateIndexFn(addToInvertedIndex, (x) => generate1ToNgram(3, x)),
+        generateSearchFn(searchInvertedIndex, (x) => generateNgram(3, x)),
         trigram_index
     );
     
     // normal quadgram
-    const quadgram_index : NgramIndex = {};
+    const quadgram_index : InvertedIndex = {};
     await prepareAndExecBenchmark(
         "NORMAL QUADGRAM",
         wikipedia_articles,
         keywords,
         ref_results,
-        generateIndexFn(addToNgramIndex, (x) => generate1ToNgram(4, x)),
-        generateSearchFn(searchNgram, (x) => generateNgram(4, x)),
+        generateIndexFn(addToInvertedIndex, (x) => generate1ToNgram(4, x)),
+        generateSearchFn(searchInvertedIndex, (x) => generateNgram(4, x)),
         quadgram_index
     );
     
@@ -186,19 +185,19 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     );
     
     // Hybrid: inverted index, normal bigram
-    const hybrid_bigram_index : HybridIndex<NgramIndex, InvertedIndex> = { ja: {}, en: {} };
+    const hybrid_bigram_index : HybridIndex<InvertedIndex, InvertedIndex> = { ja: {}, en: {} };
     await prepareAndExecBenchmark(
         "HYBRID INVERTED-INDEX NORMAL-BIGRAM",
         wikipedia_articles,
         keywords,
         ref_results,
         generateHybridIndexFn(
-            addToNgramIndex, (x) => generateNgram(2, x),
+            addToInvertedIndex, (x) => generateNgram(2, x),
             addToInvertedIndex, (x) => [x],
         ),
         generateHybridSearchFn(
-            searchNgram, (x) => generateNgram(2, x),
-            searchAllInvertedIndex, (x) => [x]
+            searchInvertedIndex, (x) => generateNgram(2, x),
+            searchInvertedIndex, (x) => [x]
         ),
         hybrid_bigram_index
     );
@@ -216,10 +215,11 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     );
 }
 
-async function runBloom() {
+async function runBloom(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[]) {
     console.log("LINEAR SEARCH");
     const linear_index : LinearIndex = [];
-    const ref_results = await execBenchmark(addToLinearIndex, generateSearchFn(searchLinear), linear_index, getAllKeywords(wikipedia_keyword_ja), wikipedia_articles_ja);
+    const keywords = getAllKeywords(wikipedia_keyword);
+    const ref_results = await execBenchmark(addToLinearIndex, generateSearchFn(searchLinear), linear_index, keywords, wikipedia_articles);
     
     async function bloomSim(bits: number, hashes: number, articles: WikipediaArticle[], keywords: string[], ) {
         const bloom_index : BloomIndex = {index: {}, bits: bits, hashes: hashes};
@@ -232,7 +232,7 @@ async function runBloom() {
     
     for(let hashes = 1; hashes < 4; hashes++) {
         for(let bits = 1024; bits < 512 * 1024; bits = bits * 2) {
-            await bloomSim(bits, hashes, wikipedia_articles_ja, getAllKeywords(wikipedia_keyword_ja));
+            await bloomSim(bits, hashes, wikipedia_articles, keywords);
         }
     }    
 }

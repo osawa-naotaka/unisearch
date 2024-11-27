@@ -1,4 +1,4 @@
-import type { DocId, Token } from "@src/types";
+import type { DocId, Token } from "@src/common";
 import { firstLetter, restString, union } from "@src/util";
 
 type TrieNode = {
