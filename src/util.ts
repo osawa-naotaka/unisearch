@@ -63,6 +63,10 @@ export function foldl1Array<T>(array: T[][], fn: (acc: T[], cur: T[]) => T[]): T
     return array.length === 0 ? [] : array.length === 1 ? array[0] : foldl1(array, fn);
 }
 
+export function rangeArray(n: number): number[] {
+    return [...Array(n).keys()];
+}
+
 const encoder = new TextEncoder();
 export function toUtf8(text: string) {
     return encoder.encode(text);

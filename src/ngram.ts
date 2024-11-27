@@ -1,8 +1,8 @@
 import type { DocId, Ngram, NgramIndex } from "@src/types";
-import { appendIfNotExists } from "@src/util";
+import { appendIfNotExists, rangeArray } from "@src/util";
 
 export function generate1ToNgram(n: number, text: string): Ngram[] {
-    return [...Array(n).keys()].flatMap((x) => generateNgramInternal(x + 1, text));
+    return rangeArray(n).flatMap((x) => generateNgramInternal(x + 1, text));
 }
 
 export function generateNgram(n: number, text: string): Ngram[] {

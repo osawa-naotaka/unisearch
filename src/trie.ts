@@ -35,9 +35,8 @@ function searchTrieNode(token: string, node: TrieIndex): number[] {
     return searchTrieNode(restString(token), child);
 }
 
-export function docToTrieIndex(docid: DocId, doc: string, index: TrieIndex): TrieIndex {
+export function docToTrieIndex(docid: DocId, doc: string, index: TrieIndex){
     createTrieNode(doc, [docid], index);
-    return index;
 }
 
 export function searchTrie(query: string, index: TrieIndex): DocId[] {
