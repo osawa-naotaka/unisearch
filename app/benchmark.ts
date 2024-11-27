@@ -218,17 +218,18 @@ async function runBloom(run_hashes: number, run_bits: [number, number], wikipedi
         );
     }
     
-    for(let hashes = 1; hashes < run_hashes; hashes++) {
+    for(let hashes = 2; hashes <= run_hashes; hashes++) {
         for(let bits = run_bits[0]; bits < run_bits[1]; bits = bits * 2) {
             await bloomSim(bits, hashes, wikipedia_articles, keywords);
         }
     }    
 }
 
+const num_articles = 10;
 console.log("JAPANESE benchmark.");
-await runAll(wikipedia_articles_ja, wikipedia_keyword_ja);
+await runAll(wikipedia_articles_ja.slice(0, num_articles), wikipedia_keyword_ja);
 console.log("ENGLISH benchmark.");
-await runAll(wikipedia_articles_en, wikipedia_keyword_en);
+await runAll(wikipedia_articles_en.slice(0, num_articles), wikipedia_keyword_en);
 console.log("JAPANESE bloom benchmark.");
 // hashes: 2, bits: 1024 * 128 is suitable
-await runBloom(3, [1024, 512 * 1024], wikipedia_articles_ja, wikipedia_keyword_ja);
+await runBloom(3, [1024, 512 * 1024], wikipedia_articles_ja.slice(0, num_articles), wikipedia_keyword_ja);
