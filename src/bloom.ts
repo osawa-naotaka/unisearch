@@ -1,8 +1,14 @@
 import { murmurhash3_32_gc } from "@src/murmurhash3_gc";
-import type { BloomIndex, DocId } from "@src/types";
-import { foldl1Array, intersect, union, rangeArray } from "@src/util";
+import type { DocId, Token } from "@src/types";
+import { foldl1Array, intersect, rangeArray, union } from "@src/util";
 
-function addBloom(docid: DocId, text: string, index: BloomIndex) {
+export type BloomIndex = {
+    index: Record<number, number[]>;
+    bits: number;
+    hashes: number;
+};
+
+function addBloom(docid: DocId, text: Token, index: BloomIndex) {
     rangeArray(index.hashes)
         .map((id) => murmurhash3_32_gc(text, id + 1) % index.bits)
         .map((pos) => {
@@ -10,17 +16,17 @@ function addBloom(docid: DocId, text: string, index: BloomIndex) {
         });
 }
 
-function isExists(query: string, index: BloomIndex): DocId[] {
+function isExists(query: Token, index: BloomIndex): DocId[] {
     return foldl1Array(
         rangeArray(index.hashes).map((id) => index.index[murmurhash3_32_gc(query, id + 1) % index.bits] || []),
         intersect,
     );
 }
 
-export function docToBloomIndex(docid: DocId, doc: string, index: BloomIndex) {
-    addBloom(docid, doc, index);
+export function addToBloomIndex(docid: DocId, text: Token, index: BloomIndex) {
+    addBloom(docid, text, index);
 }
 
-export function searchBloom(query: string, index: BloomIndex): DocId[] {
+export function searchBloom(query: Token, index: BloomIndex): DocId[] {
     return isExists(query, index);
 }

@@ -26,9 +26,10 @@
         "paths": {
             "@src/*": ["src/*.ts"],
             "@app/*": ["app/*"],
+            "@ref/*": ["ref/*"],
             "@test/*": ["test/*"]
         }
     },
-    "include": ["src", "app", "test"],
+    "include": ["src", "ref", "app", "test"],
     "exclude": ["dist"]
 }

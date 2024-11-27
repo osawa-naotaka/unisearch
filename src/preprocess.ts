@@ -1,4 +1,5 @@
 import { compose } from "@src/util";
+import type { Token } from "src/types";
 
 // 日本語正規化
 const normalizeJapanese = (input: string) =>
@@ -35,7 +36,7 @@ function splitByNonSpaceSeparatedChar(text: string[]): string[] {
 
 export const tokenizeTexts = (text: string[]) => compose(splitByDelimiter, splitByNonSpaceSeparatedChar)(text);
 
-export function docToWords(doc: string[]): string[] {
+export function docToWords(doc: string[]): Token[] {
     const normalized = doc.map(normalizeText);
     const tokenized = tokenizeTexts(normalized);
 

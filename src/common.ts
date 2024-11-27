@@ -3,8 +3,8 @@ import type { DocId, HybridIndex, HybridIndexFn, HybridSearchFn, IndexFn, Prepro
 import { foldl1Array, intersect, isNonSpaceSeparatedChar } from "@src/util";
 
 export function generateIndexFn<T>(idxfn: IndexFn<T>, pre: PreprocessFn = (x) => [x]): IndexFn<T> {
-    return (docid: DocId, doc: string, index: T) =>
-        docToWords([doc])
+    return (docid: DocId, text: string, index: T) =>
+        docToWords([text])
             .flatMap((w) => pre(w))
             .map((word) => idxfn(docid, word, index));
 }
@@ -25,8 +25,8 @@ export function generateHybridIndexFn<T, U>(
     idxenfn: IndexFn<U>,
     idxenpre: PreprocessFn,
 ): HybridIndexFn<T, U> {
-    return (docid: DocId, doc: string, index: HybridIndex<T, U>) => {
-        for (const word of docToWords([doc])) {
+    return (docid: DocId, text: string, index: HybridIndex<T, U>) => {
+        for (const word of docToWords([text])) {
             if (isNonSpaceSeparatedChar(word[0])) {
                 idxjapre(word).map((w) => idxjafn(docid, w, index.ja));
             } else {

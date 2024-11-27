@@ -1,7 +1,14 @@
-import type { DocId, TrieIndex, TrieNode } from "@src/types";
+import type { DocId, Token } from "@src/types";
 import { firstLetter, restString, union } from "@src/util";
 
-function createTrieNode(token: string, ids: DocId[], node: TrieNode): TrieNode {
+type TrieNode = {
+    ids: DocId[];
+    children: Record<string, TrieNode>;
+};
+
+export type TrieIndex = TrieNode;
+
+function createTrieNode(token: Token, ids: DocId[], node: TrieNode): TrieNode {
     if (token.length === 0) {
         return node;
     }
@@ -23,7 +30,7 @@ function createTrieNode(token: string, ids: DocId[], node: TrieNode): TrieNode {
     return node;
 }
 
-function searchTrieNode(token: string, node: TrieIndex): number[] {
+function searchTrieNode(token: Token, node: TrieIndex): number[] {
     if (token.length === 0) {
         return node.ids;
     }
@@ -35,10 +42,10 @@ function searchTrieNode(token: string, node: TrieIndex): number[] {
     return searchTrieNode(restString(token), child);
 }
 
-export function docToTrieIndex(docid: DocId, doc: string, index: TrieIndex){
-    createTrieNode(doc, [docid], index);
+export function addToTrieIndex(docid: DocId, text: Token, index: TrieIndex) {
+    createTrieNode(text, [docid], index);
 }
 
-export function searchTrie(query: string, index: TrieIndex): DocId[] {
+export function searchTrie(query: Token, index: TrieIndex): DocId[] {
     return searchTrieNode(query, index);
 }

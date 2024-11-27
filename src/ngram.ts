@@ -1,5 +1,8 @@
-import type { DocId, Ngram, NgramIndex } from "@src/types";
+import type { DocId, Token } from "@src/types";
 import { appendIfNotExists, rangeArray } from "@src/util";
+
+export type Ngram = string;
+export type NgramIndex = Record<Token, DocId[]>;
 
 export function generate1ToNgram(n: number, text: string): Ngram[] {
     return rangeArray(n).flatMap((x) => generateNgramInternal(x + 1, text));
@@ -36,10 +39,10 @@ function generateNgramInternal(n: number, text: string): Ngram[] {
     return grams;
 }
 
-export function docToNgramIndex(docid: DocId, doc: string, index: NgramIndex) {
-    index[doc] = appendIfNotExists(docid, index[doc]);
+export function addToNgramIndex(docid: DocId, token: Token, index: NgramIndex) {
+    index[token] = appendIfNotExists(docid, index[token]);
 }
 
-export function searchNgram(query: string, index: NgramIndex): DocId[] {
+export function searchNgram(query: Token, index: NgramIndex): DocId[] {
     return index[query] || [];
 }

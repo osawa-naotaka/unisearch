@@ -1,11 +1,13 @@
 import { normalizeText } from "@src/preprocess";
-import type { DocId, LinearIndex } from "@src/types";
+import type { DocId } from "@src/types";
 
-export function docToLinearIndex(docid: DocId, doc: string, index: LinearIndex) {
+export type LinearIndex = { docid: number; content: string[] }[];
+
+export function addToLinearIndex(docid: DocId, text: string, index: LinearIndex) {
     if (index[docid]) {
-        index[docid].content.push(normalizeText(doc));
+        index[docid].content.push(normalizeText(text));
     } else {
-        index[docid] = { docid: docid, content: [normalizeText(doc)] };
+        index[docid] = { docid: docid, content: [normalizeText(text)] };
     }
 }
 
