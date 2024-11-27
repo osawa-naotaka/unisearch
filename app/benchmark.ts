@@ -201,21 +201,9 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         ),
         hybrid_bigram_index
     );
-
-    // bloom quadgram
-    const bloom_quadgram_index : BloomIndex = {index: {}, bits: 1024*128, hashes: 2};
-    await prepareAndExecBenchmark(
-        "BLOOM QUADGRAM",
-        wikipedia_articles,
-        keywords,
-        ref_results,
-        generateIndexFn(addToBloomIndex, (x) => generate1ToNgram(4, x)),
-        generateSearchFn(searchBloom, (x) => generateNgram(4, x)),
-        bloom_quadgram_index
-    );
 }
 
-async function runBloom(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[]) {
+async function runBloom(run_hashes: number, run_bits: [number, number], wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[]) {
     console.log("LINEAR SEARCH");
     const linear_index : LinearIndex = [];
     const keywords = getAllKeywords(wikipedia_keyword);
@@ -230,14 +218,17 @@ async function runBloom(wikipedia_articles: WikipediaArticle[], wikipedia_keywor
         );
     }
     
-    for(let hashes = 1; hashes < 4; hashes++) {
-        for(let bits = 1024; bits < 512 * 1024; bits = bits * 2) {
+    for(let hashes = 1; hashes < run_hashes; hashes++) {
+        for(let bits = run_bits[0]; bits < run_bits[1]; bits = bits * 2) {
             await bloomSim(bits, hashes, wikipedia_articles, keywords);
         }
     }    
 }
 
-console.log("JAPANESE test.");
+console.log("JAPANESE benchmark.");
 await runAll(wikipedia_articles_ja, wikipedia_keyword_ja);
-console.log("ENGLISH test.");
+console.log("ENGLISH benchmark.");
 await runAll(wikipedia_articles_en, wikipedia_keyword_en);
+console.log("JAPANESE bloom benchmark.");
+// hashes: 2, bits: 1024 * 128 is suitable
+await runBloom(3, [1024, 512 * 1024], wikipedia_articles_ja, wikipedia_keyword_ja);
