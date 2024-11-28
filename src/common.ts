@@ -18,7 +18,7 @@ export type HybridIndex<T, U> = {
 
 export type IndexFn<T> = (ref: Reference, token: Token, index: T) => void;
 export type SearchFn<T> = (query: Token, index: T) => Reference[];
-export type PreprocessFn = (text: string) => Token[];
+export type PreprocessFn = (token: Token) => Token[];
 export type HybridIndexFn<T, U> = (ref: Reference, text: Token, index: HybridIndex<T, U>) => void;
 export type HybridSearchFn<T, U> = (query: Token, index: HybridIndex<T, U>) => Reference[];
 

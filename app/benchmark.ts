@@ -7,7 +7,7 @@ import { wikipedia_keyword_ja } from "@test/wikipedia_keyword.ja";
 import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
 import { wikipedia_keyword_en } from "@test/wikipedia_keyword.en";
 import { wikipedia_articles_en } from "@test/wikipedia_articles.en";
-import { calculateJsonSize, calculateGzipedJsonSize } from "@src/util";
+import { calculateJsonSize, calculateGzipedJsonSize, zipWith, foldl, intersect, difference } from "@src/util";
 import { addToLinearIndex, searchLinear } from "@src/linear";
 import { generate1ToNgram, generateNgram, generateNgramTrie } from "@src/ngram";
 import { addToTrieIndex, searchTrie } from "@src/trie";
@@ -86,31 +86,28 @@ async function execBenchmark<T> (
 }
 
 function checkResult(correct: Result[], test: Result[]): SearchCorrectness<Reference[]>[] {
-    const ret: SearchCorrectness<Reference[]>[] = [];
-
-    for(let i = 0; i < test.length; i++) {
-        ret.push({
-            keyword: correct[i].keyword,
-            match: correct[i].refs.filter((x) => test[i].refs.filter((y) => y.docid == x.docid).length !== 0),
-            false_positive: test[i].refs.filter((x) => correct[i].refs.filter((y) => y.docid == x.docid).length === 0),
-            false_negative: correct[i].refs.filter((x) => test[i].refs.filter((y) => y.docid == x.docid).length === 0),
-        });
-    }
-
-    return ret;
+    const equals = (a: Reference, b: Reference) => a.docid === b.docid;
+    return zipWith(correct, test, (a, b) => {
+        return {
+            keyword: a.keyword,
+            match: intersect(a.refs, b.refs, equals),
+            false_positive: difference(b.refs, a.refs, equals),
+            false_negative: difference(a.refs, b.refs, equals),
+        };
+    });
 }
 
 function countResults<R>(results: SearchCorrectness<R[]>[]) : SearchCorrectness<number> {
-    const count : SearchCorrectness<number> = {
+    const count: SearchCorrectness<number> = {
         keyword: "",
         match: 0,
         false_positive: 0,
         false_negative: 0
     };
     for(let i = 0; i < results.length; i++) {
-        count.match          = count.match          + results[i].match.length;
-        count.false_positive = count.false_positive + results[i].false_positive.length;
-        count.false_negative = count.false_negative + results[i].false_negative.length;
+        count.match          += results[i].match.length;
+        count.false_positive += results[i].false_positive.length;
+        count.false_negative += results[i].false_negative.length;
     }
     return count;
 }

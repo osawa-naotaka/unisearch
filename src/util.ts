@@ -2,22 +2,16 @@ export function compose<T>(...fns: ((arg: T) => T)[]): (arg: T) => T {
     return (arg: T) => fns.reduce((val, f) => f(val), arg);
 }
 
-export function intersect<T>(a: T[], b: T[], includes = (a: T, b: T[]) => b.includes(a)): T[] {
-    const result = [];
-    for (const x of a) {
-        if (includes(x, b)) {
-            result.push(x);
-        }
-    }
-    return result;
+export function intersect<T>(a: T[], b: T[], equals = (a: T, b: T) => a === b): T[] {
+    return a.filter((x) => b.filter((y) => equals(x, y)).length !== 0);
 }
 
 export function union<T>(a: T[], b?: T[]): T[] {
     return b ? Array.from(new Set([...a, ...b])) : a;
 }
 
-export function difference<T>(a: T[], b: T[], includes = (a: T, b: T[]) => b.includes(a)): T[] {
-    return a.filter((x) => !includes(x, b));
+export function difference<T>(a: T[], b: T[], equals = (a: T, b: T) => a === b): T[] {
+    return a.filter((x) => b.filter((y) => equals(x, y)).length === 0);
 }
 
 export function appendIfNotExists<T>(item: T, array?: T[]): T[] {

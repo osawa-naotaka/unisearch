@@ -9,11 +9,10 @@ export type BloomIndex = {
 };
 
 function addBloom(refs: Reference, text: Token, index: BloomIndex) {
-    rangeArray(index.hashes)
-        .map((id) => murmurhash3_32_gc(text, id + 1) % index.bits)
-        .map((pos) => {
-            index.index[pos] = union([refs], index.index[pos]);
-        });
+    for(let i = 0; i < index.hashes; i++) {
+        const pos = murmurhash3_32_gc(text, i + 1) % index.bits;
+        index.index[pos] = union([refs], index.index[pos]);
+    }
 }
 
 function isExists(query: Token, index: BloomIndex): Reference[] {
