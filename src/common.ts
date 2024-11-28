@@ -4,11 +4,11 @@ import { foldl1Array, intersect, isNonSpaceSeparatedChar } from "@src/util";
 export type DocId = number;
 export type Token = string;
 export type Reference = {
-    docid: DocId,
+    docid: DocId;
     position?: {
-        index: number,
-        wordaround?: string
-    }
+        index: number;
+        wordaround?: string;
+    };
 };
 
 export type HybridIndex<T, U> = {

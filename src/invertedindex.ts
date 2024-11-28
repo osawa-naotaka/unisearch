@@ -1,4 +1,4 @@
-import type { Token, Reference } from "@src/common";
+import type { Reference, Token } from "@src/common";
 import { appendIfNotExists, foldl1Array, union } from "@src/util";
 
 export type InvertedIndex = Record<Token, Reference[]>;

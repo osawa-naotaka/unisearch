@@ -1,4 +1,4 @@
-import type { Token, Reference } from "@src/common";
+import type { Reference, Token } from "@src/common";
 import { murmurhash3_32_gc } from "@src/murmurhash3_gc";
 import { foldl1Array, intersect, rangeArray, union } from "@src/util";
 

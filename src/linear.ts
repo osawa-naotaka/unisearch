@@ -13,13 +13,13 @@ export function searchLinear(query: string, index: LinearIndex): Reference[] {
         let pos = 0;
         let r: number;
         const result: Reference[] = [];
-        while((r = c.indexOf(query_normalized, pos)) !== -1) {
+        while ((r = c.indexOf(query_normalized, pos)) !== -1) {
             result.push({
                 docid: docid,
                 position: {
                     index: r,
-                    wordaround: c.slice(r - 10, r + query_normalized.length + 10)
-                }
+                    wordaround: c.slice(r - 10, r + query_normalized.length + 10),
+                },
             });
             pos = r + query_normalized.length + 1;
         }

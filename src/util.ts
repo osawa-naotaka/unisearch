@@ -2,7 +2,7 @@ export function compose<T>(...fns: ((arg: T) => T)[]): (arg: T) => T {
     return (arg: T) => fns.reduce((val, f) => f(val), arg);
 }
 
-export function intersect<T>(a: T[], b: T[], includes = (a: T, b:T[]) => b.includes(a)): T[] {
+export function intersect<T>(a: T[], b: T[], includes = (a: T, b: T[]) => b.includes(a)): T[] {
     const result = [];
     for (const x of a) {
         if (includes(x, b)) {
@@ -16,7 +16,7 @@ export function union<T>(a: T[], b?: T[]): T[] {
     return b ? Array.from(new Set([...a, ...b])) : a;
 }
 
-export function difference<T>(a: T[], b: T[], includes = (a: T, b:T[]) => b.includes(a)): T[] {
+export function difference<T>(a: T[], b: T[], includes = (a: T, b: T[]) => b.includes(a)): T[] {
     return a.filter((x) => !includes(x, b));
 }
 

@@ -36,8 +36,7 @@ function splitByNonSpaceSeparatedChar(text: string[]): string[] {
 
 export function splitByKatakana(text: string[]): string[] {
     const regex = /[\u30A0-\u30FF]+|[^ \u30A0-\u30FF]+/g;
-    const matches = text.flatMap(t => t.match(regex)).filter(x => x !== null)
-    ;
+    const matches = text.flatMap((t) => t.match(regex)).filter((x) => x !== null);
     return matches;
 }
 
