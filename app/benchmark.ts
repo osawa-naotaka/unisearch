@@ -1,4 +1,4 @@
-import type { DocId, IndexFn, SearchFn, HybridIndex } from "@src/common";
+import type { Reference, IndexFn, SearchFn, HybridIndex } from "@src/common";
 import type { LinearIndex } from "@src/linear";
 import type { InvertedIndex } from "@src/invertedindex";
 import type { TrieIndex } from "@src/trie";
@@ -7,7 +7,7 @@ import { wikipedia_keyword_ja } from "@test/wikipedia_keyword.ja";
 import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
 import { wikipedia_keyword_en } from "@test/wikipedia_keyword.en";
 import { wikipedia_articles_en } from "@test/wikipedia_articles.en";
-import { calculateJsonSize, intersect, difference, zipWith3, calculateGzipedJsonSize } from "@src/util";
+import { calculateJsonSize, calculateGzipedJsonSize } from "@src/util";
 import { addToLinearIndex, searchLinear } from "@src/linear";
 import { generate1ToNgram, generateNgram, generateNgramTrie } from "@src/ngram";
 import { addToTrieIndex, searchTrie } from "@src/trie";
@@ -18,29 +18,32 @@ import { loadDefaultJapaneseParser } from "budoux";
 import { splitByKatakana } from "@src/preprocess";
 import { compose } from "@src/util";
 
-type BenchmarkResult<T> = {
+type Result = {
+    keyword: string,
+    refs: Reference[]
+};
+
+type BenchmarkResult<R> = {
     time: number,
-    results: T[]
-}
+    results: R[]
+};
 
 type WikipediaKeyword = {
     title: string,
     keywords: string[]
-}
+};
 
 type WikipediaArticle = {
     title: string,
     content: string
-}
+};
 
 type SearchCorrectness<T> = {
     keyword: string,
     match: T,
     false_positive: T,
     false_negative: T
-}
-
-type Results = number[][];
+};
 
 function benchmark<T, R>(fn: (args: T, idx: number) => R, args: T[]) : BenchmarkResult<R> {
     const start = performance.now();
@@ -56,18 +59,18 @@ function getAllKeywords(keyword_array: WikipediaKeyword[]): string[] {
     return keyword_array.flatMap(k => k.keywords);
 }
 
-async function execBenchmark<T extends Object> (
+async function execBenchmark<T> (
     index_fn: IndexFn<T>,
     search_fn: SearchFn<T>,
     index: T,
     keywords: string[],
-    articles: WikipediaArticle[]) : Promise<DocId[][]> {
+    articles: WikipediaArticle[]) : Promise<Result[]> {
 
     console.log("creating index...");
 
     const result_create_index = benchmark((doc, docid) => {
-        index_fn(docid, doc.title, index);
-        index_fn(docid, doc.content, index);
+        index_fn({docid: docid}, doc.title, index);
+        index_fn({docid: docid}, doc.content, index);
     }, articles);
     
     console.log(`time: ${result_create_index.time}`);
@@ -76,22 +79,28 @@ async function execBenchmark<T extends Object> (
 
     console.log("begin benchmark...");
     const result_search = benchmark((key) =>
-        search_fn(key, index), keywords);
+        ({keyword: key, refs: search_fn(key, index)}), keywords);
     console.log(`time: ${result_search.time} ms`);
 
     return result_search.results;
 }
 
-function checkResult(keyword: string, correct: DocId[], test: DocId[]) : SearchCorrectness<DocId[]> {
-    return {
-        keyword: keyword,
-        match: intersect(correct, test),
-        false_positive: difference(test, correct),
-        false_negative: difference(correct, test)
-    };
+function checkResult(correct: Result[], test: Result[]): SearchCorrectness<Reference[]>[] {
+    const ret: SearchCorrectness<Reference[]>[] = [];
+
+    for(let i = 0; i < test.length; i++) {
+        ret.push({
+            keyword: correct[i].keyword,
+            match: correct[i].refs.filter((x) => test[i].refs.filter((y) => y.docid == x.docid).length !== 0),
+            false_positive: test[i].refs.filter((x) => correct[i].refs.filter((y) => y.docid == x.docid).length === 0),
+            false_negative: correct[i].refs.filter((x) => test[i].refs.filter((y) => y.docid == x.docid).length === 0),
+        });
+    }
+
+    return ret;
 }
 
-function countResults(results: SearchCorrectness<DocId[]>[]) : SearchCorrectness<number> {
+function countResults<R>(results: SearchCorrectness<R[]>[]) : SearchCorrectness<number> {
     const count : SearchCorrectness<number> = {
         keyword: "",
         match: 0,
@@ -106,23 +115,23 @@ function countResults(results: SearchCorrectness<DocId[]>[]) : SearchCorrectness
     return count;
 }
 
-async function prepareAndExecBenchmark<T extends Object>(
+async function prepareAndExecBenchmark<T>(
     name: string,
     articles: WikipediaArticle[],
     keywords: string[],
-    ref_results: Results,
+    ref_results: Result[],
     index_fn: IndexFn<T>,
     search_fn: SearchFn<T>,
     index: T
-) : Promise<Results> {
+) : Promise<Result[]> {
     console.log(`${name} SEARCH`);
     const results = await execBenchmark<T>(index_fn, search_fn, index, keywords, articles);
-    console.log(zipWith3(keywords, ref_results, results, checkResult));
-    console.log(countResults(zipWith3(keywords, ref_results, results, checkResult)));
+    const cheked_results = checkResult(ref_results, results);
+    console.log(cheked_results);
+    console.log(countResults(cheked_results));
 
     return results;
 }
-
 
 async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[]) {
     console.log("initializing benchmark...");
@@ -138,6 +147,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     console.log("LINEAR SEARCH");
     const linear_index : LinearIndex = [];
     const ref_results = await execBenchmark(addToLinearIndex, generateSearchFn(searchLinear), linear_index, keywords, wikipedia_articles);
+    console.log(ref_results);
 
     // bigram
     const bigram_index : InvertedIndex = {};
@@ -176,7 +186,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     );
     
     // Trie trigram
-    const trie_trigram_index : TrieIndex = {ids: [], children: {}};
+    const trie_trigram_index : TrieIndex = {refs: [], children: {}};
     await prepareAndExecBenchmark(
         "TRIGRAM TRIE",
         wikipedia_articles,

@@ -2,10 +2,10 @@ export function compose<T>(...fns: ((arg: T) => T)[]): (arg: T) => T {
     return (arg: T) => fns.reduce((val, f) => f(val), arg);
 }
 
-export function intersect<T>(a: T[], b: T[]): T[] {
+export function intersect<T>(a: T[], b: T[], includes = (a: T, b:T[]) => b.includes(a)): T[] {
     const result = [];
     for (const x of a) {
-        if (b.includes(x)) {
+        if (includes(x, b)) {
             result.push(x);
         }
     }
@@ -16,8 +16,8 @@ export function union<T>(a: T[], b?: T[]): T[] {
     return b ? Array.from(new Set([...a, ...b])) : a;
 }
 
-export function difference<T>(a: T[], b: T[]): T[] {
-    return a.filter((e) => !b.includes(e));
+export function difference<T>(a: T[], b: T[], includes = (a: T, b:T[]) => b.includes(a)): T[] {
+    return a.filter((x) => !includes(x, b));
 }
 
 export function appendIfNotExists<T>(item: T, array?: T[]): T[] {
@@ -36,7 +36,7 @@ export function zipWith<T, U, V>(a: T[], b: U[], combine: (a: T, b: U) => V): V[
 }
 
 export function zipWith3<T, U, V, R>(a: T[], b: U[], c: V[], combine: (a: T, b: U, c: V) => R): R[] {
-    const minLength = Math.min(a.length, b.length);
+    const minLength = Math.min(a.length, b.length, c.length);
     const result: R[] = [];
 
     for (let i = 0; i < minLength; i++) {
@@ -46,7 +46,27 @@ export function zipWith3<T, U, V, R>(a: T[], b: U[], c: V[], combine: (a: T, b: 
     return result;
 }
 
-export function foldl1<T>(array: T[], fn: (acc: T, cur: T) => T): T {
+export function zipWith4<T, U, V, W, R>(a: T[], b: U[], c: V[], d: W[], combine: (a: T, b: U, c: V, d: W) => R): R[] {
+    const minLength = Math.min(a.length, b.length, c.length, d.length);
+    const result: R[] = [];
+
+    for (let i = 0; i < minLength; i++) {
+        result.push(combine(a[i], b[i], c[i], d[i]));
+    }
+
+    return result;
+}
+
+export function foldl<T>(fn: (acc: T, cur: T) => T, array: T[], initial: T) {
+    let acc = initial;
+    for (let i = 0; i < array.length; i++) {
+        acc = fn(acc, array[i]);
+    }
+
+    return acc;
+}
+
+export function foldl1<T>(fn: (acc: T, cur: T) => T, array: T[]): T {
     if (array.length === 0) {
         throw new Error("foldl1 cannot be called on an empty array.");
     }
@@ -59,8 +79,8 @@ export function foldl1<T>(array: T[], fn: (acc: T, cur: T) => T): T {
     return acc;
 }
 
-export function foldl1Array<T>(array: T[][], fn: (acc: T[], cur: T[]) => T[]): T[] {
-    return array.length === 0 ? [] : array.length === 1 ? array[0] : foldl1(array, fn);
+export function foldl1Array<T>(fn: (acc: T[], cur: T[]) => T[], array: T[][]): T[] {
+    return array.length === 0 ? [] : array.length === 1 ? array[0] : foldl1(fn, array);
 }
 
 export function rangeArray(n: number): number[] {
