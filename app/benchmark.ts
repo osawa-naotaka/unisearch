@@ -15,6 +15,8 @@ import { addToBloomIndex, searchBloom } from "@src/bloom";
 import { generateIndexFn, generateSearchFn, generateHybridIndexFn, generateHybridSearchFn } from "@src/common";
 import { addToInvertedIndex, searchInvertedIndex } from "@src/invertedindex";
 import { loadDefaultJapaneseParser } from "budoux";
+import { splitByKatakana } from "@src/preprocess";
+import { compose } from "@src/util";
 
 type BenchmarkResult<T> = {
     time: number,
@@ -137,10 +139,10 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     const linear_index : LinearIndex = [];
     const ref_results = await execBenchmark(addToLinearIndex, generateSearchFn(searchLinear), linear_index, keywords, wikipedia_articles);
 
-    // normal bigram
+    // bigram
     const bigram_index : InvertedIndex = {};
     await prepareAndExecBenchmark(
-        "NORMAL BIGRAM",
+        "BIGRAM INVERTED-INDEX",
         wikipedia_articles,
         keywords,
         ref_results,
@@ -149,10 +151,10 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         bigram_index
     );
     
-    // normal trigram
+    // trigram
     const trigram_index : InvertedIndex = {};
     await prepareAndExecBenchmark(
-        "NORMAL TRIGRAM",
+        "TRIGRAM INVERTED-INDEX",
         wikipedia_articles,
         keywords,
         ref_results,
@@ -161,10 +163,10 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         trigram_index
     );
     
-    // normal quadgram
+    // quadgram
     const quadgram_index : InvertedIndex = {};
     await prepareAndExecBenchmark(
-        "NORMAL QUADGRAM",
+        "QUADGRAM INVERTED-INDEX",
         wikipedia_articles,
         keywords,
         ref_results,
@@ -173,10 +175,10 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         quadgram_index
     );
     
-    // Trie: normal trigram
+    // Trie trigram
     const trie_trigram_index : TrieIndex = {ids: [], children: {}};
     await prepareAndExecBenchmark(
-        "TRIE NORMAL TRIGRAM",
+        "TRIGRAM TRIE",
         wikipedia_articles,
         keywords,
         ref_results,
@@ -184,24 +186,46 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         generateSearchFn(searchTrie, (x) => generateNgram(3, x)),
         trie_trigram_index
     );
-    
-    // Hybrid: en inverted index, normal wakachigaki inverted index
+
+    // Hybrid: en inverted index, ja bigram inverted index
     const hybrid_bigram_index : HybridIndex<InvertedIndex, InvertedIndex> = { ja: {}, en: {} };
-    const parser = loadDefaultJapaneseParser();
     await prepareAndExecBenchmark(
-        "HYBRID en:INVERTED-INDEX ja:wakachigaki-INVERTED-INDEX",
+        "HYBRID en:INVERTED-INDEX ja:BIGRAM INVERTED-INDEX",
         wikipedia_articles,
         keywords,
         ref_results,
         generateHybridIndexFn(
-            addToInvertedIndex, (x) => parser.parse(x) || [],
+            addToInvertedIndex, (x) => generateNgram(2, x),
             addToInvertedIndex, (x) => [x],
         ),
         generateHybridSearchFn(
-            searchInvertedIndex, (x) => parser.parse(x) || [],
+            searchInvertedIndex, (x) => generateNgram(2, x),
             searchInvertedIndex, (x) => [x]
         ),
         hybrid_bigram_index
+    );
+
+    // Hybrid: en inverted index, ja wakachigaki inverted index
+    const hybrid_wakachigaki_index : HybridIndex<InvertedIndex, InvertedIndex> = { ja: {}, en: {} };
+    const parser = loadDefaultJapaneseParser();
+    const ja_preprocess = compose(
+        splitByKatakana,
+        (words: string[]) => words.flatMap((w: string) => parser.parse(w) || [])
+    );
+    await prepareAndExecBenchmark(
+        "HYBRID en:INVERTED-INDEX ja:wakachigaki INVERTED-INDEX",
+        wikipedia_articles,
+        keywords,
+        ref_results,
+        generateHybridIndexFn(
+            addToInvertedIndex, (x) => ja_preprocess([x]),
+            addToInvertedIndex, (x) => [x],
+        ),
+        generateHybridSearchFn(
+            searchInvertedIndex, (x) => ja_preprocess([x]),
+            searchInvertedIndex, (x) => [x]
+        ),
+        hybrid_wakachigaki_index
     );
 }
 
