@@ -22,7 +22,7 @@ export const normalizeText = (text: string) => compose(normalizeJapanese, normal
 function splitByDelimiter(text: string[]): string[] {
     const separators =
         // biome-ignore lint: bug of biome?
-        /[\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007F\u0080-\u00BF\u02B0-\u02FF\u2000-\u206F\u3000-\u3004\u3007-\u303F\uFF00-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\uFFE0-\uFFFF]/u;
+        /[\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007F\u0080-\u00BF\u02B0-\u02FF\u2000-\u206F\u3000-\u3004\u3007-\u303F\u30fb\uFF00-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\uFFE0-\uFFFF]/u;
     return text.flatMap((t) => t.split(separators).filter(Boolean));
 }
 
@@ -31,6 +31,13 @@ function splitByNonSpaceSeparatedChar(text: string[]): string[] {
         /[\u2E80-\u31FF\u3400-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF\u0E00-\u17FF\u1A00-\u1B7F\uA980-\uAA5F\u0D80-\u0DFF\u{20000}-\u{2CEAF}]+|[^\u2E80-\u31FF\u3400-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF\u0E00-\u17FF\u1A00-\u1B7F\uA980-\uAA5F\u0D80-\u0DFF\u{20000}-\u{2CEAF}]+/gu;
     const matches = text.flatMap((t) => t.match(nonSpaceSeparatedCharRegex)).filter((x) => x !== null);
 
+    return matches;
+}
+
+export function splitByKatakana(text: string[]): string[] {
+    const regex = /[\u30A0-\u30FF]+|[^ \u30A0-\u30FF]+/g;
+    const matches = text.flatMap(t => t.match(regex)).filter(x => x !== null)
+    ;
     return matches;
 }
 

@@ -14,6 +14,7 @@ import { addToTrieIndex, searchTrie } from "@src/trie";
 import { addToBloomIndex, searchBloom } from "@src/bloom";
 import { generateIndexFn, generateSearchFn, generateHybridIndexFn, generateHybridSearchFn } from "@src/common";
 import { addToInvertedIndex, searchInvertedIndex } from "@src/invertedindex";
+import { loadDefaultJapaneseParser } from "budoux";
 
 type BenchmarkResult<T> = {
     time: number,
@@ -184,19 +185,20 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         trie_trigram_index
     );
     
-    // Hybrid: inverted index, normal bigram
+    // Hybrid: en inverted index, normal wakachigaki inverted index
     const hybrid_bigram_index : HybridIndex<InvertedIndex, InvertedIndex> = { ja: {}, en: {} };
+    const parser = loadDefaultJapaneseParser();
     await prepareAndExecBenchmark(
-        "HYBRID INVERTED-INDEX NORMAL-BIGRAM",
+        "HYBRID en:INVERTED-INDEX ja:wakachigaki-INVERTED-INDEX",
         wikipedia_articles,
         keywords,
         ref_results,
         generateHybridIndexFn(
-            addToInvertedIndex, (x) => generateNgram(2, x),
+            addToInvertedIndex, (x) => parser.parse(x) || [],
             addToInvertedIndex, (x) => [x],
         ),
         generateHybridSearchFn(
-            searchInvertedIndex, (x) => generateNgram(2, x),
+            searchInvertedIndex, (x) => parser.parse(x) || [],
             searchInvertedIndex, (x) => [x]
         ),
         hybrid_bigram_index

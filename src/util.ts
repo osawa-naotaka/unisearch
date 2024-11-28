@@ -126,6 +126,7 @@ const delimiter: UnicodeRange[] = [
 
     [0x3000, 0x3004], // CJKの記号及び句読点
     [0x3007, 0x303f], // CJKの記号及び句読点
+    [0x30fb, 0x30fb], // ・
 
     [0xff00, 0xff0f], // 半角・全角形
     [0xff1a, 0xff20],
