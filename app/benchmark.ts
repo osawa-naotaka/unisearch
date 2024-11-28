@@ -143,7 +143,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     // linear search
     console.log("LINEAR SEARCH");
     const linear_index : LinearIndex = [];
-    const ref_results = await execBenchmark(addToLinearIndex, generateSearchFn(searchLinear), linear_index, keywords, wikipedia_articles);
+    const ref_results = await execBenchmark(addToLinearIndex, searchLinear, linear_index, keywords, wikipedia_articles);
     console.log(ref_results);
 
     // bigram
