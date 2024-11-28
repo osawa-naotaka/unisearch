@@ -9,7 +9,7 @@ export type BloomIndex = {
 };
 
 function addBloom(refs: Reference, text: Token, index: BloomIndex) {
-    for(let i = 0; i < index.hashes; i++) {
+    for (let i = 0; i < index.hashes; i++) {
         const pos = murmurhash3_32_gc(text, i + 1) % index.bits;
         index.index[pos] = union([refs], index.index[pos]);
     }

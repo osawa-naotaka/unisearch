@@ -7,7 +7,7 @@ import { wikipedia_keyword_ja } from "@test/wikipedia_keyword.ja";
 import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
 import { wikipedia_keyword_en } from "@test/wikipedia_keyword.en";
 import { wikipedia_articles_en } from "@test/wikipedia_articles.en";
-import { calculateJsonSize, calculateGzipedJsonSize, zipWith, foldl, intersect, difference } from "@src/util";
+import { calculateJsonSize, calculateGzipedJsonSize, zipWith, intersect, difference } from "@src/util";
 import { addToLinearIndex, searchLinear } from "@src/linear";
 import { generate1ToNgram, generateNgram, generateNgramTrie } from "@src/ngram";
 import { addToTrieIndex, searchTrie } from "@src/trie";
