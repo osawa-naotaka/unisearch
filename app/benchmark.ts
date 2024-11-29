@@ -17,7 +17,7 @@ import { addToTrieIndex, searchTrie } from "@src/trie";
 import { addToBloomIndex, searchBloom } from "@src/bloom";
 import { addToRecordIndex, searchRecord } from "@src/record";
 import { loadDefaultJapaneseParser } from "budoux";
-import { addToSortedArrayIndex, createSortedArrayIndex, searchSortedArray } from "@src/sortedarray";
+import { addToSortedArrayIndex, createSortedArrayIndex, searchExactSortedArray, searchSortedArray } from "@src/sortedarray";
 
 type Result = {
     keyword: string,
@@ -206,7 +206,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     );
 
     // Hybrid: en sorted arrya, ja bigram sorted array
-    const hybrid_bigram_index : HybridIndex<SortedArrayIndex, SortedArrayIndex> = { ja: { unsorted: {}, sorted: {} }, en: { unsorted: {}, sorted: {} } };
+    const hybrid_bigram_index : HybridIndex<SortedArrayIndex, SortedArrayIndex> = { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } };
     await prepareAndExecBenchmark(
         "HYBRID en:SORTED-ARRAY ja:BIGRAM SORTED-ARRAY",
         wikipedia_articles,
@@ -225,7 +225,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     );
 
     // Hybrid: en sorted array, ja wakachigaki sorted array
-    const hybrid_wakachigaki_index : HybridIndex<SortedArrayIndex, SortedArrayIndex> = { ja: { unsorted: {}, sorted: {} }, en: { unsorted: {}, sorted: {} } };
+    const hybrid_wakachigaki_index : HybridIndex<SortedArrayIndex, SortedArrayIndex> = { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } };
     const parser = loadDefaultJapaneseParser();
     const ja_preprocess = compose(
         splitByKatakana,
@@ -246,6 +246,25 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
             searchSortedArray, noPreProcess
         ),
         hybrid_wakachigaki_index
+    );
+
+    // Hybrid: en sorted array, ja wakachigaki exact sorted array
+    const hybrid_wakachigaki_exact_index : HybridIndex<SortedArrayIndex, SortedArrayIndex> = { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } };
+    await prepareAndExecBenchmark(
+        "HYBRID en: exact SORTED-ARRAY ja:wakachigaki exact SORTED-ARRAY",
+        wikipedia_articles,
+        keywords,
+        ref_results,
+        generateHybridIndexFn(
+            addToSortedArrayIndex, (x) => ja_preprocess([x]),
+            addToSortedArrayIndex, noPreProcess,
+        ),
+        generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
+        generateHybridSearchFn(
+            searchExactSortedArray, (x) => ja_preprocess([x]),
+            searchExactSortedArray, noPreProcess
+        ),
+        hybrid_wakachigaki_exact_index
     );
 }
 

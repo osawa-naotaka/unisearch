@@ -27,14 +27,14 @@ export type HybridPostprocessFn<T, U> = (index: HybridIndex<T, U>) => void;
 export const noPreProcess = (x: Token) => [x];
 export const noPostProcess = () => {};
 
-export function generateIndexFn<T>(idxfn: IndexFn<T>, pre: PreprocessFn = (x) => [x]): IndexFn<T> {
+export function generateIndexFn<T>(idxfn: IndexFn<T>, pre: PreprocessFn = noPreProcess): IndexFn<T> {
     return (ref: Reference, text: string, index: T) =>
         docToWords([text])
             .flatMap((w) => pre(w))
             .map((word) => idxfn(ref, word, index));
 }
 
-export function generateSearchFn<T>(search: SearchFn<T>, pre: PreprocessFn = (x) => [x]): SearchFn<T> {
+export function generateSearchFn<T>(search: SearchFn<T>, pre: PreprocessFn = noPreProcess): SearchFn<T> {
     return (query: string, index: T) =>
         foldl1Array(
             intersect,
