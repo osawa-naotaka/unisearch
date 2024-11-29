@@ -124,6 +124,7 @@ async function prepareAndExecBenchmark<T>(
     const results = await execBenchmark<T>(index_fn, search_fn, index, keywords, articles);
     const cheked_results = checkResult(ref_results, results);
     console.log(cheked_results);
+    console.log(cheked_results.map((r) => ({keyword:r.keyword, false_negative: r.false_negative})).filter((x) => x.false_negative.length !== 0));
     console.log(countResults(cheked_results));
 
     return results;
