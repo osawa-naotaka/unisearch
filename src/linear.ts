@@ -7,22 +7,23 @@ export function addToLinearIndex(ref: Reference, text: string, index: LinearInde
     index[ref.docid] += normalizeText(text);
 }
 
+function* indicesOf(keyword: string, target: string): Generator<number> {
+    let pos = target.indexOf(keyword, 0);
+    while (pos !== -1) {
+        yield pos;
+        pos = target.indexOf(keyword, pos + keyword.length + 1);
+    }
+}
+
 export function searchLinear(query: string, index: LinearIndex): Reference[] {
     const query_normalized = normalizeText(query);
-    return index.flatMap((c, docid) => {
-        let pos = 0;
-        let r: number;
-        const result: Reference[] = [];
-        while ((r = c.indexOf(query_normalized, pos)) !== -1) {
-            result.push({
-                docid: docid,
-                position: {
-                    index: r,
-                    wordaround: c.slice(r - 10, r + query_normalized.length + 10),
-                },
-            });
-            pos = r + query_normalized.length + 1;
-        }
-        return result;
-    });
+    return index.flatMap((item, docid) =>
+        [...indicesOf(query_normalized, item)].map((pos) => ({
+            docid: docid,
+            position: {
+                index: pos,
+                wordaround: item.slice(pos - 10, pos + query_normalized.length + 10),
+            },
+        })),
+    );
 }
