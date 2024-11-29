@@ -19,10 +19,10 @@ export type HybridIndex<T, U> = {
 export type IndexFn<T> = (ref: Reference, token: Token, index: T) => void;
 export type SearchFn<T> = (query: Token, index: T) => Reference[];
 export type PreprocessFn = (token: Token) => Token[];
-export type PostprocessFn<T> = (index: T) => void; 
+export type PostprocessFn<T> = (index: T) => void;
 export type HybridIndexFn<T, U> = (ref: Reference, text: Token, index: HybridIndex<T, U>) => void;
 export type HybridSearchFn<T, U> = (query: Token, index: HybridIndex<T, U>) => Reference[];
-export type HybridPostprocessFn<T, U> = (index: HybridIndex<T, U>) => void; 
+export type HybridPostprocessFn<T, U> = (index: HybridIndex<T, U>) => void;
 
 export const noPreProcess = (x: Token) => [x];
 export const noPostProcess = () => {};
@@ -63,12 +63,12 @@ export function generateHybridIndexFn<T, U>(
 
 export function generateHybridPostprocessFn<T, U>(
     idxjapost: PostprocessFn<T>,
-    idxenpost: PostprocessFn<U>
+    idxenpost: PostprocessFn<U>,
 ): HybridPostprocessFn<T, U> {
     return (index: HybridIndex<T, U>) => {
         idxjapost(index.ja);
         idxenpost(index.en);
-    }
+    };
 }
 
 export function generateHybridSearchFn<T, U>(
