@@ -1,6 +1,6 @@
-import type { Reference, IndexFn, SearchFn, HybridIndex } from "@src/common";
+import type { Reference, IndexFn, SearchFn, HybridIndex, PostprocessFn } from "@src/common";
 import type { LinearIndex } from "@src/linear";
-import type { InvertedIndex } from "@src/invertedindex";
+import type { RecordIndex } from "@src/record";
 import type { TrieIndex } from "@src/trie";
 import type { BloomIndex } from "@src/bloom";
 import { wikipedia_keyword_ja } from "@test/wikipedia_keyword.ja";
@@ -9,12 +9,12 @@ import { wikipedia_keyword_en } from "@test/wikipedia_keyword.en";
 import { wikipedia_articles_en } from "@test/wikipedia_articles.en";
 import { calculateJsonSize, calculateGzipedJsonSize, compose, zipWith, intersect, difference } from "@src/util";
 import { splitByKatakana } from "@src/preprocess";
-import { generateIndexFn, generateSearchFn, generateHybridIndexFn, generateHybridSearchFn } from "@src/common";
+import { generateIndexFn, generateSearchFn, generateHybridIndexFn, generateHybridSearchFn, noPostProcess } from "@src/common";
 import { addToLinearIndex, searchLinear } from "@src/linear";
 import { generate1ToNgram, generateNgram, generateNgramTrie } from "@src/ngram";
 import { addToTrieIndex, searchTrie } from "@src/trie";
 import { addToBloomIndex, searchBloom } from "@src/bloom";
-import { addToInvertedIndex, searchInvertedIndex } from "@src/invertedindex";
+import { addToRecordIndex, searchRecord } from "@src/record";
 import { loadDefaultJapaneseParser } from "budoux";
 
 type Result = {
@@ -60,23 +60,27 @@ function getAllKeywords(keyword_array: WikipediaKeyword[]): string[] {
 
 async function execBenchmark<T> (
     index_fn: IndexFn<T>,
+    post_fn: PostprocessFn<T>,
     search_fn: SearchFn<T>,
     index: T,
     keywords: string[],
     articles: WikipediaArticle[]) : Promise<Result[]> {
 
-    console.log("creating index...");
-
+    console.log("creating index.");
     const result_create_index = benchmark((doc, docid) => {
         index_fn({docid: docid}, doc.title, index);
         index_fn({docid: docid}, doc.content, index);
     }, articles);
-    
     console.log(`time: ${result_create_index.time}`);
+
+    console.log("index post process.");
+    const result_post_index = benchmark(() => post_fn(index), [null]);
+    console.log(`time: ${result_post_index.time}`);
+
     console.log(`index size in byte: ${calculateJsonSize(index)} byte`);
     console.log(`gziped index size in byte: ${await calculateGzipedJsonSize(index)} byte`);
 
-    console.log("begin benchmark...");
+    console.log("begin benchmark.");
     const result_search = benchmark((key) =>
         ({keyword: key, refs: search_fn(key, index)}), keywords);
     console.log(`time: ${result_search.time} ms`);
@@ -117,11 +121,12 @@ async function prepareAndExecBenchmark<T>(
     keywords: string[],
     ref_results: Result[],
     index_fn: IndexFn<T>,
+    post_fn: PostprocessFn<T>,
     search_fn: SearchFn<T>,
     index: T
 ) : Promise<Result[]> {
     console.log(`${name} SEARCH`);
-    const results = await execBenchmark<T>(index_fn, search_fn, index, keywords, articles);
+    const results = await execBenchmark<T>(index_fn, post_fn, search_fn, index, keywords, articles);
     const cheked_results = checkResult(ref_results, results);
     console.log(cheked_results);
     console.log(cheked_results.map((r) => ({keyword:r.keyword, false_negative: r.false_negative})).filter((x) => x.false_negative.length !== 0));
@@ -143,42 +148,45 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     // linear search
     console.log("LINEAR SEARCH");
     const linear_index : LinearIndex = [];
-    const ref_results = await execBenchmark(addToLinearIndex, searchLinear, linear_index, keywords, wikipedia_articles);
+    const ref_results = await execBenchmark(addToLinearIndex, noPostProcess, searchLinear, linear_index, keywords, wikipedia_articles);
     console.log(ref_results);
 
     // bigram
-    const bigram_index : InvertedIndex = {};
+    const bigram_index : RecordIndex = {};
     await prepareAndExecBenchmark(
         "BIGRAM INVERTED-INDEX",
         wikipedia_articles,
         keywords,
         ref_results,
-        generateIndexFn(addToInvertedIndex, (x) => generate1ToNgram(2, x)),
-        generateSearchFn(searchInvertedIndex, (x) => generateNgram(2, x)),
+        generateIndexFn(addToRecordIndex, (x) => generate1ToNgram(2, x)),
+        noPostProcess,
+        generateSearchFn(searchRecord, (x) => generateNgram(2, x)),
         bigram_index
     );
     
     // trigram
-    const trigram_index : InvertedIndex = {};
+    const trigram_index : RecordIndex = {};
     await prepareAndExecBenchmark(
         "TRIGRAM INVERTED-INDEX",
         wikipedia_articles,
         keywords,
         ref_results,
-        generateIndexFn(addToInvertedIndex, (x) => generate1ToNgram(3, x)),
-        generateSearchFn(searchInvertedIndex, (x) => generateNgram(3, x)),
+        generateIndexFn(addToRecordIndex, (x) => generate1ToNgram(3, x)),
+        noPostProcess,
+        generateSearchFn(searchRecord, (x) => generateNgram(3, x)),
         trigram_index
     );
     
     // quadgram
-    const quadgram_index : InvertedIndex = {};
+    const quadgram_index : RecordIndex = {};
     await prepareAndExecBenchmark(
         "QUADGRAM INVERTED-INDEX",
         wikipedia_articles,
         keywords,
         ref_results,
-        generateIndexFn(addToInvertedIndex, (x) => generate1ToNgram(4, x)),
-        generateSearchFn(searchInvertedIndex, (x) => generateNgram(4, x)),
+        generateIndexFn(addToRecordIndex, (x) => generate1ToNgram(4, x)),
+        noPostProcess,
+        generateSearchFn(searchRecord, (x) => generateNgram(4, x)),
         quadgram_index
     );
     
@@ -190,30 +198,32 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         keywords,
         ref_results,
         generateIndexFn(addToTrieIndex, (x) => generateNgramTrie(3, x)),
+        noPostProcess,
         generateSearchFn(searchTrie, (x) => generateNgram(3, x)),
         trie_trigram_index
     );
 
     // Hybrid: en inverted index, ja bigram inverted index
-    const hybrid_bigram_index : HybridIndex<InvertedIndex, InvertedIndex> = { ja: {}, en: {} };
+    const hybrid_bigram_index : HybridIndex<RecordIndex, RecordIndex> = { ja: {}, en: {} };
     await prepareAndExecBenchmark(
         "HYBRID en:INVERTED-INDEX ja:BIGRAM INVERTED-INDEX",
         wikipedia_articles,
         keywords,
         ref_results,
         generateHybridIndexFn(
-            addToInvertedIndex, (x) => generateNgram(2, x),
-            addToInvertedIndex, (x) => [x],
+            addToRecordIndex, (x) => generateNgram(2, x),
+            addToRecordIndex, (x) => [x],
         ),
+        noPostProcess,
         generateHybridSearchFn(
-            searchInvertedIndex, (x) => generateNgram(2, x),
-            searchInvertedIndex, (x) => [x]
+            searchRecord, (x) => generateNgram(2, x),
+            searchRecord, (x) => [x]
         ),
         hybrid_bigram_index
     );
 
     // Hybrid: en inverted index, ja wakachigaki inverted index
-    const hybrid_wakachigaki_index : HybridIndex<InvertedIndex, InvertedIndex> = { ja: {}, en: {} };
+    const hybrid_wakachigaki_index : HybridIndex<RecordIndex, RecordIndex> = { ja: {}, en: {} };
     const parser = loadDefaultJapaneseParser();
     const ja_preprocess = compose(
         splitByKatakana,
@@ -225,12 +235,13 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         keywords,
         ref_results,
         generateHybridIndexFn(
-            addToInvertedIndex, (x) => ja_preprocess([x]),
-            addToInvertedIndex, (x) => [x],
+            addToRecordIndex, (x) => ja_preprocess([x]),
+            addToRecordIndex, (x) => [x],
         ),
+        noPostProcess,
         generateHybridSearchFn(
-            searchInvertedIndex, (x) => ja_preprocess([x]),
-            searchInvertedIndex, (x) => [x]
+            searchRecord, (x) => ja_preprocess([x]),
+            searchRecord, (x) => [x]
         ),
         hybrid_wakachigaki_index
     );
@@ -240,13 +251,14 @@ async function runBloom(run_hashes: number, run_bits: [number, number], wikipedi
     console.log("LINEAR SEARCH");
     const linear_index : LinearIndex = [];
     const keywords = getAllKeywords(wikipedia_keyword);
-    const ref_results = await execBenchmark(addToLinearIndex, generateSearchFn(searchLinear), linear_index, keywords, wikipedia_articles);
+    const ref_results = await execBenchmark(addToLinearIndex, noPostProcess, generateSearchFn(searchLinear), linear_index, keywords, wikipedia_articles);
     
     async function bloomSim(bits: number, hashes: number, articles: WikipediaArticle[], keywords: string[], ) {
         const bloom_index : BloomIndex = {index: {}, bits: bits, hashes: hashes};
         await prepareAndExecBenchmark(`bloom filter bits = ${bits}, hashes = ${hashes}`,
             articles, keywords, ref_results,
             generateIndexFn(addToBloomIndex, (x) => generate1ToNgram(4, x)),
+            noPostProcess,
             generateSearchFn(searchBloom, (x) => generateNgram(4, x)), bloom_index
         );
     }

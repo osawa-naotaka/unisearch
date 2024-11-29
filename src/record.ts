@@ -1,17 +1,17 @@
 import type { Reference, Token } from "@src/common";
 import { appendIfNotExists, foldl1Array, union } from "@src/util";
 
-export type InvertedIndex = Record<Token, Reference[]>;
+export type RecordIndex = Record<Token, Reference[]>;
 
-export function addToInvertedIndex(ref: Reference, text: Token, index: InvertedIndex) {
+export function addToRecordIndex(ref: Reference, text: Token, index: RecordIndex) {
     index[text] = appendIfNotExists(ref, index[text]);
 }
 
-export function searchInvertedIndex(query: Token, index: InvertedIndex): Reference[] {
+export function searchRecord(query: Token, index: RecordIndex): Reference[] {
     return index[query] || [];
 }
 
-export function searchAllInvertedIndex(query: Token, index: InvertedIndex): Reference[] {
+export function searchAllRecord(query: Token, index: RecordIndex): Reference[] {
     return foldl1Array(
         union,
         Object.entries(index).map(([token, docs]) => (token.includes(query) ? docs : [])),
