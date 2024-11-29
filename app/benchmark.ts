@@ -3,19 +3,21 @@ import type { LinearIndex } from "@src/linear";
 import type { RecordIndex } from "@src/record";
 import type { TrieIndex } from "@src/trie";
 import type { BloomIndex } from "@src/bloom";
+import type { SortedArrayIndex } from "@src/sortedarray";
 import { wikipedia_keyword_ja } from "@test/wikipedia_keyword.ja";
 import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
 import { wikipedia_keyword_en } from "@test/wikipedia_keyword.en";
 import { wikipedia_articles_en } from "@test/wikipedia_articles.en";
 import { calculateJsonSize, calculateGzipedJsonSize, compose, zipWith, intersect, difference } from "@src/util";
 import { splitByKatakana } from "@src/preprocess";
-import { generateIndexFn, generateSearchFn, generateHybridIndexFn, generateHybridSearchFn, noPostProcess } from "@src/common";
+import { generateIndexFn, generateSearchFn, generateHybridIndexFn, generateHybridSearchFn, noPostProcess, noPreProcess, generateHybridPostprocessFn } from "@src/common";
 import { addToLinearIndex, searchLinear } from "@src/linear";
 import { generate1ToNgram, generateNgram, generateNgramTrie } from "@src/ngram";
 import { addToTrieIndex, searchTrie } from "@src/trie";
 import { addToBloomIndex, searchBloom } from "@src/bloom";
 import { addToRecordIndex, searchRecord } from "@src/record";
 import { loadDefaultJapaneseParser } from "budoux";
+import { addToSortedArrayIndex, createSortedArrayIndex, searchSortedArray } from "@src/sortedarray";
 
 type Result = {
     keyword: string,
@@ -74,7 +76,7 @@ async function execBenchmark<T> (
     console.log(`time: ${result_create_index.time}`);
 
     console.log("index post process.");
-    const result_post_index = benchmark(() => post_fn(index), [null]);
+    const result_post_index = benchmark((x) => post_fn(x), [index]);
     console.log(`time: ${result_post_index.time}`);
 
     console.log(`index size in byte: ${calculateJsonSize(index)} byte`);
@@ -154,7 +156,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     // bigram
     const bigram_index : RecordIndex = {};
     await prepareAndExecBenchmark(
-        "BIGRAM INVERTED-INDEX",
+        "BIGRAM RECORD",
         wikipedia_articles,
         keywords,
         ref_results,
@@ -167,7 +169,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     // trigram
     const trigram_index : RecordIndex = {};
     await prepareAndExecBenchmark(
-        "TRIGRAM INVERTED-INDEX",
+        "TRIGRAM RECORD",
         wikipedia_articles,
         keywords,
         ref_results,
@@ -180,7 +182,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     // quadgram
     const quadgram_index : RecordIndex = {};
     await prepareAndExecBenchmark(
-        "QUADGRAM INVERTED-INDEX",
+        "QUADGRAM RECORD",
         wikipedia_articles,
         keywords,
         ref_results,
@@ -203,45 +205,45 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         trie_trigram_index
     );
 
-    // Hybrid: en inverted index, ja bigram inverted index
-    const hybrid_bigram_index : HybridIndex<RecordIndex, RecordIndex> = { ja: {}, en: {} };
+    // Hybrid: en sorted arrya, ja bigram sorted array
+    const hybrid_bigram_index : HybridIndex<SortedArrayIndex, SortedArrayIndex> = { ja: { unsorted: {}, sorted: {} }, en: { unsorted: {}, sorted: {} } };
     await prepareAndExecBenchmark(
-        "HYBRID en:INVERTED-INDEX ja:BIGRAM INVERTED-INDEX",
+        "HYBRID en:SORTED-ARRAY ja:BIGRAM SORTED-ARRAY",
         wikipedia_articles,
         keywords,
         ref_results,
         generateHybridIndexFn(
-            addToRecordIndex, (x) => generateNgram(2, x),
-            addToRecordIndex, (x) => [x],
+            addToSortedArrayIndex, (x) => generateNgram(2, x),
+            addToSortedArrayIndex, noPreProcess,
         ),
-        noPostProcess,
+        generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
         generateHybridSearchFn(
-            searchRecord, (x) => generateNgram(2, x),
-            searchRecord, (x) => [x]
+            searchSortedArray, (x) => generateNgram(2, x),
+            searchSortedArray, noPreProcess
         ),
         hybrid_bigram_index
     );
 
-    // Hybrid: en inverted index, ja wakachigaki inverted index
-    const hybrid_wakachigaki_index : HybridIndex<RecordIndex, RecordIndex> = { ja: {}, en: {} };
+    // Hybrid: en sorted array, ja wakachigaki sorted array
+    const hybrid_wakachigaki_index : HybridIndex<SortedArrayIndex, SortedArrayIndex> = { ja: { unsorted: {}, sorted: {} }, en: { unsorted: {}, sorted: {} } };
     const parser = loadDefaultJapaneseParser();
     const ja_preprocess = compose(
         splitByKatakana,
         (words: string[]) => words.flatMap((w: string) => parser.parse(w) || [])
     );
     await prepareAndExecBenchmark(
-        "HYBRID en:INVERTED-INDEX ja:wakachigaki INVERTED-INDEX",
+        "HYBRID en:SORTED-ARRAY ja:wakachigaki SORTED-ARRAY",
         wikipedia_articles,
         keywords,
         ref_results,
         generateHybridIndexFn(
-            addToRecordIndex, (x) => ja_preprocess([x]),
-            addToRecordIndex, (x) => [x],
+            addToSortedArrayIndex, (x) => ja_preprocess([x]),
+            addToSortedArrayIndex, noPreProcess,
         ),
-        noPostProcess,
+        generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
         generateHybridSearchFn(
-            searchRecord, (x) => ja_preprocess([x]),
-            searchRecord, (x) => [x]
+            searchSortedArray, (x) => ja_preprocess([x]),
+            searchSortedArray, noPreProcess
         ),
         hybrid_wakachigaki_index
     );
