@@ -7,16 +7,15 @@ import { wikipedia_keyword_ja } from "@test/wikipedia_keyword.ja";
 import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
 import { wikipedia_keyword_en } from "@test/wikipedia_keyword.en";
 import { wikipedia_articles_en } from "@test/wikipedia_articles.en";
-import { calculateJsonSize, calculateGzipedJsonSize, zipWith, intersect, difference } from "@src/util";
+import { calculateJsonSize, calculateGzipedJsonSize, compose, zipWith, intersect, difference } from "@src/util";
+import { splitByKatakana } from "@src/preprocess";
+import { generateIndexFn, generateSearchFn, generateHybridIndexFn, generateHybridSearchFn } from "@src/common";
 import { addToLinearIndex, searchLinear } from "@src/linear";
 import { generate1ToNgram, generateNgram, generateNgramTrie } from "@src/ngram";
 import { addToTrieIndex, searchTrie } from "@src/trie";
 import { addToBloomIndex, searchBloom } from "@src/bloom";
-import { generateIndexFn, generateSearchFn, generateHybridIndexFn, generateHybridSearchFn } from "@src/common";
 import { addToInvertedIndex, searchInvertedIndex } from "@src/invertedindex";
 import { loadDefaultJapaneseParser } from "budoux";
-import { splitByKatakana } from "@src/preprocess";
-import { compose } from "@src/util";
 
 type Result = {
     keyword: string,
