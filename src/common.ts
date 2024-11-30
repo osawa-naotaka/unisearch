@@ -38,7 +38,7 @@ export const noPostProcess = () => {};
 export function generateIndexFn<T>(idxfn: IndexFn<T>, tttfn: TermToTokenFn = tokenIsTerm): IndexFn<T> {
     return (ref: Reference, text: string, index: T) =>
         textToTerm([text])
-            .flatMap((term) => tttfn(term))
+            .flatMap(tttfn)
             .map((token) => idxfn(ref, token, index));
 }
 
@@ -47,7 +47,7 @@ export function generateSearchFn<T>(search: SearchFn<T>, tttfn: TermToTokenFn = 
         foldl1Array(
             intersect,
             textToTerm([query])
-                .flatMap((term) => tttfn(term))
+                .flatMap(tttfn)
                 .map((token) => search(token, index)),
         );
 }
