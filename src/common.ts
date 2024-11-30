@@ -48,8 +48,11 @@ export function generateSearchFn<T>(search: SearchFn<T>, tttfn: TermToTokenFn = 
         foldl1Array(
             intersect,
             textToTerm([query])
-                .flatMap(tttfn)
-                .map((token) => search(scheme, token, index)),
+                .map(tttfn)
+                .map((tokens) => {
+                    const result = tokens.map((token) => search(scheme, token, index));
+                    return foldl1Array(intersect, result);
+                }),
         );
 }
 

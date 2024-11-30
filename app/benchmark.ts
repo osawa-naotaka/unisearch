@@ -193,9 +193,9 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     
     // quadgram
     const quadgram_set: SearcherSet<RecordIndex> = {
-        index_fn: generateIndexFn(addToRecordIndex, (x) => generate1ToNgram(3, x)),
+        index_fn: generateIndexFn(addToRecordIndex, (x) => generate1ToNgram(4, x)),
         post_fn: noPostProcess,
-        search_fn: generateSearchFn(searchRecord, (x) => generateNgram(3, x)),
+        search_fn: generateSearchFn(searchRecord, (x) => generateNgram(4, x)),
         index: {}
     }
     await runner("QUADGRAM RECORD", quadgram_set, "EXACT");
