@@ -17,6 +17,13 @@ export type HybridIndex<T, U> = {
     en: U;
 };
 
+export type SearcherSet<T> = {
+    index_fn: (ref: Reference, text: string, index: T) => void;
+    post_fn: PostprocessFn<T>;
+    search_fn: (query: string, index: T) => Reference[];
+    index: T;
+};
+
 export type IndexFn<T> = (ref: Reference, token: Token, index: T) => void;
 export type SearchFn<T> = (query: Token, index: T) => Reference[];
 export type TermToTokenFn = (term: Term) => Token[];

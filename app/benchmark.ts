@@ -1,4 +1,4 @@
-import type { Reference, IndexFn, SearchFn, HybridIndex, PostprocessFn } from "@src/common";
+import type { Reference, HybridIndex, IndexFn, PostprocessFn, SearcherSet } from "@src/common";
 import type { LinearIndex } from "@src/linear";
 import type { RecordIndex } from "@src/record";
 import type { TrieIndex } from "@src/trie";
@@ -18,7 +18,7 @@ import { addToTrieIndex, searchTrie } from "@src/trie";
 import { addToBloomIndex, searchBloom } from "@src/bloom";
 import { addToRecordIndex, searchRecord } from "@src/record";
 import { loadDefaultJapaneseParser } from "budoux";
-import { addToSortedArrayIndex, createSortedArrayIndex, searchExactSortedArray, searchSortedArray } from "@src/sortedarray";
+import { addToSortedArrayIndex, createSortedArrayIndex, searchSortedArray } from "@src/sortedarray";
 
 type Result = {
     keyword: string,
@@ -73,24 +73,21 @@ function execIndexing<T> (index_fn: IndexFn<T>, post_fn: PostprocessFn<T>, index
 }
 
 async function execBenchmark<T> (
-    index_fn: IndexFn<T>,
-    post_fn: PostprocessFn<T>,
-    search_fn: SearchFn<T>,
-    index: T,
+    searcher: SearcherSet<T>,
     keywords: string[],
     articles: WikipediaArticle[]) : Promise<Result[]> {
 
     console.log("start indexing.");
-    const result_indexing = execIndexing(index_fn, post_fn, index, articles);
+    const result_indexing = execIndexing(searcher.index_fn, searcher.post_fn, searcher.index, articles);
     console.log(`indexing time: ${result_indexing[0].time} ms`);
     console.log(`post process time: ${result_indexing[1].time} ms`);
 
-    console.log(`index size in byte: ${calculateJsonSize(index)} byte`);
-    console.log(`gziped index size in byte: ${await calculateGzipedJsonSize(index)} byte`);
+    console.log(`index size in byte: ${calculateJsonSize(searcher.index)} byte`);
+    console.log(`gziped index size in byte: ${await calculateGzipedJsonSize(searcher.index)} byte`);
 
     console.log("start search benchmark.");
     const result_search = benchmark((key) =>
-        ({keyword: key, refs: search_fn(key, index)}), keywords);
+        ({keyword: key, refs: searcher.search_fn(key, searcher.index)}), keywords);
     console.log(`time: ${result_search.time} ms`);
 
     return result_search.results;
@@ -128,19 +125,26 @@ async function prepareAndExecBenchmark<T>(
     articles: WikipediaArticle[],
     keywords: string[],
     ref_results: Result[],
-    index_fn: IndexFn<T>,
-    post_fn: PostprocessFn<T>,
-    search_fn: SearchFn<T>,
-    index: T
+    searcher: SearcherSet<T>
 ) : Promise<Result[]> {
     console.log(`${name} SEARCH`);
-    const results = await execBenchmark<T>(index_fn, post_fn, search_fn, index, keywords, articles);
+    const results = await execBenchmark<T>(searcher, keywords, articles);
     const cheked_results = checkResult(ref_results, results);
     console.log(cheked_results);
     console.log(cheked_results.map((r) => ({keyword:r.keyword, false_negative: r.false_negative})).filter((x) => x.false_negative.length !== 0));
     console.log(countResults(cheked_results));
 
     return results;
+}
+
+type Runner = <T>(name: string, searcher: SearcherSet<T>) => Promise<Result[]>;
+
+function generateBenchmarkRunner(
+    articles: WikipediaArticle[],
+    keywords: string[],
+    ref_results: Result[]
+) : Runner {
+    return <T>(name: string, searcher: SearcherSet<T>) => prepareAndExecBenchmark(name, articles, keywords, ref_results, searcher);
 }
 
 async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[]) {
@@ -155,144 +159,124 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     
     // linear search
     console.log("LINEAR SEARCH");
-    const linear_index : LinearIndex = [];
-    const ref_results = await execBenchmark(addToLinearIndex, noPostProcess, searchLinear, linear_index, keywords, wikipedia_articles);
+    const linear_set : SearcherSet<LinearIndex> = {
+        index_fn: addToLinearIndex,
+        post_fn: noPostProcess,
+        search_fn: searchLinear,
+        index: []
+    };
+    const ref_results = await execBenchmark(linear_set, keywords, wikipedia_articles);
     console.log(ref_results);
 
+    // prepare benchmark runner
+    const runner = generateBenchmarkRunner(wikipedia_articles, keywords, ref_results);
+
     // bigram
-    const bigram_index : RecordIndex = {};
-    await prepareAndExecBenchmark(
-        "BIGRAM RECORD",
-        wikipedia_articles,
-        keywords,
-        ref_results,
-        generateIndexFn(addToRecordIndex, (x) => generate1ToNgram(2, x)),
-        noPostProcess,
-        generateSearchFn(searchRecord, (x) => generateNgram(2, x)),
-        bigram_index
-    );
+    const bigram_set: SearcherSet<RecordIndex> = {
+        index_fn: generateIndexFn(addToRecordIndex, (x) => generate1ToNgram(2, x)),
+        post_fn: noPostProcess,
+        search_fn: generateSearchFn(searchRecord, (x) => generateNgram(2, x)),
+        index: {}
+    }
+    await runner("BIGRAM RECORD", bigram_set);
     
     // trigram
-    const trigram_index : RecordIndex = {};
-    await prepareAndExecBenchmark(
-        "TRIGRAM RECORD",
-        wikipedia_articles,
-        keywords,
-        ref_results,
-        generateIndexFn(addToRecordIndex, (x) => generate1ToNgram(3, x)),
-        noPostProcess,
-        generateSearchFn(searchRecord, (x) => generateNgram(3, x)),
-        trigram_index
-    );
+    const trigram_set: SearcherSet<RecordIndex> = {
+        index_fn: generateIndexFn(addToRecordIndex, (x) => generate1ToNgram(3, x)),
+        post_fn: noPostProcess,
+        search_fn: generateSearchFn(searchRecord, (x) => generateNgram(3, x)),
+        index: {}
+    }
+    await runner("TRIGRAM RECORD", trigram_set);
     
     // quadgram
-    const quadgram_index : RecordIndex = {};
-    await prepareAndExecBenchmark(
-        "QUADGRAM RECORD",
-        wikipedia_articles,
-        keywords,
-        ref_results,
-        generateIndexFn(addToRecordIndex, (x) => generate1ToNgram(4, x)),
-        noPostProcess,
-        generateSearchFn(searchRecord, (x) => generateNgram(4, x)),
-        quadgram_index
-    );
+    const quadgram_set: SearcherSet<RecordIndex> = {
+        index_fn: generateIndexFn(addToRecordIndex, (x) => generate1ToNgram(3, x)),
+        post_fn: noPostProcess,
+        search_fn: generateSearchFn(searchRecord, (x) => generateNgram(3, x)),
+        index: {}
+    }
+    await runner("QUADGRAM RECORD", quadgram_set);
     
     // Trie trigram
-    const trie_trigram_index : TrieIndex = {refs: [], children: {}};
-    await prepareAndExecBenchmark(
-        "TRIGRAM TRIE",
-        wikipedia_articles,
-        keywords,
-        ref_results,
-        generateIndexFn(addToTrieIndex, (x) => generateNgramTrie(3, x)),
-        noPostProcess,
-        generateSearchFn(searchTrie, (x) => generateNgram(3, x)),
-        trie_trigram_index
-    );
+    const trie_trigram_set: SearcherSet<TrieIndex> = {
+        index_fn: generateIndexFn(addToTrieIndex, (x) => generateNgramTrie(3, x)),
+        post_fn: noPostProcess,
+        search_fn: generateSearchFn(searchTrie, (x) => generateNgram(3, x)),
+        index: {refs: [], children: {}}
+    }
+    await runner("TRIGRAM TRIE", trie_trigram_set);
 
     // Hybrid: en sorted arrya, ja bigram sorted array
-    const hybrid_bigram_index : HybridIndex<SortedArrayIndex, SortedArrayIndex> = { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } };
-    await prepareAndExecBenchmark(
-        "HYBRID en:SORTED-ARRAY ja:BIGRAM SORTED-ARRAY",
-        wikipedia_articles,
-        keywords,
-        ref_results,
-        generateHybridIndexFn(
+    const hybrid_bigram_set: SearcherSet<HybridIndex<SortedArrayIndex, SortedArrayIndex>> = {
+        index_fn: generateHybridIndexFn(
             addToSortedArrayIndex, (x) => generateNgramTrie(2, x),
             addToSortedArrayIndex, tokenIsTerm,
         ),
-        generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
-        generateHybridSearchFn(
+        post_fn: generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
+        search_fn: generateHybridSearchFn(
             searchSortedArray, (x) => generateNgram(2, x),
             searchSortedArray, tokenIsTerm
         ),
-        hybrid_bigram_index
-    );
+        index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } }
+    }
+    await runner("HYBRID en:SORTED-ARRAY ja:BIGRAM SORTED-ARRAY", hybrid_bigram_set);
 
     // Hybrid: en sorted array, ja wakachigaki sorted array
-    const hybrid_wakachigaki_index : HybridIndex<SortedArrayIndex, SortedArrayIndex> = { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } };
     const parser = loadDefaultJapaneseParser();
     const tokenize_ja = compose(
         splitByKatakana,
         (words: string[]) => words.flatMap((w: string) => parser.parse(w) || [])
     );
-    await prepareAndExecBenchmark(
-        "HYBRID en:SORTED-ARRAY ja:wakachigaki SORTED-ARRAY",
-        wikipedia_articles,
-        keywords,
-        ref_results,
-        generateHybridIndexFn(
+    const hybrid_wakachigaki_set: SearcherSet<HybridIndex<SortedArrayIndex, SortedArrayIndex>> = {
+        index_fn: generateHybridIndexFn(
             addToSortedArrayIndex, (x) => tokenize_ja([x]),
             addToSortedArrayIndex, tokenIsTerm,
         ),
-        generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
-        generateHybridSearchFn(
+        post_fn: generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
+        search_fn: generateHybridSearchFn(
             searchSortedArray, (x) => tokenize_ja([x]),
             searchSortedArray, tokenIsTerm
         ),
-        hybrid_wakachigaki_index
-    );
-
-    // Hybrid: en sorted array, ja wakachigaki exact sorted array
-    const hybrid_wakachigaki_exact_index : HybridIndex<SortedArrayIndex, SortedArrayIndex> = { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } };
-    await prepareAndExecBenchmark(
-        "HYBRID en: exact SORTED-ARRAY ja:wakachigaki exact SORTED-ARRAY",
-        wikipedia_articles,
-        keywords,
-        ref_results,
-        generateHybridIndexFn(
-            addToSortedArrayIndex, (x) => tokenize_ja([x]),
-            addToSortedArrayIndex, tokenIsTerm,
-        ),
-        generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
-        generateHybridSearchFn(
-            searchExactSortedArray, (x) => tokenize_ja([x]),
-            searchExactSortedArray, tokenIsTerm
-        ),
-        hybrid_wakachigaki_exact_index
-    );
+        index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } }
+    }
+    await runner("HYBRID en:SORTED-ARRAY ja:wakachigaki SORTED-ARRAY", hybrid_wakachigaki_set);
 }
 
 async function runBloom(run_hashes: number, run_bits: [number, number], wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[]) {
-    console.log("LINEAR SEARCH");
-    const linear_index : LinearIndex = [];
+    console.log("initializing bloom benchmark.");
     const keywords = getAllKeywords(wikipedia_keyword);
-    const ref_results = await execBenchmark(addToLinearIndex, noPostProcess, generateSearchFn(searchLinear), linear_index, keywords, wikipedia_articles);
+    console.log(`select all ${keywords.length} keywords...`);
+    console.log("selected keywords are:");
+    console.log(keywords);
     
-    async function bloomSim(bits: number, hashes: number, articles: WikipediaArticle[], keywords: string[], ) {
-        const bloom_index : BloomIndex = {index: {}, bits: bits, hashes: hashes};
-        await prepareAndExecBenchmark(`bloom filter bits = ${bits}, hashes = ${hashes}`,
-            articles, keywords, ref_results,
-            generateIndexFn(addToBloomIndex, (x) => generate1ToNgram(4, x)),
-            noPostProcess,
-            generateSearchFn(searchBloom, (x) => generateNgram(4, x)), bloom_index
-        );
-    }
+    // article size
+    console.log("articles size: " + calculateJsonSize(wikipedia_articles));
+    
+    // linear search
+    console.log("LINEAR SEARCH");
+    const linear_set : SearcherSet<LinearIndex> = {
+        index_fn: addToLinearIndex,
+        post_fn: noPostProcess,
+        search_fn: searchLinear,
+        index: []
+    };
+    const ref_results = await execBenchmark(linear_set, keywords, wikipedia_articles);
+    console.log(ref_results);
+
+    // prepare benchmark runner
+    const runner = generateBenchmarkRunner(wikipedia_articles, keywords, ref_results);
+    const bloom_set: SearcherSet<BloomIndex> = {
+        index_fn: generateIndexFn(addToBloomIndex, (x) => generate1ToNgram(4, x)),
+        post_fn: noPostProcess,
+        search_fn: generateSearchFn(searchBloom, (x) => generateNgram(4, x)),
+        index: {index: {}, bits: run_bits[0], hashes: 2}
+    };
     
     for(let hashes = 2; hashes <= run_hashes; hashes++) {
         for(let bits = run_bits[0]; bits < run_bits[1]; bits = bits * 2) {
-            await bloomSim(bits, hashes, wikipedia_articles, keywords);
+            bloom_set.index = {index: {}, bits: bits, hashes: hashes};
+            await runner(`BLOOM FILTER ${bits} bits, ${hashes} hashs`, bloom_set);
         }
     }    
 }
