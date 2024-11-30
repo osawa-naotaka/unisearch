@@ -11,7 +11,7 @@ import { wikipedia_keyword_en } from "@test/wikipedia_keyword.en";
 import { wikipedia_articles_en } from "@test/wikipedia_articles.en";
 import { calculateJsonSize, calculateGzipedJsonSize, compose, zipWith, intersect, difference } from "@src/util";
 import { splitByKatakana } from "@src/preprocess";
-import { generateIndexFn, generateSearchFn, generateHybridIndexFn, generateHybridSearchFn, noPostProcess, noPreProcess, generateHybridPostprocessFn } from "@src/common";
+import { generateIndexFn, generateSearchFn, generateHybridIndexFn, generateHybridSearchFn, noPostProcess, tokenIsTerm, generateHybridPostprocessFn } from "@src/common";
 import { addToLinearIndex, searchLinear } from "@src/linear";
 import { generate1ToNgram, generateNgram, generateNgramTrie } from "@src/ngram";
 import { addToTrieIndex, searchTrie } from "@src/trie";
@@ -215,12 +215,12 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         ref_results,
         generateHybridIndexFn(
             addToSortedArrayIndex, (x) => generateNgram(2, x),
-            addToSortedArrayIndex, noPreProcess,
+            addToSortedArrayIndex, tokenIsTerm,
         ),
         generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
         generateHybridSearchFn(
             searchSortedArray, (x) => generateNgram(2, x),
-            searchSortedArray, noPreProcess
+            searchSortedArray, tokenIsTerm
         ),
         hybrid_bigram_index
     );
@@ -228,7 +228,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     // Hybrid: en sorted array, ja wakachigaki sorted array
     const hybrid_wakachigaki_index : HybridIndex<SortedArrayIndex, SortedArrayIndex> = { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } };
     const parser = loadDefaultJapaneseParser();
-    const ja_preprocess = compose(
+    const tokenize_ja = compose(
         splitByKatakana,
         (words: string[]) => words.flatMap((w: string) => parser.parse(w) || [])
     );
@@ -238,13 +238,13 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         keywords,
         ref_results,
         generateHybridIndexFn(
-            addToSortedArrayIndex, (x) => ja_preprocess([x]),
-            addToSortedArrayIndex, noPreProcess,
+            addToSortedArrayIndex, (x) => tokenize_ja([x]),
+            addToSortedArrayIndex, tokenIsTerm,
         ),
         generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
         generateHybridSearchFn(
-            searchSortedArray, (x) => ja_preprocess([x]),
-            searchSortedArray, noPreProcess
+            searchSortedArray, (x) => tokenize_ja([x]),
+            searchSortedArray, tokenIsTerm
         ),
         hybrid_wakachigaki_index
     );
@@ -257,13 +257,13 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         keywords,
         ref_results,
         generateHybridIndexFn(
-            addToSortedArrayIndex, (x) => ja_preprocess([x]),
-            addToSortedArrayIndex, noPreProcess,
+            addToSortedArrayIndex, (x) => tokenize_ja([x]),
+            addToSortedArrayIndex, tokenIsTerm,
         ),
         generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
         generateHybridSearchFn(
-            searchExactSortedArray, (x) => ja_preprocess([x]),
-            searchExactSortedArray, noPreProcess
+            searchExactSortedArray, (x) => tokenize_ja([x]),
+            searchExactSortedArray, tokenIsTerm
         ),
         hybrid_wakachigaki_exact_index
     );

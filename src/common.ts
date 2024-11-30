@@ -1,7 +1,8 @@
-import { docToWords } from "@src/preprocess";
+import { textToTerm } from "@src/preprocess";
 import { foldl1Array, intersect, isNonSpaceSeparatedChar } from "@src/util";
 
 export type DocId = number;
+export type Term = string;
 export type Token = string;
 export type Reference = {
     docid: DocId;
@@ -18,74 +19,74 @@ export type HybridIndex<T, U> = {
 
 export type IndexFn<T> = (ref: Reference, token: Token, index: T) => void;
 export type SearchFn<T> = (query: Token, index: T) => Reference[];
-export type PreprocessFn = (token: Token) => Token[];
+export type TermToTokenFn = (term: Term) => Token[];
 export type PostprocessFn<T> = (index: T) => void;
 export type HybridIndexFn<T, U> = (ref: Reference, text: Token, index: HybridIndex<T, U>) => void;
 export type HybridSearchFn<T, U> = (query: Token, index: HybridIndex<T, U>) => Reference[];
 export type HybridPostprocessFn<T, U> = (index: HybridIndex<T, U>) => void;
 
-export const noPreProcess = (x: Token) => [x];
+export const tokenIsTerm = (x: Term) => [x];
 export const noPostProcess = () => {};
 
-export function generateIndexFn<T>(idxfn: IndexFn<T>, pre: PreprocessFn = noPreProcess): IndexFn<T> {
+export function generateIndexFn<T>(idxfn: IndexFn<T>, tttfn: TermToTokenFn = tokenIsTerm): IndexFn<T> {
     return (ref: Reference, text: string, index: T) =>
-        docToWords([text])
-            .flatMap((w) => pre(w))
-            .map((word) => idxfn(ref, word, index));
+        textToTerm([text])
+            .flatMap((term) => tttfn(term))
+            .map((token) => idxfn(ref, token, index));
 }
 
-export function generateSearchFn<T>(search: SearchFn<T>, pre: PreprocessFn = noPreProcess): SearchFn<T> {
+export function generateSearchFn<T>(search: SearchFn<T>, tttfn: TermToTokenFn = tokenIsTerm): SearchFn<T> {
     return (query: string, index: T) =>
         foldl1Array(
             intersect,
-            docToWords([query])
-                .flatMap((w) => pre(w))
-                .map((w) => search(w, index)),
+            textToTerm([query])
+                .flatMap((term) => tttfn(term))
+                .map((token) => search(token, index)),
         );
 }
 
 export function generateHybridIndexFn<T, U>(
-    idxjafn: IndexFn<T>,
-    idxjapre: PreprocessFn,
-    idxenfn: IndexFn<U>,
-    idxenpre: PreprocessFn,
+    idxfn_ja: IndexFn<T>,
+    tttfn_ja: TermToTokenFn,
+    idxfn_en: IndexFn<U>,
+    tttfn_en: TermToTokenFn,
 ): HybridIndexFn<T, U> {
     return (ref: Reference, text: string, index: HybridIndex<T, U>) => {
-        for (const word of docToWords([text])) {
-            if (isNonSpaceSeparatedChar(word[0])) {
-                idxjapre(word).map((w) => idxjafn(ref, w, index.ja));
+        for (const term of textToTerm([text])) {
+            if (isNonSpaceSeparatedChar(term[0])) {
+                tttfn_ja(term).map((token) => idxfn_ja(ref, token, index.ja));
             } else {
-                idxenpre(word).map((w) => idxenfn(ref, w, index.en));
+                tttfn_en(term).map((token) => idxfn_en(ref, token, index.en));
             }
         }
     };
 }
 
 export function generateHybridPostprocessFn<T, U>(
-    idxjapost: PostprocessFn<T>,
-    idxenpost: PostprocessFn<U>,
+    idxpostfn_ja: PostprocessFn<T>,
+    idxpostfn_en: PostprocessFn<U>,
 ): HybridPostprocessFn<T, U> {
     return (index: HybridIndex<T, U>) => {
-        idxjapost(index.ja);
-        idxenpost(index.en);
+        idxpostfn_ja(index.ja);
+        idxpostfn_en(index.en);
     };
 }
 
 export function generateHybridSearchFn<T, U>(
-    searchjafn: SearchFn<T>,
-    searchjapre: PreprocessFn,
-    searchenfn: SearchFn<U>,
-    searchenpre: PreprocessFn,
+    searchfn_ja: SearchFn<T>,
+    tttfn_ja: TermToTokenFn,
+    searchfn_en: SearchFn<U>,
+    tttfn_en: TermToTokenFn,
 ): HybridSearchFn<T, U> {
     return (query: string, index: HybridIndex<T, U>) =>
         foldl1Array(
             intersect,
-            docToWords([query]).map((word) =>
+            textToTerm([query]).map((term) =>
                 foldl1Array(
                     intersect,
-                    isNonSpaceSeparatedChar(word[0])
-                        ? searchjapre(word).map((w) => searchjafn(w, index.ja))
-                        : searchenpre(word).map((w) => searchenfn(w, index.en)),
+                    isNonSpaceSeparatedChar(term[0])
+                        ? tttfn_ja(term).map((token) => searchfn_ja(token, index.ja))
+                        : tttfn_en(term).map((token) => searchfn_en(token, index.en)),
                 ),
             ),
         );

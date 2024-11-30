@@ -1,5 +1,5 @@
 import { compose } from "@src/util";
-import type { Token } from "src/common";
+import type { Term } from "src/common";
 
 // 日本語正規化
 const normalizeJapanese = (input: string) =>
@@ -40,11 +40,8 @@ export function splitByKatakana(text: string[]): string[] {
     return matches;
 }
 
-export const tokenizeTexts = (text: string[]) => compose(splitByDelimiter, splitByNonSpaceSeparatedChar)(text);
+export const termingTexts = (text: string[]) => compose(splitByDelimiter, splitByNonSpaceSeparatedChar)(text);
 
-export function docToWords(doc: string[]): Token[] {
-    const normalized = doc.map(normalizeText);
-    const tokenized = tokenizeTexts(normalized);
-
-    return tokenized;
+export function textToTerm(text: string[]): Term[] {
+    return termingTexts(text.map(normalizeText));
 }
