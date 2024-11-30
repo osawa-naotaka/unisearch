@@ -1,4 +1,4 @@
-import type { Reference, Token } from "@src/common";
+import type { Reference, Scheme, Token } from "@src/common";
 import { firstLetter, restString, union } from "@src/util";
 
 type TrieNode = {
@@ -46,6 +46,8 @@ export function addToTrieIndex(ref: Reference, text: Token, index: TrieIndex) {
     createTrieNode(text, [ref], index);
 }
 
-export function searchTrie(query: Token, index: TrieIndex): Reference[] {
+export function searchTrie(scheme: Scheme, query: Token, index: TrieIndex): Reference[] {
+    if (scheme === "EXACT") throw new Error("searchTrie: EXACT is not implemented yet.");
+    if (scheme === "FUZZY") throw new Error("searchTrie: FUZZY is not implemented yet.");
     return searchTrieNode(query, index);
 }
