@@ -219,7 +219,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         keywords,
         ref_results,
         generateHybridIndexFn(
-            addToSortedArrayIndex, (x) => generateNgram(2, x),
+            addToSortedArrayIndex, (x) => generateNgramTrie(2, x),
             addToSortedArrayIndex, tokenIsTerm,
         ),
         generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
