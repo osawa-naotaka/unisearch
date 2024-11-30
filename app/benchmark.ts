@@ -61,6 +61,17 @@ function getAllKeywords(keyword_array: WikipediaKeyword[]): string[] {
     return keyword_array.flatMap(k => k.keywords);
 }
 
+function execIndexing<T> (index_fn: IndexFn<T>, post_fn: PostprocessFn<T>, index: T, articles: WikipediaArticle[]) : BenchmarkResult<void>[] {
+    const result_create_index = benchmark((doc, docid) => {
+        index_fn({docid: docid}, doc.title, index);
+        index_fn({docid: docid}, doc.content, index);
+    }, articles);
+
+    const result_post_index = benchmark((x) => post_fn(x), [index]);
+
+    return [result_create_index, result_post_index];
+}
+
 async function execBenchmark<T> (
     index_fn: IndexFn<T>,
     post_fn: PostprocessFn<T>,
@@ -69,21 +80,15 @@ async function execBenchmark<T> (
     keywords: string[],
     articles: WikipediaArticle[]) : Promise<Result[]> {
 
-    console.log("creating index.");
-    const result_create_index = benchmark((doc, docid) => {
-        index_fn({docid: docid}, doc.title, index);
-        index_fn({docid: docid}, doc.content, index);
-    }, articles);
-    console.log(`time: ${result_create_index.time}`);
-
-    console.log("index post process.");
-    const result_post_index = benchmark((x) => post_fn(x), [index]);
-    console.log(`time: ${result_post_index.time}`);
+    console.log("start indexing.");
+    const result_indexing = execIndexing(index_fn, post_fn, index, articles);
+    console.log(`indexing time: ${result_indexing[0].time} ms`);
+    console.log(`post process time: ${result_indexing[1].time} ms`);
 
     console.log(`index size in byte: ${calculateJsonSize(index)} byte`);
     console.log(`gziped index size in byte: ${await calculateGzipedJsonSize(index)} byte`);
 
-    console.log("begin benchmark.");
+    console.log("start search benchmark.");
     const result_search = benchmark((key) =>
         ({keyword: key, refs: search_fn(key, index)}), keywords);
     console.log(`time: ${result_search.time} ms`);
