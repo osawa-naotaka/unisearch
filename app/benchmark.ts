@@ -5,6 +5,7 @@ import type { TrieIndex } from "@src/trie";
 import type { BloomIndex } from "@src/bloom";
 import type { SortedArrayIndex } from "@src/sortedarray";
 import { wikipedia_keyword_ja } from "@test/wikipedia_keyword.ja";
+import { wikipedia_keyword_long_ja } from "@test/wikipedia_keyword_long.ja";
 import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
 import { wikipedia_keyword_en } from "@test/wikipedia_keyword.en";
 import { wikipedia_articles_en } from "@test/wikipedia_articles.en";
@@ -294,6 +295,8 @@ async function runBloom(run_hashes: number, run_bits: [number, number], wikipedi
 const num_articles = 10;
 console.log("JAPANESE benchmark.");
 await runAll(wikipedia_articles_ja.slice(0, num_articles), wikipedia_keyword_ja);
+console.log("JAPANESE benchmark with long keyword.");
+await runAll(wikipedia_articles_ja.slice(0, num_articles), wikipedia_keyword_long_ja);
 console.log("ENGLISH benchmark.");
 await runAll(wikipedia_articles_en.slice(0, num_articles), wikipedia_keyword_en);
 console.log("JAPANESE bloom benchmark.");
