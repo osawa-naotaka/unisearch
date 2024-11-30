@@ -81,10 +81,6 @@ export function rangeArray(n: number): number[] {
     return [...Array(n).keys()];
 }
 
-export function beginWith(pre: string, text: string): boolean {
-    return pre.length > text.length ? false : text.slice(0, pre.length) === pre;
-}
-
 const encoder = new TextEncoder();
 export function toUtf8(text: string) {
     return encoder.encode(text);

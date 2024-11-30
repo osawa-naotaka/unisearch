@@ -11,7 +11,6 @@ export type Reference = {
         wordaround?: string;
     };
 };
-export type Scheme = "EXACT" | "FORWARD" | "FUZZY";
 
 export type HybridIndex<T, U> = {
     ja: T;
@@ -21,16 +20,16 @@ export type HybridIndex<T, U> = {
 export type SearcherSet<T> = {
     index_fn: (ref: Reference, text: string, index: T) => void;
     post_fn: PostprocessFn<T>;
-    search_fn: (scheme: Scheme, query: string, index: T) => Reference[];
+    search_fn: (query: string, index: T) => Reference[];
     index: T;
 };
 
 export type IndexFn<T> = (ref: Reference, token: Token, index: T) => void;
-export type SearchFn<T> = (scheme: Scheme, query: Token, index: T) => Reference[];
+export type SearchFn<T> = (query: Token, index: T) => Reference[];
 export type TermToTokenFn = (term: Term) => Token[];
 export type PostprocessFn<T> = (index: T) => void;
 export type HybridIndexFn<T, U> = (ref: Reference, text: Token, index: HybridIndex<T, U>) => void;
-export type HybridSearchFn<T, U> = (scheme: Scheme, query: Token, index: HybridIndex<T, U>) => Reference[];
+export type HybridSearchFn<T, U> = (query: Token, index: HybridIndex<T, U>) => Reference[];
 export type HybridPostprocessFn<T, U> = (index: HybridIndex<T, U>) => void;
 
 export const tokenIsTerm = (x: Term) => [x];
@@ -44,13 +43,13 @@ export function generateIndexFn<T>(idxfn: IndexFn<T>, tttfn: TermToTokenFn = tok
 }
 
 export function generateSearchFn<T>(search: SearchFn<T>, tttfn: TermToTokenFn = tokenIsTerm): SearchFn<T> {
-    return (scheme: Scheme, query: string, index: T) =>
+    return (query: string, index: T) =>
         foldl1Array(
             intersect,
             textToTerm([query])
                 .map(tttfn)
                 .map((tokens) => {
-                    const result = tokens.map((token) => search(scheme, token, index));
+                    const result = tokens.map((token) => search(token, index));
                     return foldl1Array(intersect, result);
                 }),
         );
@@ -89,15 +88,15 @@ export function generateHybridSearchFn<T, U>(
     searchfn_en: SearchFn<U>,
     tttfn_en: TermToTokenFn,
 ): HybridSearchFn<T, U> {
-    return (scheme: Scheme, query: string, index: HybridIndex<T, U>) =>
+    return (query: string, index: HybridIndex<T, U>) =>
         foldl1Array(
             intersect,
             textToTerm([query]).map((term) =>
                 foldl1Array(
                     intersect,
                     isNonSpaceSeparatedChar(term[0])
-                        ? tttfn_ja(term).map((token) => searchfn_ja(scheme, token, index.ja))
-                        : tttfn_en(term).map((token) => searchfn_en(scheme, token, index.en)),
+                        ? tttfn_ja(term).map((token) => searchfn_ja(token, index.ja))
+                        : tttfn_en(term).map((token) => searchfn_en(token, index.en)),
                 ),
             ),
         );

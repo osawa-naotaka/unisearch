@@ -1,5 +1,5 @@
-import type { Reference, Scheme, Token } from "@src/common";
-import { appendIfNotExists, beginWith } from "@src/util";
+import type { Reference, Token } from "@src/common";
+import { appendIfNotExists } from "@src/util";
 
 export type SortedArrayIndex = {
     unsorted: Record<Token, Reference[]>;
@@ -15,11 +15,16 @@ export function createSortedArrayIndex(index: SortedArrayIndex) {
     index.unsorted = {};
 }
 
-export function searchSortedArray(scheme: Scheme, query: Token, index: SortedArrayIndex): Reference[] {
-    if (scheme === "FUZZY") throw new Error("searchSortedArray: FUZZY is not implemented yet.");
-    return scheme === "EXACT"
-        ? Array.from(new Set([...index.sorted.filter(([word]) => query === word).flatMap(([_, refs]) => refs)]))
-        : Array.from(
-              new Set([...index.sorted.filter(([word]) => beginWith(query, word)).flatMap(([_, refs]) => refs)]),
-          );
+function beginWith(pre: string, text: string): boolean {
+    return pre.length > text.length ? false : text.slice(0, pre.length) === pre;
+}
+
+export function searchExactSortedArray(query: Token, index: SortedArrayIndex): Reference[] {
+    return Array.from(new Set([...index.sorted.filter(([word]) => query === word).flatMap(([_, refs]) => refs)]));
+}
+
+export function searchSortedArray(query: Token, index: SortedArrayIndex): Reference[] {
+    return Array.from(
+        new Set([...index.sorted.filter(([word]) => beginWith(query, word)).flatMap(([_, refs]) => refs)]),
+    );
 }

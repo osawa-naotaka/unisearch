@@ -1,4 +1,4 @@
-import type { Reference, Scheme, Token } from "@src/common";
+import type { Reference, Token } from "@src/common";
 import { murmurhash3_32_gc } from "@src/murmurhash3_gc";
 import { foldl1Array, intersect, rangeArray, union } from "@src/util";
 
@@ -26,8 +26,6 @@ export function addToBloomIndex(refs: Reference, text: Token, index: BloomIndex)
     addBloom(refs, text, index);
 }
 
-export function searchBloom(scheme: Scheme, query: Token, index: BloomIndex): Reference[] {
-    if (scheme === "FORWARD") throw new Error("searchBloom: FORWARD is not implemented yet.");
-    if (scheme === "FUZZY") throw new Error("searchBloom: FUZZY is not implemented yet.");
+export function searchBloom(query: Token, index: BloomIndex): Reference[] {
     return isExists(query, index);
 }

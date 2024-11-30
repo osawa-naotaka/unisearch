@@ -1,4 +1,4 @@
-import type { Reference, HybridIndex, IndexFn, PostprocessFn, SearcherSet, Scheme } from "@src/common";
+import type { Reference, HybridIndex, IndexFn, PostprocessFn, SearcherSet } from "@src/common";
 import type { LinearIndex } from "@src/linear";
 import type { RecordIndex } from "@src/record";
 import type { TrieIndex } from "@src/trie";
@@ -74,7 +74,6 @@ function execIndexing<T> (index_fn: IndexFn<T>, post_fn: PostprocessFn<T>, index
 
 async function execBenchmark<T> (
     searcher: SearcherSet<T>,
-    scheme: Scheme,
     keywords: string[],
     articles: WikipediaArticle[]) : Promise<Result[]> {
 
@@ -88,7 +87,7 @@ async function execBenchmark<T> (
 
     console.log("start search benchmark.");
     const result_search = benchmark((key) =>
-        ({keyword: key, refs: searcher.search_fn(scheme, key, searcher.index)}), keywords);
+        ({keyword: key, refs: searcher.search_fn(key, searcher.index)}), keywords);
     console.log(`time: ${result_search.time} ms`);
 
     return result_search.results;
@@ -126,11 +125,10 @@ async function prepareAndExecBenchmark<T>(
     articles: WikipediaArticle[],
     keywords: string[],
     ref_results: Result[],
-    searcher: SearcherSet<T>,
-    scheme: Scheme
+    searcher: SearcherSet<T>
 ) : Promise<Result[]> {
     console.log(`${name} SEARCH`);
-    const results = await execBenchmark<T>(searcher, scheme, keywords, articles);
+    const results = await execBenchmark<T>(searcher, keywords, articles);
     const cheked_results = checkResult(ref_results, results);
     console.log(cheked_results);
     console.log(cheked_results.map((r) => ({keyword:r.keyword, false_negative: r.false_negative})).filter((x) => x.false_negative.length !== 0));
@@ -139,14 +137,14 @@ async function prepareAndExecBenchmark<T>(
     return results;
 }
 
-type Runner = <T>(name: string, searcher: SearcherSet<T>, scheme: Scheme) => Promise<Result[]>;
+type Runner = <T>(name: string, searcher: SearcherSet<T>) => Promise<Result[]>;
 
 function generateBenchmarkRunner(
     articles: WikipediaArticle[],
     keywords: string[],
     ref_results: Result[]
 ) : Runner {
-    return <T>(name: string, searcher: SearcherSet<T>, scheme: Scheme) => prepareAndExecBenchmark(name, articles, keywords, ref_results, searcher, scheme);
+    return <T>(name: string, searcher: SearcherSet<T>) => prepareAndExecBenchmark(name, articles, keywords, ref_results, searcher);
 }
 
 async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[]) {
@@ -167,7 +165,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         search_fn: searchLinear,
         index: []
     };
-    const ref_results = await execBenchmark(linear_set, "EXACT", keywords, wikipedia_articles);
+    const ref_results = await execBenchmark(linear_set, keywords, wikipedia_articles);
     console.log(ref_results);
 
     // prepare benchmark runner
@@ -180,7 +178,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         search_fn: generateSearchFn(searchRecord, (x) => generateNgram(2, x)),
         index: {}
     }
-    await runner("BIGRAM RECORD", bigram_set, "EXACT");
+    await runner("BIGRAM RECORD", bigram_set);
     
     // trigram
     const trigram_set: SearcherSet<RecordIndex> = {
@@ -189,7 +187,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         search_fn: generateSearchFn(searchRecord, (x) => generateNgram(3, x)),
         index: {}
     }
-    await runner("TRIGRAM RECORD", trigram_set, "EXACT");
+    await runner("TRIGRAM RECORD", trigram_set);
     
     // quadgram
     const quadgram_set: SearcherSet<RecordIndex> = {
@@ -198,7 +196,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         search_fn: generateSearchFn(searchRecord, (x) => generateNgram(4, x)),
         index: {}
     }
-    await runner("QUADGRAM RECORD", quadgram_set, "EXACT");
+    await runner("QUADGRAM RECORD", quadgram_set);
     
     // Trie trigram
     const trie_trigram_set: SearcherSet<TrieIndex> = {
@@ -207,7 +205,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         search_fn: generateSearchFn(searchTrie, (x) => generateNgram(3, x)),
         index: {refs: [], children: {}}
     }
-    await runner("TRIGRAM TRIE", trie_trigram_set, "FORWARD");
+    await runner("TRIGRAM TRIE", trie_trigram_set);
 
     // Hybrid: en sorted arrya, ja bigram sorted array
     const hybrid_bigram_set: SearcherSet<HybridIndex<SortedArrayIndex, SortedArrayIndex>> = {
@@ -222,7 +220,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         ),
         index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } }
     }
-    await runner("HYBRID en:SORTED-ARRAY ja:BIGRAM SORTED-ARRAY", hybrid_bigram_set, "EXACT");
+    await runner("HYBRID en:SORTED-ARRAY ja:BIGRAM SORTED-ARRAY", hybrid_bigram_set);
 
     // Hybrid: en sorted array, ja wakachigaki sorted array
     const parser = loadDefaultJapaneseParser();
@@ -242,7 +240,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         ),
         index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } }
     }
-    await runner("HYBRID en:SORTED-ARRAY ja:wakachigaki SORTED-ARRAY", hybrid_wakachigaki_set, "EXACT");
+    await runner("HYBRID en:SORTED-ARRAY ja:wakachigaki SORTED-ARRAY", hybrid_wakachigaki_set);
 }
 
 async function runBloom(run_hashes: number, run_bits: [number, number], wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[]) {
@@ -263,7 +261,7 @@ async function runBloom(run_hashes: number, run_bits: [number, number], wikipedi
         search_fn: searchLinear,
         index: []
     };
-    const ref_results = await execBenchmark(linear_set, "EXACT", keywords, wikipedia_articles);
+    const ref_results = await execBenchmark(linear_set, keywords, wikipedia_articles);
     console.log(ref_results);
 
     // prepare benchmark runner
@@ -278,7 +276,7 @@ async function runBloom(run_hashes: number, run_bits: [number, number], wikipedi
     for(let hashes = 2; hashes <= run_hashes; hashes++) {
         for(let bits = run_bits[0]; bits < run_bits[1]; bits = bits * 2) {
             bloom_set.index = {index: {}, bits: bits, hashes: hashes};
-            await runner(`BLOOM FILTER ${bits} bits, ${hashes} hashs`, bloom_set, "EXACT");
+            await runner(`BLOOM FILTER ${bits} bits, ${hashes} hashs`, bloom_set);
         }
     }    
 }

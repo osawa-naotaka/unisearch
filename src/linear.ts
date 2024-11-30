@@ -1,4 +1,4 @@
-import type { Reference, Scheme } from "@src/common";
+import type { Reference } from "@src/common";
 import { normalizeText } from "@src/preprocess";
 
 export type LinearIndex = string[];
@@ -15,8 +15,7 @@ function* indicesOf(keyword: string, target: string): Generator<number> {
     }
 }
 
-export function searchLinear(scheme: Scheme, query: string, index: LinearIndex): Reference[] {
-    if (scheme === "FUZZY") throw new Error("serachLinear: FUZZY is not implemented yet.");
+export function searchLinear(query: string, index: LinearIndex): Reference[] {
     const query_normalized = normalizeText(query);
     return index.flatMap((item, docid) =>
         [...indicesOf(query_normalized, item)].map((pos) => ({
