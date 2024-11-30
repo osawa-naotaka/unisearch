@@ -26,6 +26,6 @@ export function addToBloomIndex(refs: Reference, text: Token, index: BloomIndex)
     addBloom(refs, text, index);
 }
 
-export function searchBloom(query: Token, index: BloomIndex): Reference[] {
+export function searchExactBloom(query: Token, index: BloomIndex): Reference[] {
     return isExists(query, index);
 }

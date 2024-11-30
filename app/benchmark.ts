@@ -11,14 +11,14 @@ import { wikipedia_keyword_en } from "@test/wikipedia_keyword.en";
 import { wikipedia_articles_en } from "@test/wikipedia_articles.en";
 import { calculateJsonSize, calculateGzipedJsonSize, compose, zipWith, intersect, difference } from "@src/util";
 import { splitByKatakana } from "@src/preprocess";
-import { generateIndexFn, generateSearchFn, generateHybridIndexFn, generateHybridSearchFn, noPostProcess, tokenIsTerm, generateHybridPostprocessFn } from "@src/common";
+import { generateIndexFn, generateSearchFn, generateHybridIndexFn, generateHybridPostprocessFn, generateHybridSearchFn, noPostProcess, tokenIsTerm, intersectAll } from "@src/common";
 import { addToLinearIndex, searchLinear } from "@src/linear";
 import { generate1ToNgram, generateNgram, generateNgramTrie } from "@src/ngram";
 import { addToTrieIndex, searchTrie } from "@src/trie";
-import { addToBloomIndex, searchBloom } from "@src/bloom";
-import { addToRecordIndex, searchRecord } from "@src/record";
+import { addToBloomIndex, searchExactBloom } from "@src/bloom";
+import { addToRecordIndex, searchExactRecord } from "@src/record";
 import { loadDefaultJapaneseParser } from "budoux";
-import { addToSortedArrayIndex, createSortedArrayIndex, searchSortedArray } from "@src/sortedarray";
+import { addToSortedArrayIndex, createSortedArrayIndex, searchExactSortedArray } from "@src/sortedarray";
 
 type Result = {
     keyword: string,
@@ -175,7 +175,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     const bigram_set: SearcherSet<RecordIndex> = {
         index_fn: generateIndexFn(addToRecordIndex, (x) => generate1ToNgram(2, x)),
         post_fn: noPostProcess,
-        search_fn: generateSearchFn(searchRecord, (x) => generateNgram(2, x)),
+        search_fn: generateSearchFn(searchExactRecord, (x) => generateNgram(2, x), intersectAll),
         index: {}
     }
     await runner("BIGRAM RECORD", bigram_set);
@@ -184,7 +184,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     const trigram_set: SearcherSet<RecordIndex> = {
         index_fn: generateIndexFn(addToRecordIndex, (x) => generate1ToNgram(3, x)),
         post_fn: noPostProcess,
-        search_fn: generateSearchFn(searchRecord, (x) => generateNgram(3, x)),
+        search_fn: generateSearchFn(searchExactRecord, (x) => generateNgram(3, x), intersectAll),
         index: {}
     }
     await runner("TRIGRAM RECORD", trigram_set);
@@ -193,7 +193,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     const quadgram_set: SearcherSet<RecordIndex> = {
         index_fn: generateIndexFn(addToRecordIndex, (x) => generate1ToNgram(4, x)),
         post_fn: noPostProcess,
-        search_fn: generateSearchFn(searchRecord, (x) => generateNgram(4, x)),
+        search_fn: generateSearchFn(searchExactRecord, (x) => generateNgram(4, x), intersectAll),
         index: {}
     }
     await runner("QUADGRAM RECORD", quadgram_set);
@@ -202,7 +202,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     const trie_trigram_set: SearcherSet<TrieIndex> = {
         index_fn: generateIndexFn(addToTrieIndex, (x) => generateNgramTrie(3, x)),
         post_fn: noPostProcess,
-        search_fn: generateSearchFn(searchTrie, (x) => generateNgram(3, x)),
+        search_fn: generateSearchFn(searchTrie, (x) => generateNgram(3, x), intersectAll),
         index: {refs: [], children: {}}
     }
     await runner("TRIGRAM TRIE", trie_trigram_set);
@@ -215,8 +215,8 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         ),
         post_fn: generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
         search_fn: generateHybridSearchFn(
-            searchSortedArray, (x) => generateNgram(2, x),
-            searchSortedArray, tokenIsTerm
+            searchExactSortedArray, (x) => generateNgram(2, x), intersectAll,
+            searchExactSortedArray, tokenIsTerm, intersectAll
         ),
         index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } }
     }
@@ -235,8 +235,8 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         ),
         post_fn: generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
         search_fn: generateHybridSearchFn(
-            searchSortedArray, (x) => tokenize_ja([x]),
-            searchSortedArray, tokenIsTerm
+            searchExactSortedArray, (x) => tokenize_ja([x]), intersectAll,
+            searchExactSortedArray, tokenIsTerm, intersectAll
         ),
         index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } }
     }
@@ -269,7 +269,7 @@ async function runBloom(run_hashes: number, run_bits: [number, number], wikipedi
     const bloom_set: SearcherSet<BloomIndex> = {
         index_fn: generateIndexFn(addToBloomIndex, (x) => generate1ToNgram(4, x)),
         post_fn: noPostProcess,
-        search_fn: generateSearchFn(searchBloom, (x) => generateNgram(4, x)),
+        search_fn: generateSearchFn(searchExactBloom, (x) => generateNgram(4, x), intersectAll),
         index: {index: {}, bits: run_bits[0], hashes: 2}
     };
     
