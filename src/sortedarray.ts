@@ -6,48 +6,60 @@ export type SortedArrayIndex = {
     sorted: [Token, Reference[]][];
 };
 
-function refineSortedArray<T>(prefix: string, keyof: (item: T) => string, items: T[]): T[] {
+export function refineSortedArray<T>(prefix: string, keyof: (item: T) => string, items: T[]): T[] {
 
-    function findStartIndex(items: T[], prefix: string): number  {
+    function findStartIndex(items: T[], prefix: string): number | null {
         let left = 0;
         let right = items.length - 1;
+        let match = null;
         
         while (left <= right) {
             const mid = Math.floor((left + right) / 2);
-            if (keyof(items[mid]) < prefix) {
+            const key = keyof(items[mid]);
+            if(key.startsWith(prefix)) {
+                match = mid;
+            }
+            if (key < prefix) {
                 left = mid + 1;
             } else {
                 right = mid - 1;
             }
         }
         
-        return left;
+        return match;
     };
 
-    function findEndIndex(items: T[], prefix: string): number {
+    function findEndIndex(items: T[], prefix: string): number | null {
         let left = 0;
         let right = items.length - 1;
+        let match = null;
         
         while (left <= right) {
             const mid = Math.floor((left + right) / 2);
-            if (prefix < keyof(items[mid])) {
-                right = mid - 1;
+            const key = keyof(items[mid]);
+            if(key.startsWith(prefix)) {
+                match = mid;
+                if (key < prefix) {
+                    right = mid - 1;
+                } else {
+                    left = mid + 1;
+                }
             } else {
-                left = mid + 1;
+                if (key < prefix) {
+                    left = mid + 1;
+                } else {
+                    right = mid - 1;
+                }    
             }
         }
         
-        return right;
+        return match;
     };
 
     const startIndex = findStartIndex(items, prefix);
     const endIndex = findEndIndex(items, prefix);
 
-    if (startIndex >= items.length || !keyof(items[startIndex]).startsWith(prefix)) {
-        return [];
-    }
-
-    return items.slice(startIndex, endIndex + 1);
+    return startIndex !== null && endIndex !== null ? items.slice(startIndex, endIndex + 1) : [];
 }
 
 export function addToSortedArrayIndex(ref: Reference, text: Token, index: SortedArrayIndex) {
