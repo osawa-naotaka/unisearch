@@ -1,6 +1,7 @@
+import { foldl1Array, intersect, union } from "@src/algo";
 import type { Reference, Token } from "@src/common";
 import { murmurhash3_32_gc } from "@src/murmurhash3_gc";
-import { foldl1Array, intersect, rangeArray, union } from "@src/util";
+import { rangeArray } from "@src/util";
 
 export type BloomIndex = {
     index: Record<number, Reference[]>;

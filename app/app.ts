@@ -4,7 +4,7 @@ import type { SearcherSet, HybridIndex } from "@src/common";
 import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
 import { addToLinearIndex, searchLinear } from "@src/linear";
 import { addToSortedArrayIndex, createSortedArrayIndex, searchExactSortedArray, searchForwardSortedArray } from "@src/sortedarray";
-import { generateNgram, generateNgramTrie } from "@src/ngram";
+import { generateNgram, generateNgramTrie } from "@src/algo";
 import { generateHybridIndexFn, generateHybridPostprocessFn, generateHybridSearchFn, tokenIsTerm, intersectAll } from "@src/common";
 
 const keyword = "ナイター";

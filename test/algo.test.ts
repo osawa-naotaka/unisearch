@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { generate1ToNgram, generateNgram, generateNgramTrie } from '@src/ngram';
+import { generate1ToNgram, generateNgram, generateNgramTrie } from '@src/algo';
 
 test('1-gram for "t", is ["t"]', () =>
     expect(generateNgram(1, "t")).toStrictEqual(["t"]));

@@ -1,5 +1,6 @@
+import { foldl1Array, intersect } from "@src/algo";
 import { textToTerm } from "@src/preprocess";
-import { foldl1Array, intersect, isNonSpaceSeparatedChar } from "@src/util";
+import { isNonSpaceSeparatedChar } from "@src/util";
 
 export type DocId = number;
 export type Term = string;
@@ -50,7 +51,8 @@ export function generateSearchFn<T>(search: SearchFn<T>, tttfn: TermToTokenFn, a
             intersect,
             textToTerm([query])
                 .map(tttfn)
-                .map((tokens) => aggfn(tokens.map((token) => search(token, index)))));
+                .map((tokens) => aggfn(tokens.map((token) => search(token, index)))),
+        );
 }
 
 export function generateHybridIndexFn<T, U>(
@@ -86,15 +88,15 @@ export function generateHybridSearchFn<T, U>(
     aggfn_ja: AggregateFn,
     searchfn_en: SearchFn<U>,
     tttfn_en: TermToTokenFn,
-    aggfn_en: AggregateFn
+    aggfn_en: AggregateFn,
 ): HybridSearchFn<T, U> {
     return (query: string, index: HybridIndex<T, U>) =>
         foldl1Array(
             intersect,
             textToTerm([query]).map((term) =>
                 isNonSpaceSeparatedChar(term[0])
-                   ? aggfn_ja(tttfn_ja(term).map((token) => searchfn_ja(token, index.ja)))
-                   : aggfn_en(tttfn_en(term).map((token) => searchfn_en(token, index.en)))
+                    ? aggfn_ja(tttfn_ja(term).map((token) => searchfn_ja(token, index.ja)))
+                    : aggfn_en(tttfn_en(term).map((token) => searchfn_en(token, index.en))),
             ),
         );
 }

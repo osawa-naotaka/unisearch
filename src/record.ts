@@ -1,5 +1,5 @@
+import { appendIfNotExists, foldl1Array, union } from "@src/algo";
 import type { Reference, Token } from "@src/common";
-import { appendIfNotExists, foldl1Array, union } from "@src/util";
 
 export type RecordIndex = Record<Token, Reference[]>;
 

@@ -1,4 +1,4 @@
-import { compose } from "@src/util";
+import { compose } from "@src/algo";
 import type { Term } from "src/common";
 
 // 日本語正規化
