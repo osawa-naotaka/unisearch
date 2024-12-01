@@ -2,7 +2,7 @@ export function rangeArray(n: number): number[] {
     return [...Array(n).keys()];
 }
 
-export function compareWithUnicode(a: string, b: string) {
+export function compareString(a: string, b: string) {
     return a > b ? 1 : a < b ? -1 : 0;
 }
 

@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest';
-import { generate1ToNgram, generateNgram, generateNgramTrie } from '@src/algo';
+import { findStartIndex, findEndIndex, generate1ToNgram, generateNgram, generateNgramTrie } from '@src/algo';
+import { prefixCompare } from '@src/sortedarray';
 
 test('1-gram for "t", is ["t"]', () =>
     expect(generateNgram(1, "t")).toStrictEqual(["t"]));
@@ -89,3 +90,9 @@ test('trie 3-gram for "tes", is ["tes", "es", "s"]', () =>
 
 test('trie 3-gram for "test", is ["tes", "est", "st", "t"]', () =>
     expect(generateNgramTrie(3, "test")).toStrictEqual(["tes", "est", "st", "t"]));
+
+test('binary search for refine: start', () =>
+    expect(findStartIndex("HTTP", ["A", "B", "HTTP", "HTTPS", "LAST"], prefixCompare)).toStrictEqual(2));
+
+test('binary search for refine: end', () =>
+    expect(findEndIndex("HTTP", ["A", "B", "HTTP", "HTTPS", "LAST"], prefixCompare)).toStrictEqual(3));

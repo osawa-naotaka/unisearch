@@ -115,13 +115,13 @@ export function foldl1Array<T>(fn: (acc: T[], cur: T[]) => T[], array: T[][]): T
     return array.length === 0 ? [] : array.length === 1 ? array[0] : foldl1(fn, array);
 }
 
-export function binarySearch<T>(items: T[], target: T, comp: (a: T, b: T) => number): number | null {
+export function binarySearch<T>(key: T, comp: (a: T, b: T) => number, array: T[]): number | null {
     let left = 0;
-    let right = items.length - 1;
+    let right = array.length - 1;
 
     while (left <= right) {
         const mid = Math.floor((left + right) / 2);
-        const r = comp(items[mid], target);
+        const r = comp(array[mid], key);
 
         if (r === 0) {
             return mid;
@@ -137,57 +137,58 @@ export function binarySearch<T>(items: T[], target: T, comp: (a: T, b: T) => num
     return null;
 }
 
-export function refine<T>(prefix: string, keyof: (item: T) => string, items: T[]): T[] {
-    function findStartIndex(items: T[], prefix: string): number | null {
-        let left = 0;
-        let right = items.length - 1;
-        let match = null;
+export function findStartIndex<T>(key: T, array: T[], comp: (key: T, item:T) => number): number | null {
+    let left = 0;
+    let right = array.length - 1;
+    let match: number | null = null;
 
-        while (left <= right) {
-            const mid = Math.floor((left + right) / 2);
-            const key = keyof(items[mid]);
-            if (key.startsWith(prefix)) {
-                match = mid;
+    while (left <= right) {
+        const mid = Math.floor((left + right) / 2);
+        const r = comp(key, array[mid]);
+        if (r === 0) {
+            match = mid;
+        }
+        if (r < 0) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+
+    return match;
+}
+
+export function findEndIndex<T>(key: T, array: T[], comp: (key: T, item:T) => number): number | null {
+    let left = 0;
+    let right = array.length - 1;
+    let match = null;
+
+    while (left <= right) {
+        const mid = Math.floor((left + right) / 2);
+        const r = comp(key, array[mid]);
+        if (r === 0) {
+            match = mid;
+            if (r < 0) {
+                right = mid - 1;
+            } else {
+                left = mid + 1;
             }
-            if (key < prefix) {
+        } else {
+            if (r < 0) {
                 left = mid + 1;
             } else {
                 right = mid - 1;
             }
         }
-
-        return match;
     }
 
-    function findEndIndex(items: T[], prefix: string): number | null {
-        let left = 0;
-        let right = items.length - 1;
-        let match = null;
+    return match;
+}
 
-        while (left <= right) {
-            const mid = Math.floor((left + right) / 2);
-            const key = keyof(items[mid]);
-            if (key.startsWith(prefix)) {
-                match = mid;
-                if (key < prefix) {
-                    right = mid - 1;
-                } else {
-                    left = mid + 1;
-                }
-            } else {
-                if (key < prefix) {
-                    left = mid + 1;
-                } else {
-                    right = mid - 1;
-                }
-            }
-        }
+export function refine<T>(key: T, comp: (a: T, b:T) => number, array: T[]): T[] {
 
-        return match;
-    }
+    const startIndex = findStartIndex(key, array, comp);
+    const endIndex = findEndIndex(key, array, comp);
 
-    const startIndex = findStartIndex(items, prefix);
-    const endIndex = findEndIndex(items, prefix);
-
-    return startIndex !== null && endIndex !== null ? items.slice(startIndex, endIndex + 1) : [];
+    return startIndex !== null && endIndex !== null ? array.slice(startIndex, endIndex + 1) : [];
 }
