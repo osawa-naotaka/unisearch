@@ -147,11 +147,13 @@ export function findStartIndex<T>(key: T, array: T[], comp: (key: T, item:T) => 
         const r = comp(key, array[mid]);
         if (r === 0) {
             match = mid;
-        }
-        if (r < 0) {
-            left = mid + 1;
-        } else {
             right = mid - 1;
+        } else {
+            if (r < 0) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }    
         }
     }
 
@@ -168,11 +170,7 @@ export function findEndIndex<T>(key: T, array: T[], comp: (key: T, item:T) => nu
         const r = comp(key, array[mid]);
         if (r === 0) {
             match = mid;
-            if (r < 0) {
-                right = mid - 1;
-            } else {
-                left = mid + 1;
-            }
+            left = mid + 1;
         } else {
             if (r < 0) {
                 left = mid + 1;

@@ -7,8 +7,8 @@ export type SortedArrayIndex = {
     sorted: [Token, Reference[]][];
 };
 
-export function prefixCompare(item: string, key: string) {
-    return key.startsWith(item) ? 0 : key < item ? -1 : 1;
+export function prefixCompare(key: string, item: string) {
+    return item.startsWith(key) ? 0 : item < key ? -1 : 1;
 }
 
 export function addToSortedArrayIndex(ref: Reference, text: Token, index: SortedArrayIndex) {
