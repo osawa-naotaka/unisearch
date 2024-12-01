@@ -81,8 +81,28 @@ export function rangeArray(n: number): number[] {
     return [...Array(n).keys()];
 }
 
-export function beginWith(pre: string, text: string): boolean {
-    return pre.length > text.length ? false : text.slice(0, pre.length) === pre;
+export function compareWithUnicode(a: string, b: string) {
+    return a > b ? 1 : a < b ? -1 : 0;
+}
+
+export function binarySearch<T>(items: T[], target: T, comp: (a: T, b: T) => number): number | null {
+    let left = 0;
+    let right = items.length - 1;
+
+    while (left <= right) {
+        const mid = Math.floor((left + right) / 2);
+        const r = comp(items[mid], target);
+
+        if (r === 0) {
+            return mid;
+        } else if (r < 0) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+
+    return null;
 }
 
 const encoder = new TextEncoder();

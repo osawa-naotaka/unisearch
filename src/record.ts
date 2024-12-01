@@ -1,5 +1,5 @@
 import type { Reference, Token } from "@src/common";
-import { appendIfNotExists, foldl1Array, beginWith, union } from "@src/util";
+import { appendIfNotExists, foldl1Array, union } from "@src/util";
 
 export type RecordIndex = Record<Token, Reference[]>;
 
@@ -14,6 +14,6 @@ export function searchExactRecord(query: Token, index: RecordIndex): Reference[]
 export function searchForwardRecord(query: Token, index: RecordIndex): Reference[] {
     return foldl1Array(
         union,
-        Object.entries(index).map(([token, docs]) => (beginWith(query, token) ? docs : [])),
+        Object.entries(index).map(([token, docs]) => (token.startsWith(query) ? docs : [])),
     );
 }

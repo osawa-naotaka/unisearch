@@ -18,7 +18,7 @@ import { addToTrieIndex, searchTrie } from "@src/trie";
 import { addToBloomIndex, searchExactBloom } from "@src/bloom";
 import { addToRecordIndex, searchExactRecord } from "@src/record";
 import { loadDefaultJapaneseParser } from "budoux";
-import { addToSortedArrayIndex, createSortedArrayIndex, searchExactSortedArray } from "@src/sortedarray";
+import { addToSortedArrayIndex, createSortedArrayIndex, searchExactSortedArray, searchForwardSortedArray } from "@src/sortedarray";
 
 type Result = {
     keyword: string,
@@ -216,7 +216,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         post_fn: generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
         search_fn: generateHybridSearchFn(
             searchExactSortedArray, (x) => generateNgram(2, x), intersectAll,
-            searchExactSortedArray, tokenIsTerm, intersectAll
+            searchForwardSortedArray, tokenIsTerm, intersectAll
         ),
         index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } }
     }
@@ -236,7 +236,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         post_fn: generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
         search_fn: generateHybridSearchFn(
             searchExactSortedArray, (x) => tokenize_ja([x]), intersectAll,
-            searchExactSortedArray, tokenIsTerm, intersectAll
+            searchForwardSortedArray, tokenIsTerm, intersectAll
         ),
         index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } }
     }
