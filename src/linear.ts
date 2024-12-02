@@ -1,5 +1,6 @@
 import type { Reference } from "@src/common";
 import { normalizeText } from "@src/preprocess";
+import { createBitapKey, bitapSearch } from "@src/algo";
 
 export type LinearIndex = string[];
 
@@ -15,10 +16,32 @@ function* indicesOf(keyword: string, target: string): Generator<number> {
     }
 }
 
+function* fuzzyIndicesOf(keyword: string, target: string): Generator<number> {
+    const key = createBitapKey(keyword);
+    let pos = bitapSearch(key, 1, target);
+    while (pos.found) {
+        yield pos.position;
+        pos = bitapSearch(key, 1, target, pos.position + keyword.length + 1);
+    }
+}
+
 export function searchLinear(query: string, index: LinearIndex): Reference[] {
     const query_normalized = normalizeText(query);
     return index.flatMap((item, docid) =>
         [...indicesOf(query_normalized, item)].map((pos) => ({
+            docid: docid,
+            position: {
+                index: pos,
+                wordaround: item.slice(pos - 10, pos + query_normalized.length + 10),
+            },
+        })),
+    );
+}
+
+export function searchFuzzyLinear(query: string, index: LinearIndex): Reference[] {
+    const query_normalized = normalizeText(query);
+    return index.flatMap((item, docid) =>
+        [...fuzzyIndicesOf(query_normalized, item)].map((pos) => ({
             docid: docid,
             position: {
                 index: pos,

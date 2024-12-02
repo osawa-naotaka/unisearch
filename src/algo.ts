@@ -222,10 +222,10 @@ export function createBitapKey(pattern: string): BitapKey {
     return key;
 }
 
-export function bitapSearch(key: BitapKey, maxErrors: number, text: string): BitapResult {
+export function bitapSearch(key: BitapKey, maxErrors: number, text: string, pos: number = 0): BitapResult {
     const R = Array(maxErrors + 1).fill(~1);
 
-    for (let i = 0; i < text.length; i++) {
+    for (let i = pos; i < text.length; i++) {
         const oldR = [...R];
 
         const charMask = key.mask.get(text[i]) || 0;
