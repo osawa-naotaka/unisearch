@@ -240,7 +240,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         ),
         index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } }
     }
-    const hybrid_bigram_result = await hybrid_runner("HYBRID en:SORTED-ARRAY ja:BIGRAM SORTED-ARRAY: vs RECORD", hybrid_bigram_set);
+    await hybrid_runner("HYBRID en:SORTED-ARRAY ja:BIGRAM SORTED-ARRAY: vs RECORD", hybrid_bigram_set);
 
     // Hybrid: en sorted array, ja wakachigaki sorted array
     const parser = loadDefaultJapaneseParser();
