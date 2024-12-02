@@ -137,7 +137,7 @@ export function binarySearch<T>(key: T, comp: (a: T, b: T) => number, array: T[]
     return null;
 }
 
-export function findStartIndex<T>(key: T, comp: (key: T, item:T) => number, array: T[]): number | null {
+export function findStartIndex<T>(key: T, comp: (key: T, item: T) => number, array: T[]): number | null {
     let left = 0;
     let right = array.length - 1;
     let match: number | null = null;
@@ -153,14 +153,14 @@ export function findStartIndex<T>(key: T, comp: (key: T, item:T) => number, arra
                 left = mid + 1;
             } else {
                 right = mid - 1;
-            }    
+            }
         }
     }
 
     return match;
 }
 
-export function findEndIndex<T>(key: T, comp: (key: T, item:T) => number, array: T[]): number | null {
+export function findEndIndex<T>(key: T, comp: (key: T, item: T) => number, array: T[]): number | null {
     let left = 0;
     let right = array.length - 1;
     let match = null;
@@ -183,10 +183,73 @@ export function findEndIndex<T>(key: T, comp: (key: T, item:T) => number, array:
     return match;
 }
 
-export function refine<T>(key: T, comp: (a: T, b:T) => number, array: T[]): T[] {
-
+export function refine<T>(key: T, comp: (a: T, b: T) => number, array: T[]): T[] {
     const startIndex = findStartIndex(key, comp, array);
     const endIndex = findEndIndex(key, comp, array);
 
     return startIndex !== null && endIndex !== null ? array.slice(startIndex, endIndex + 1) : [];
+}
+
+type BitapKey = {
+    mask: Map<string, number>;
+    length: number;
+};
+
+type BitapResult = {
+    found: boolean;
+    position: number;
+    errors: number;
+};
+
+export function createBitapKey(pattern: string): BitapKey {
+    const key: BitapKey = {
+        mask: new Map<string, number>(),
+        length: pattern.length,
+    };
+
+    for (let i = 0; i < key.length; i++) {
+        const char = pattern[i];
+        const bit = 1 << i;
+        const old = key.mask.get(char);
+
+        if (!old) {
+            key.mask.set(char, bit);
+        } else {
+            key.mask.set(char, old | bit);
+        }
+    }
+
+    return key;
+}
+
+export function bitapSearch(key: BitapKey, maxErrors: number, text: string): BitapResult {
+    const R = Array(maxErrors + 1).fill(~1);
+
+    for (let i = 0; i < text.length; i++) {
+        const oldR = [...R];
+
+        const charMask = key.mask.get(text[i]) || 0;
+
+        for (let d = 0; d <= maxErrors; d++) {
+            const insertion = oldR[d] << 1;
+            const deletion = oldR[d - 1] || ~1;
+            const match = oldR[d - 1] | charMask;
+
+            R[d] = (insertion | deletion | match) & ~1;
+        }
+
+        const patternBit = 1 << (key.length - 1);
+
+        for (let d = 0; d <= maxErrors; d++) {
+            if ((R[d] & patternBit) !== 0) {
+                return {
+                    found: true,
+                    position: i - key.length + 1,
+                    errors: d,
+                };
+            }
+        }
+    }
+
+    return { found: false, position: -1, errors: -1 };
 }

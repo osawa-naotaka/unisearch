@@ -19,7 +19,7 @@ import { addToTrieIndex, searchTrie } from "@src/trie";
 import { addToBloomIndex, searchExactBloom } from "@src/bloom";
 import { addToRecordIndex, searchExactRecord, searchForwardRecord } from "@src/record";
 import { loadDefaultJapaneseParser } from "budoux";
-import { addToSortedArrayIndex, createSortedArrayIndex, searchExactSortedArray, searchForwardSortedArray } from "@src/sortedarray";
+import { addToSortedArrayIndex, createSortedArrayIndex, searchExactSortedArray, searchForwardSortedArray, searchFuzzySortedArray } from "@src/sortedarray";
 
 type Result = {
     keyword: string,
@@ -241,6 +241,21 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } }
     }
     await hybrid_runner("HYBRID en:SORTED-ARRAY ja:BIGRAM SORTED-ARRAY: vs RECORD", hybrid_bigram_set);
+
+    // Hybrid: en sorted arrya, ja bigram sorted array
+    const hybrid_fuzzy_bigram_set: SearcherSet<HybridIndex<SortedArrayIndex, SortedArrayIndex>> = {
+        index_fn: generateHybridIndexFn(
+            addToSortedArrayIndex, (x) => generateNgramTrie(2, x),
+            addToSortedArrayIndex, tokenIsTerm,
+        ),
+        post_fn: generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
+        search_fn: generateHybridSearchFn(
+            searchExactSortedArray, (x) => generateNgram(2, x), intersectAll,
+            searchFuzzySortedArray, tokenIsTerm, intersectAll
+        ),
+        index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } }
+    }
+    await hybrid_runner("HYBRID en:FUZZY SORTED-ARRAY ja:BIGRAM SORTED-ARRAY: vs RECORD", hybrid_fuzzy_bigram_set);
 
     // Hybrid: en sorted array, ja wakachigaki sorted array
     const parser = loadDefaultJapaneseParser();
