@@ -17,7 +17,7 @@ import { addToLinearIndex, searchLinear } from "@src/linear";
 import { generate1ToNgram, generateNgram, generateNgramTrie } from "@src/algo";
 import { addToTrieIndex, searchTrie } from "@src/trie";
 import { addToBloomIndex, searchExactBloom } from "@src/bloom";
-import { addToRecordIndex, searchExactRecord } from "@src/record";
+import { addToRecordIndex, searchExactRecord, searchForwardRecord } from "@src/record";
 import { loadDefaultJapaneseParser } from "budoux";
 import { addToSortedArrayIndex, createSortedArrayIndex, searchExactSortedArray, searchForwardSortedArray } from "@src/sortedarray";
 
@@ -208,6 +208,25 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     }
     await runner("TRIGRAM TRIE", trie_trigram_set);
 
+    // Hybrid: en record, ja bigram record
+    const hybrid_record_bigram_set: SearcherSet<HybridIndex<RecordIndex, RecordIndex>> = {
+        index_fn: generateHybridIndexFn(
+            addToRecordIndex, (x) => generateNgramTrie(2, x),
+            addToRecordIndex, tokenIsTerm,
+        ),
+        post_fn: generateHybridPostprocessFn(noPostProcess, noPostProcess),
+        search_fn: generateHybridSearchFn(
+            searchExactRecord, (x) => generateNgram(2, x), intersectAll,
+            searchForwardRecord, tokenIsTerm, intersectAll
+        ),
+        index: { ja: { }, en: { } }
+    }
+    const hybrid_record_bigram_result = await runner("HYBRID en:RECORD ja:BIGRAM RECORD", hybrid_record_bigram_set);
+    console.log(hybrid_record_bigram_result);
+    
+    // prepare benchmark runner
+    const hybrid_runner = generateBenchmarkRunner(wikipedia_articles, keywords, hybrid_record_bigram_result);
+
     // Hybrid: en sorted arrya, ja bigram sorted array
     const hybrid_bigram_set: SearcherSet<HybridIndex<SortedArrayIndex, SortedArrayIndex>> = {
         index_fn: generateHybridIndexFn(
@@ -221,7 +240,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         ),
         index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } }
     }
-    await runner("HYBRID en:SORTED-ARRAY ja:BIGRAM SORTED-ARRAY", hybrid_bigram_set);
+    const hybrid_bigram_result = await hybrid_runner("HYBRID en:SORTED-ARRAY ja:BIGRAM SORTED-ARRAY: vs RECORD", hybrid_bigram_set);
 
     // Hybrid: en sorted array, ja wakachigaki sorted array
     const parser = loadDefaultJapaneseParser();
@@ -241,7 +260,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         ),
         index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } }
     }
-    await runner("HYBRID en:SORTED-ARRAY ja:wakachigaki SORTED-ARRAY", hybrid_wakachigaki_set);
+    await hybrid_runner("HYBRID en:SORTED-ARRAY ja:wakachigaki SORTED-ARRAY: vs RECORD", hybrid_wakachigaki_set);
 }
 
 async function runBloom(run_hashes: number, run_bits: [number, number], wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[]) {

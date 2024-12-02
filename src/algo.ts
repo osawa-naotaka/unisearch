@@ -121,13 +121,13 @@ export function binarySearch<T>(key: T, comp: (a: T, b: T) => number, array: T[]
 
     while (left <= right) {
         const mid = Math.floor((left + right) / 2);
-        const r = comp(array[mid], key);
+        const r = comp(key, array[mid]);
 
         if (r === 0) {
             return mid;
         }
 
-        if (r < 0) {
+        if (r > 0) {
             left = mid + 1;
         } else {
             right = mid - 1;
@@ -137,7 +137,7 @@ export function binarySearch<T>(key: T, comp: (a: T, b: T) => number, array: T[]
     return null;
 }
 
-export function findStartIndex<T>(key: T, array: T[], comp: (key: T, item:T) => number): number | null {
+export function findStartIndex<T>(key: T, comp: (key: T, item:T) => number, array: T[]): number | null {
     let left = 0;
     let right = array.length - 1;
     let match: number | null = null;
@@ -149,7 +149,7 @@ export function findStartIndex<T>(key: T, array: T[], comp: (key: T, item:T) => 
             match = mid;
             right = mid - 1;
         } else {
-            if (r < 0) {
+            if (r > 0) {
                 left = mid + 1;
             } else {
                 right = mid - 1;
@@ -160,7 +160,7 @@ export function findStartIndex<T>(key: T, array: T[], comp: (key: T, item:T) => 
     return match;
 }
 
-export function findEndIndex<T>(key: T, array: T[], comp: (key: T, item:T) => number): number | null {
+export function findEndIndex<T>(key: T, comp: (key: T, item:T) => number, array: T[]): number | null {
     let left = 0;
     let right = array.length - 1;
     let match = null;
@@ -172,7 +172,7 @@ export function findEndIndex<T>(key: T, array: T[], comp: (key: T, item:T) => nu
             match = mid;
             left = mid + 1;
         } else {
-            if (r < 0) {
+            if (r > 0) {
                 left = mid + 1;
             } else {
                 right = mid - 1;
@@ -185,8 +185,8 @@ export function findEndIndex<T>(key: T, array: T[], comp: (key: T, item:T) => nu
 
 export function refine<T>(key: T, comp: (a: T, b:T) => number, array: T[]): T[] {
 
-    const startIndex = findStartIndex(key, array, comp);
-    const endIndex = findEndIndex(key, array, comp);
+    const startIndex = findStartIndex(key, comp, array);
+    const endIndex = findEndIndex(key, comp, array);
 
     return startIndex !== null && endIndex !== null ? array.slice(startIndex, endIndex + 1) : [];
 }

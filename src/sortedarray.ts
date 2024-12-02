@@ -8,7 +8,7 @@ export type SortedArrayIndex = {
 };
 
 export function prefixCompare(key: string, item: string) {
-    return item.startsWith(key) ? 0 : item < key ? -1 : 1;
+    return item.startsWith(key) ? 0 : key < item ? -1 : 1;
 }
 
 export function addToSortedArrayIndex(ref: Reference, text: Token, index: SortedArrayIndex) {

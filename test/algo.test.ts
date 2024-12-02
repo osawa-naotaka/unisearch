@@ -92,7 +92,7 @@ test('trie 3-gram for "test", is ["tes", "est", "st", "t"]', () =>
     expect(generateNgramTrie(3, "test")).toStrictEqual(["tes", "est", "st", "t"]));
 
 test('binary search for refine: start', () =>
-    expect(findStartIndex("HTTP", ["A", "B", "HTTP", "HTTPS", "LAST"], prefixCompare)).toStrictEqual(2));
+    expect(findStartIndex("HTTP", prefixCompare, ["A", "B", "HTTP", "HTTPS", "LAST"])).toStrictEqual(2));
 
 test('binary search for refine: end', () =>
-    expect(findEndIndex("HTTP", ["A", "B", "HTTP", "HTTPS", "LAST"], prefixCompare)).toStrictEqual(3));
+    expect(findEndIndex("HTTP", prefixCompare, ["A", "B", "HTTP", "HTTPS", "LAST"])).toStrictEqual(3));

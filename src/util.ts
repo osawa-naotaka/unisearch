@@ -3,7 +3,7 @@ export function rangeArray(n: number): number[] {
 }
 
 export function compareString(a: string, b: string) {
-    return a > b ? 1 : a < b ? -1 : 0;
+    return a < b ? -1 : a > b ? 1 : 0;
 }
 
 const encoder = new TextEncoder();
