@@ -1,6 +1,6 @@
+import { bitapSearch, createBitapKey } from "@src/algo";
 import type { Reference } from "@src/common";
 import { normalizeText } from "@src/preprocess";
-import { createBitapKey, bitapSearch } from "@src/algo";
 
 export type LinearIndex = string[];
 

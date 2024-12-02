@@ -1,3 +1,4 @@
+import { BinarySearchType } from "@src/algo";
 import { appendIfNotExists, binarySearch, bitapSearch, createBitapKey, refine } from "@src/algo";
 import type { Reference, Token } from "@src/common";
 import { compareString } from "@src/util";
@@ -21,7 +22,7 @@ export function createSortedArrayIndex(index: SortedArrayIndex) {
 }
 
 export function searchExactSortedArray(query: Token, index: SortedArrayIndex): Reference[] {
-    const pos = binarySearch([query, []], ([x], [y]) => compareString(x, y), index.sorted);
+    const pos = binarySearch([query, []], ([x], [y]) => compareString(x, y), index.sorted, BinarySearchType.Exact);
     return pos ? index.sorted[pos][1] : [];
 }
 

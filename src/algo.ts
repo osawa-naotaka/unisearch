@@ -115,29 +115,20 @@ export function foldl1Array<T>(fn: (acc: T[], cur: T[]) => T[], array: T[][]): T
     return array.length === 0 ? [] : array.length === 1 ? array[0] : foldl1(fn, array);
 }
 
-export function binarySearch<T>(key: T, comp: (a: T, b: T) => number, array: T[]): number | null {
-    let left = 0;
-    let right = array.length - 1;
+export const BinarySearchType = {
+    Exact: 0,
+    FindStart: 1,
+    FindEnd: 2,
+} as const;
 
-    while (left <= right) {
-        const mid = Math.floor((left + right) / 2);
-        const r = comp(key, array[mid]);
+export type BinarySearchType = (typeof BinarySearchType)[keyof typeof BinarySearchType];
 
-        if (r === 0) {
-            return mid;
-        }
-
-        if (r > 0) {
-            left = mid + 1;
-        } else {
-            right = mid - 1;
-        }
-    }
-
-    return null;
-}
-
-export function findStartIndex<T>(key: T, comp: (key: T, item: T) => number, array: T[]): number | null {
+export function binarySearch<T>(
+    key: T,
+    comp: (a: T, b: T) => number,
+    array: T[],
+    type: BinarySearchType,
+): number | null {
     let left = 0;
     let right = array.length - 1;
     let match: number | null = null;
@@ -145,32 +136,20 @@ export function findStartIndex<T>(key: T, comp: (key: T, item: T) => number, arr
     while (left <= right) {
         const mid = Math.floor((left + right) / 2);
         const r = comp(key, array[mid]);
+
         if (r === 0) {
-            match = mid;
-            right = mid - 1;
-        } else {
-            if (r > 0) {
-                left = mid + 1;
-            } else {
-                right = mid - 1;
+            switch (type) {
+                case BinarySearchType.Exact:
+                    return mid;
+                case BinarySearchType.FindStart:
+                    match = mid;
+                    right = mid - 1;
+                    break;
+                case BinarySearchType.FindEnd:
+                    match = mid;
+                    left = mid + 1;
+                    break;
             }
-        }
-    }
-
-    return match;
-}
-
-export function findEndIndex<T>(key: T, comp: (key: T, item: T) => number, array: T[]): number | null {
-    let left = 0;
-    let right = array.length - 1;
-    let match = null;
-
-    while (left <= right) {
-        const mid = Math.floor((left + right) / 2);
-        const r = comp(key, array[mid]);
-        if (r === 0) {
-            match = mid;
-            left = mid + 1;
         } else {
             if (r > 0) {
                 left = mid + 1;
@@ -184,8 +163,8 @@ export function findEndIndex<T>(key: T, comp: (key: T, item: T) => number, array
 }
 
 export function refine<T>(key: T, comp: (a: T, b: T) => number, array: T[]): T[] {
-    const startIndex = findStartIndex(key, comp, array);
-    const endIndex = findEndIndex(key, comp, array);
+    const startIndex = binarySearch(key, comp, array, BinarySearchType.FindStart);
+    const endIndex = binarySearch(key, comp, array, BinarySearchType.FindEnd);
 
     return startIndex !== null && endIndex !== null ? array.slice(startIndex, endIndex + 1) : [];
 }
