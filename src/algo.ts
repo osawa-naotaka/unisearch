@@ -181,6 +181,7 @@ type BitapResult = {
 };
 
 export function createBitapKey(pattern: string): BitapKey {
+    if(pattern.length > 32) throw new Error("createBitapKey: key length must be less than 32.");
     const key: BitapKey = {
         mask: new Map<string, number>(),
         length: pattern.length,
@@ -201,34 +202,18 @@ export function createBitapKey(pattern: string): BitapKey {
     return key;
 }
 
-export function bitapSearch(key: BitapKey, maxErrors: number, text: string, pos: number = 0): BitapResult {
-    const R = Array(maxErrors + 1).fill(~1);
+export function bitapSearch(key: BitapKey, maxErrors: number, text: string, pos: number = 0): number | null {
+    let state = 0;
+    const matchbit = 1 << (key.length - 1);
 
     for (let i = pos; i < text.length; i++) {
-        const oldR = [...R];
+        const mask = key.mask.get(text[i]) || 0;
+        state = ((state << 1) | 1) & mask;
 
-        const charMask = key.mask.get(text[i]) || 0;
-
-        for (let d = 0; d <= maxErrors; d++) {
-            const insertion = oldR[d] << 1;
-            const deletion = oldR[d - 1] || ~1;
-            const match = oldR[d - 1] | charMask;
-
-            R[d] = (insertion | deletion | match) & ~1;
-        }
-
-        const patternBit = 1 << (key.length - 1);
-
-        for (let d = 0; d <= maxErrors; d++) {
-            if ((R[d] & patternBit) !== 0) {
-                return {
-                    found: true,
-                    position: i - key.length + 1,
-                    errors: d,
-                };
-            }
+        if((state & matchbit) !== 0) {
+            return i - key.length + 1;
         }
     }
 
-    return { found: false, position: -1, errors: -1 };
+    return null;
 }

@@ -19,9 +19,9 @@ function* indicesOf(keyword: string, target: string): Generator<number> {
 function* fuzzyIndicesOf(keyword: string, target: string): Generator<number> {
     const key = createBitapKey(keyword);
     let pos = bitapSearch(key, 1, target);
-    while (pos.found) {
-        yield pos.position;
-        pos = bitapSearch(key, 1, target, pos.position + keyword.length + 1);
+    while (pos !== null) {
+        yield pos;
+        pos = bitapSearch(key, 1, target, pos + keyword.length + 1);
     }
 }
 

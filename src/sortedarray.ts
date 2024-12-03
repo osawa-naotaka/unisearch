@@ -37,8 +37,8 @@ export function searchFuzzySortedArray(query: Token, index: SortedArrayIndex): R
     const key = createBitapKey(query);
     const results = items
         .map((item, idx) => ({ idx: idx, result: bitapSearch(key, 1, item[0]) }))
-        .filter((x) => x.result.found)
-        .map((x) => items[x.idx][1]);
+        .filter((x) => x.result !== null)
+        .flatMap((x) => items[x.idx][1]);
 
-    return Array.from(new Set(...results));
+    return Array.from(new Set(results));
 }

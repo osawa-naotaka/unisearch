@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest';
-import { findStartIndex, findEndIndex, generate1ToNgram, generateNgram, generateNgramTrie } from '@src/algo';
+import { binarySearch, generate1ToNgram, generateNgram, generateNgramTrie, createBitapKey, bitapSearch } from '@src/algo';
+import { BinarySearchType } from '@src/algo';
 import { prefixCompare } from '@src/sortedarray';
 
 test('1-gram for "t", is ["t"]', () =>
@@ -92,7 +93,13 @@ test('trie 3-gram for "test", is ["tes", "est", "st", "t"]', () =>
     expect(generateNgramTrie(3, "test")).toStrictEqual(["tes", "est", "st", "t"]));
 
 test('binary search for refine: start', () =>
-    expect(findStartIndex("HTTP", prefixCompare, ["A", "B", "HTTP", "HTTPS", "LAST"])).toStrictEqual(2));
+    expect(binarySearch("HTTP", prefixCompare, ["A", "B", "HTTP", "HTTPS", "LAST"], BinarySearchType.FindStart)).toStrictEqual(2));
 
 test('binary search for refine: end', () =>
-    expect(findEndIndex("HTTP", prefixCompare, ["A", "B", "HTTP", "HTTPS", "LAST"])).toStrictEqual(3));
+    expect(binarySearch("HTTP", prefixCompare, ["A", "B", "HTTP", "HTTPS", "LAST"], BinarySearchType.FindEnd)).toStrictEqual(3));
+
+const key = createBitapKey("HT");
+test('bitap search 1', () => expect(bitapSearch(key, 0, "hogeHThage")).toStrictEqual({found:true, position: 4, errors: 0}));
+test('bitap search 2', () => expect(bitapSearch(key, 0, "hogeHTTPShage")).toStrictEqual({found:true, position: 4, errors: 0}));
+test('bitap search 3', () => expect(bitapSearch(key, 0, "HTTPS")).toStrictEqual({found:true, position: 0, errors: 0}));
+test('bitap search 4', () => expect(bitapSearch(key, 0, "hogeHT")).toStrictEqual({found:true, position: 4, errors: 0}));

@@ -96,14 +96,12 @@ async function execBenchmark<T> (
 
 function checkResult(correct: Result[], test: Result[]): SearchCorrectness<Reference[]>[] {
     const equals = (a: Reference, b: Reference) => a.docid === b.docid;
-    return zipWith(correct, test, (a, b) => {
-        return {
+    return zipWith(correct, test, (a, b) => ({
             keyword: a.keyword,
             match: intersect(a.refs, b.refs, equals),
             false_positive: difference(b.refs, a.refs, equals),
             false_negative: difference(a.refs, b.refs, equals),
-        };
-    });
+    }));
 }
 
 function countResults<R>(results: SearchCorrectness<R[]>[]) : SearchCorrectness<number> {
