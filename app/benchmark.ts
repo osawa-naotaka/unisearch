@@ -6,14 +6,11 @@ import type { SortedArrayIndex } from "@src/sortedarray";
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
 import { calculateJsonSize } from "@src/util";
-import { compose } from "@src/algo";
-import { splitByKatakana } from "@src/preprocess";
 import { generateIndexFn, generateSearchFn, generateHybridIndexFn, generateHybridPostprocessFn, generateHybridSearchFn, noPostProcess, tokenIsTerm, intersectAll } from "@src/common";
 import { addToLinearIndex, searchLinear } from "@src/linear";
 import { generateNgram, generateNgramTrie } from "@src/algo";
 import { addToTrieIndex, searchTrie } from "@src/trie";
 import { addToRecordIndex, searchExactRecord, searchForwardRecord } from "@src/record";
-import { loadDefaultJapaneseParser } from "budoux";
 import { addToSortedArrayIndex, createSortedArrayIndex, searchExactSortedArray, searchForwardSortedArray, searchFuzzySortedArray } from "@src/sortedarray";
 import { execBenchmark, generateBenchmarkRunner } from "@app/benchmark_common";
 
@@ -129,26 +126,6 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } }
     }
     await hybrid_runner("HYBRID en:FUZZY SORTED-ARRAY ja:BIGRAM SORTED-ARRAY: vs RECORD", hybrid_fuzzy_bigram_set);
-
-    // Hybrid: en sorted array, ja wakachigaki sorted array
-    const parser = loadDefaultJapaneseParser();
-    const tokenize_ja = compose(
-        splitByKatakana,
-        (words: string[]) => words.flatMap((w: string) => parser.parse(w) || [])
-    );
-    const hybrid_wakachigaki_set: SearcherSet<HybridIndex<SortedArrayIndex, SortedArrayIndex>> = {
-        index_fn: generateHybridIndexFn(
-            addToSortedArrayIndex, (x) => tokenize_ja([x]),
-            addToSortedArrayIndex, tokenIsTerm,
-        ),
-        post_fn: generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
-        search_fn: generateHybridSearchFn(
-            searchExactSortedArray, (x) => tokenize_ja([x]), intersectAll,
-            searchForwardSortedArray, tokenIsTerm, intersectAll
-        ),
-        index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } }
-    }
-    await hybrid_runner("HYBRID en:SORTED-ARRAY ja:wakachigaki SORTED-ARRAY: vs RECORD", hybrid_wakachigaki_set);
 }
 
 
