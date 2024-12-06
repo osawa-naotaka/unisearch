@@ -4,11 +4,8 @@ import type { RecordIndex } from "@src/record";
 import type { TrieIndex } from "@src/trie";
 import type { BloomIndex } from "@src/bloom";
 import type { SortedArrayIndex } from "@src/sortedarray";
-import { wikipedia_keyword_ja } from "@test/wikipedia_keyword.ja";
-import { wikipedia_keyword_long_ja } from "@test/wikipedia_keyword_long.ja";
-import { wikipedia_articles_ja } from "@test/wikipedia_articles.ja";
-import { wikipedia_keyword_en } from "@test/wikipedia_keyword.en";
-import { wikipedia_articles_en } from "@test/wikipedia_articles.en";
+import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
+import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
 import { calculateJsonSize, calculateGzipedJsonSize } from "@src/util";
 import { compose, zipWith, intersect, difference } from "@src/algo";
 import { splitByKatakana } from "@src/preprocess";
@@ -38,7 +35,7 @@ type WikipediaKeyword = {
 
 type WikipediaArticle = {
     title: string,
-    content: string
+    text: string
 };
 
 type SearchCorrectness<T> = {
@@ -65,7 +62,7 @@ function getAllKeywords(keyword_array: WikipediaKeyword[]): string[] {
 function execIndexing<T> (index_fn: IndexFn<T>, post_fn: PostprocessFn<T>, index: T, articles: WikipediaArticle[]) : BenchmarkResult<void>[] {
     const result_create_index = benchmark((doc, docid) => {
         index_fn({docid: docid}, doc.title, index);
-        index_fn({docid: docid}, doc.content, index);
+        index_fn({docid: docid}, doc.text, index);
     }, articles);
 
     const result_post_index = benchmark((x) => post_fn(x), [index]);
@@ -316,11 +313,7 @@ async function runBloom(run_hashes: number, run_bits: [number, number], wikipedi
 
 const num_articles = 10;
 console.log("JAPANESE benchmark.");
-await runAll(wikipedia_articles_ja.slice(0, num_articles), wikipedia_keyword_ja);
-console.log("JAPANESE benchmark with long keyword.");
-await runAll(wikipedia_articles_ja.slice(0, num_articles), wikipedia_keyword_long_ja);
-console.log("ENGLISH benchmark.");
-await runAll(wikipedia_articles_en.slice(0, num_articles), wikipedia_keyword_en);
+await runAll(wikipedia_ja_extracted.slice(0, num_articles), wikipedia_ja_keyword);
 console.log("JAPANESE bloom benchmark.");
 // hashes: 2, bits: 1024 * 128 is suitable
-await runBloom(3, [1024, 512 * 1024], wikipedia_articles_ja.slice(0, num_articles), wikipedia_keyword_ja);
+await runBloom(3, [1024, 512 * 1024], wikipedia_ja_extracted.slice(0, num_articles), wikipedia_ja_keyword);
