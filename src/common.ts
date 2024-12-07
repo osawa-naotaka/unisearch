@@ -118,3 +118,11 @@ export function generateHybridSearchFn<T, U>(
             ),
         );
 }
+
+export function updateRefs(refs: Reference[], ref: Reference) : Reference[] {
+    const old_ref = refs?.find((x) => x.id === ref.id);
+    const new_ref = { id: ref.id, n: (old_ref?.n || 0) + ref.n };
+    const new_refs = refs?.filter((x) => x.id !== ref.id) || [];
+    new_refs.push(new_ref);
+    return new_refs;
+}

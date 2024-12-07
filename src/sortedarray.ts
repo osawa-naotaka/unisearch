@@ -1,6 +1,7 @@
-import { BinarySearchType } from "@src/algo";
-import { appendIfNotExists, binarySearch, bitapSearch, createBitapKey, refine } from "@src/algo";
 import type { Reference, Token } from "@src/common";
+import { BinarySearchType } from "@src/algo";
+import { binarySearch, bitapSearch, createBitapKey, refine } from "@src/algo";
+import { updateRefs } from "@src/common";
 import { compareString } from "@src/util";
 
 export type SortedArrayIndex = {
@@ -13,7 +14,7 @@ export function prefixCompare(key: string, item: string) {
 }
 
 export function addToSortedArrayIndex(ref: Reference, text: Token, index: SortedArrayIndex) {
-    index.unsorted[text] = appendIfNotExists(ref, index.unsorted[text]);
+    index.unsorted[text] = updateRefs(index.unsorted[text], ref);
 }
 
 export function createSortedArrayIndex(index: SortedArrayIndex) {

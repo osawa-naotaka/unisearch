@@ -1,10 +1,11 @@
-import { appendIfNotExists, foldl1Array, union } from "@src/algo";
 import type { Reference, Token } from "@src/common";
+import { foldl1Array, union } from "@src/algo";
+import { updateRefs } from "@src/common";
 
 export type RecordIndex = Record<Token, Reference[]>;
 
 export function addToRecordIndex(ref: Reference, text: Token, index: RecordIndex) {
-    index[text] = appendIfNotExists(ref, index[text]);
+    index[text] = updateRefs(index[text], ref);
 }
 
 export function searchExactRecord(query: Token, index: RecordIndex): Reference[] {
