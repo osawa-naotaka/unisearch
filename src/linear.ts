@@ -5,7 +5,7 @@ import { normalizeText } from "@src/preprocess";
 export type LinearIndex = string[];
 
 export function addToLinearIndex(ref: Reference, text: string, index: LinearIndex) {
-    index[ref.docid] += normalizeText(text);
+    index[ref.id] += normalizeText(text);
 }
 
 function* indicesOf(keyword: string, target: string): Generator<number> {
@@ -27,9 +27,10 @@ function* fuzzyIndicesOf(keyword: string, target: string): Generator<number> {
 
 export function searchLinear(query: string, index: LinearIndex): Reference[] {
     const query_normalized = normalizeText(query);
-    return index.flatMap((item, docid) =>
+    return index.flatMap((item, id) =>
         [...indicesOf(query_normalized, item)].map((pos) => ({
-            docid: docid,
+            id: id,
+            n: 1,
             position: {
                 index: pos,
                 wordaround: item.slice(pos - 10, pos + query_normalized.length + 10),
@@ -40,9 +41,10 @@ export function searchLinear(query: string, index: LinearIndex): Reference[] {
 
 export function searchFuzzyLinear(query: string, index: LinearIndex): Reference[] {
     const query_normalized = normalizeText(query);
-    return index.flatMap((item, docid) =>
+    return index.flatMap((item, id) =>
         [...fuzzyIndicesOf(query_normalized, item)].map((pos) => ({
-            docid: docid,
+            id: id,
+            n: 1,
             position: {
                 index: pos,
                 wordaround: item.slice(pos - 10, pos + query_normalized.length + 10),

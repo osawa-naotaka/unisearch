@@ -1,4 +1,4 @@
-import type { HybridIndex, SearcherSet } from "@src/common";
+import type { SingleIndex, HybridIndex, SearcherSet, Reference } from "@src/common";
 import type { LinearIndex } from "@src/linear";
 import type { RecordIndex } from "@src/record";
 import type { TrieIndex } from "@src/trie";
@@ -30,51 +30,51 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     
     // linear search
     console.log("LINEAR SEARCH");
-    const linear_set : SearcherSet<LinearIndex> = {
-        index_fn: addToLinearIndex,
+    const linear_search_set: SearcherSet<SingleIndex<LinearIndex>> = {
+        index_fn: (ref: Reference, text: string, index: SingleIndex<LinearIndex>) => addToLinearIndex(ref, text, index.index),
         post_fn: noPostProcess,
-        search_fn: searchLinear,
-        index: []
-    };
-    const ref_results = await execBenchmark(linear_set, keywords, wikipedia_articles);
+        search_fn: (query: string, index: SingleIndex<LinearIndex>) => searchLinear(query, index.index),
+        index: { index: [] }
+    }
+    const ref_results = await execBenchmark(linear_search_set, keywords, wikipedia_articles);
     console.log(ref_results);
 
     // prepare benchmark runner
     const runner = generateBenchmarkRunner(wikipedia_articles, keywords, ref_results);
 
     // bigram
-    const bigram_set: SearcherSet<RecordIndex> = {
+    const bigram_set: SearcherSet<SingleIndex<RecordIndex>> = {
         index_fn: generateIndexFn(addToRecordIndex, (x) => generateNgramTrie(2, x)),
         post_fn: noPostProcess,
         search_fn: generateSearchFn(searchExactRecord, (x) => generateNgram(2, x), intersectAll),
-        index: {}
+        index: { index: {} }
     }
     await runner("BIGRAM RECORD", bigram_set);
     
     // trigram
-    const trigram_set: SearcherSet<RecordIndex> = {
+    const trigram_set: SearcherSet<SingleIndex<RecordIndex>> = {
         index_fn: generateIndexFn(addToRecordIndex, (x) => generateNgramTrie(3, x)),
         post_fn: noPostProcess,
         search_fn: generateSearchFn(searchExactRecord, (x) => generateNgram(3, x), intersectAll),
-        index: {}
+        index: { index: {} }
     }
     await runner("TRIGRAM RECORD", trigram_set);
     
     // quadgram
-    const quadgram_set: SearcherSet<RecordIndex> = {
+    const quadgram_set: SearcherSet<SingleIndex<RecordIndex>> = {
         index_fn: generateIndexFn(addToRecordIndex, (x) => generateNgramTrie(4, x)),
         post_fn: noPostProcess,
         search_fn: generateSearchFn(searchExactRecord, (x) => generateNgram(4, x), intersectAll),
-        index: {}
+        index: { index: {} }
     }
     await runner("QUADGRAM RECORD", quadgram_set);
     
     // Trie trigram
-    const trie_trigram_set: SearcherSet<TrieIndex> = {
+    const trie_trigram_set: SearcherSet<SingleIndex<TrieIndex>> = {
         index_fn: generateIndexFn(addToTrieIndex, (x) => generateNgramTrie(3, x)),
         post_fn: noPostProcess,
         search_fn: generateSearchFn(searchTrie, (x) => generateNgram(3, x), intersectAll),
-        index: {refs: [], children: {}}
+        index: { index: {refs: [], children: {}}}
     }
     await runner("TRIGRAM TRIE", trie_trigram_set);
 

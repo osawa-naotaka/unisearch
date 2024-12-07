@@ -6,11 +6,16 @@ export type DocId = number;
 export type Term = string;
 export type Token = string;
 export type Reference = {
-    docid: DocId;
+    id: DocId;
+    n: number;
     position?: {
         index: number;
         wordaround?: string;
     };
+};
+
+export type SingleIndex<T> = {
+    index: T;
 };
 
 export type HybridIndex<T, U> = {
@@ -38,20 +43,20 @@ export const tokenIsTerm = (x: Term) => [x];
 export const noPostProcess = () => {};
 export const intersectAll = (refs: Reference[][]) => foldl1Array(intersect, refs);
 
-export function generateIndexFn<T>(idxfn: IndexFn<T>, tttfn: TermToTokenFn): IndexFn<T> {
-    return (ref: Reference, text: string, index: T) =>
+export function generateIndexFn<T>(idxfn: IndexFn<T>, tttfn: TermToTokenFn) {
+    return (ref: Reference, text: string, index: SingleIndex<T>) =>
         textToTerm([text])
             .flatMap(tttfn)
-            .map((token) => idxfn(ref, token, index));
+            .map((token) => idxfn(ref, token, index.index));
 }
 
-export function generateSearchFn<T>(search: SearchFn<T>, tttfn: TermToTokenFn, aggfn: AggregateFn): SearchFn<T> {
-    return (query: string, index: T) =>
+export function generateSearchFn<T>(search: SearchFn<T>, tttfn: TermToTokenFn, aggfn: AggregateFn) {
+    return (query: string, index: SingleIndex<T>) =>
         foldl1Array(
             intersect,
             textToTerm([query])
                 .map(tttfn)
-                .map((tokens) => aggfn(tokens.map((token) => search(token, index)))),
+                .map((tokens) => aggfn(tokens.map((token) => search(token, index.index)))),
         );
 }
 

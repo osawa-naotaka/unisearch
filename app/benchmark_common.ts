@@ -41,9 +41,9 @@ function benchmark<T, R>(fn: (args: T, idx: number) => R, args: T[]) : Benchmark
 }
 
 function execIndexing<T> (index_fn: IndexFn<T>, post_fn: PostprocessFn<T>, index: T, articles: WikipediaArticle[]) : BenchmarkResult<void>[] {
-    const result_create_index = benchmark((doc, docid) => {
-        index_fn({docid: docid}, doc.title, index);
-        index_fn({docid: docid}, doc.text, index);
+    const result_create_index = benchmark((doc, id) => {
+        index_fn({id: id, n: 1}, doc.title, index);
+        index_fn({id: id, n: 1}, doc.text, index);
     }, articles);
 
     const result_post_index = benchmark((x) => post_fn(x), [index]);
@@ -73,7 +73,7 @@ export async function execBenchmark<T> (
 }
 
 function checkResult(correct: Result[], test: Result[]): SearchCorrectness<Reference[]>[] {
-    const equals = (a: Reference, b: Reference) => a.docid === b.docid;
+    const equals = (a: Reference, b: Reference) => a.id === b.id;
     return zipWith(correct, test, (a, b) => ({
             keyword: a.keyword,
             match: intersect(a.refs, b.refs, equals),
