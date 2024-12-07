@@ -15,10 +15,12 @@ export type Reference = {
 };
 
 export type SingleIndex<T> = {
+    numtoken: Record<DocId, number>;
     index: T;
 };
 
 export type HybridIndex<T, U> = {
+    numtoken: Record<DocId, number>;
     ja: T;
     en: U;
 };
@@ -44,10 +46,13 @@ export const noPostProcess = () => {};
 export const intersectAll = (refs: Reference[][]) => foldl1Array(intersect, refs);
 
 export function generateIndexFn<T>(idxfn: IndexFn<T>, tttfn: TermToTokenFn) {
-    return (ref: Reference, text: string, index: SingleIndex<T>) =>
-        textToTerm([text])
-            .flatMap(tttfn)
-            .map((token) => idxfn(ref, token, index.index));
+    return (ref: Reference, text: string, index: SingleIndex<T>) => {
+        const tokens = textToTerm([text]).flatMap(tttfn);
+        index.numtoken[ref.id] = (index.numtoken[ref.id] || 0) + tokens.length;
+        for (const token of tokens) {
+            idxfn(ref, token, index.index);
+        }
+    };
 }
 
 export function generateSearchFn<T>(search: SearchFn<T>, tttfn: TermToTokenFn, aggfn: AggregateFn) {
@@ -69,9 +74,17 @@ export function generateHybridIndexFn<T, U>(
     return (ref: Reference, text: string, index: HybridIndex<T, U>) => {
         for (const term of textToTerm([text])) {
             if (isNonSpaceSeparatedChar(term[0])) {
-                tttfn_ja(term).map((token) => idxfn_ja(ref, token, index.ja));
+                const tokens = tttfn_ja(term);
+                index.numtoken[ref.id] = (index.numtoken[ref.id] || 0) + tokens.length;
+                for (const token of tokens) {
+                    idxfn_ja(ref, token, index.ja)
+                }
             } else {
-                tttfn_en(term).map((token) => idxfn_en(ref, token, index.en));
+                const tokens = tttfn_en(term);
+                index.numtoken[ref.id] = (index.numtoken[ref.id] || 0) + tokens.length;
+                for (const token of tokens) {
+                    idxfn_en(ref, token, index.en)
+                }
             }
         }
     };

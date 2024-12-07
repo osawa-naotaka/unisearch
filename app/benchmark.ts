@@ -34,7 +34,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         index_fn: (ref: Reference, text: string, index: SingleIndex<LinearIndex>) => addToLinearIndex(ref, text, index.index),
         post_fn: noPostProcess,
         search_fn: (query: string, index: SingleIndex<LinearIndex>) => searchLinear(query, index.index),
-        index: { index: [] }
+        index: { index: [], numtoken: {} }
     }
     const ref_results = await execBenchmark(linear_search_set, keywords, wikipedia_articles);
     console.log(ref_results);
@@ -47,7 +47,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         index_fn: generateIndexFn(addToRecordIndex, (x) => generateNgramTrie(2, x)),
         post_fn: noPostProcess,
         search_fn: generateSearchFn(searchExactRecord, (x) => generateNgram(2, x), intersectAll),
-        index: { index: {} }
+        index: { index: {}, numtoken: {} }
     }
     await runner("BIGRAM RECORD", bigram_set);
     
@@ -56,7 +56,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         index_fn: generateIndexFn(addToRecordIndex, (x) => generateNgramTrie(3, x)),
         post_fn: noPostProcess,
         search_fn: generateSearchFn(searchExactRecord, (x) => generateNgram(3, x), intersectAll),
-        index: { index: {} }
+        index: { index: {}, numtoken: {} }
     }
     await runner("TRIGRAM RECORD", trigram_set);
     
@@ -65,7 +65,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         index_fn: generateIndexFn(addToRecordIndex, (x) => generateNgramTrie(4, x)),
         post_fn: noPostProcess,
         search_fn: generateSearchFn(searchExactRecord, (x) => generateNgram(4, x), intersectAll),
-        index: { index: {} }
+        index: { index: {}, numtoken: {} }
     }
     await runner("QUADGRAM RECORD", quadgram_set);
     
@@ -74,7 +74,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         index_fn: generateIndexFn(addToTrieIndex, (x) => generateNgramTrie(3, x)),
         post_fn: noPostProcess,
         search_fn: generateSearchFn(searchTrie, (x) => generateNgram(3, x), intersectAll),
-        index: { index: {refs: [], children: {}}}
+        index: { index: {refs: [], children: {}}, numtoken: {} }
     }
     await runner("TRIGRAM TRIE", trie_trigram_set);
 
@@ -89,7 +89,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
             searchExactRecord, (x) => generateNgram(2, x), intersectAll,
             searchForwardRecord, tokenIsTerm, intersectAll
         ),
-        index: { ja: { }, en: { } }
+        index: { ja: { }, en: { }, numtoken: {} }
     }
     const hybrid_record_bigram_result = await runner("HYBRID en:RECORD ja:BIGRAM RECORD", hybrid_record_bigram_set);
     console.log(hybrid_record_bigram_result);
@@ -108,7 +108,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
             searchExactSortedArray, (x) => generateNgram(2, x), intersectAll,
             searchForwardSortedArray, tokenIsTerm, intersectAll
         ),
-        index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } }
+        index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] }, numtoken: {} }
     }
     await hybrid_runner("HYBRID en:SORTED-ARRAY ja:BIGRAM SORTED-ARRAY: vs RECORD", hybrid_bigram_set);
 
@@ -123,7 +123,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
             searchExactSortedArray, (x) => generateNgram(2, x), intersectAll,
             searchFuzzySortedArray, tokenIsTerm, intersectAll
         ),
-        index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] } }
+        index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] }, numtoken: {} }
     }
     await hybrid_runner("HYBRID en:FUZZY SORTED-ARRAY ja:BIGRAM SORTED-ARRAY: vs RECORD", hybrid_fuzzy_bigram_set);
 }
