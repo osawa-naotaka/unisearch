@@ -1,5 +1,4 @@
 import type { Reference, Token } from "@src/common";
-import { foldl1Array, union } from "@src/algo";
 import { updateRefs } from "@src/common";
 
 export type RecordIndex = Record<Token, Reference[]>;
@@ -13,8 +12,5 @@ export function searchExactRecord(query: Token, index: RecordIndex): Reference[]
 }
 
 export function searchForwardRecord(query: Token, index: RecordIndex): Reference[] {
-    return foldl1Array(
-        union,
-        Object.entries(index).map(([token, docs]) => (token.startsWith(query) ? docs : [])),
-    );
+    return Object.entries(index).flatMap(([token, refs]) => token.startsWith(query) ? refs : []);
 }

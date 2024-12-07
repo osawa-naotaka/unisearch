@@ -3,10 +3,9 @@ import type { SortedArrayIndex } from "@src/sortedarray";
 import type { SearcherSet, SingleIndex, HybridIndex, Reference } from "@src/common";
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
 import { addToLinearIndex, searchLinear } from "@src/linear";
-import { addToSortedArrayIndex, createSortedArrayIndex, searchExactSortedArray, searchFuzzySortedArray } from "@src/sortedarray";
-import { generateNgram, generateNgramTrie } from "@src/algo";
-import { generateHybridIndexFn, generateHybridPostprocessFn, generateHybridSearchFn, tokenIsTerm, intersectAll, noPostProcess } from "@src/common";
-import { zipWith, difference, intersect } from "@src/algo";
+import { addToSortedArrayIndex, createSortedArrayIndex, searchForwardSortedArray, searchFuzzySortedArray } from "@src/sortedarray";
+import { generateNgram, generateNgramTrie, zipWith, difference, intersect } from "@src/algo";
+import { generateHybridIndexFn, generateHybridPostprocessFn, generateHybridSearchFn, tokenIsTerm, noPostProcess, intersectAll } from "@src/common";
 
 const keyword = "ロンドン";
 const article_begin = 0;
@@ -32,7 +31,7 @@ const search_set: SearcherSet<HybridIndex<SortedArrayIndex, SortedArrayIndex>> =
     ),
     post_fn: generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
     search_fn: generateHybridSearchFn(
-        searchExactSortedArray, (x) => generateNgram(2, x), intersectAll,
+        searchForwardSortedArray, (x) => generateNgram(2, x), intersectAll,
         searchFuzzySortedArray, tokenIsTerm, intersectAll
     ),
     index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] }, numtoken: {} }
@@ -52,4 +51,3 @@ function checkResult(correct: Reference[], test: Reference[])  {
             false_negative: difference(a, b, equals),
         }));
 }
-

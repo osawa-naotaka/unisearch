@@ -30,7 +30,7 @@ export function searchExactSortedArray(query: Token, index: SortedArrayIndex): R
 export function searchForwardSortedArray(query: Token, index: SortedArrayIndex): Reference[] {
     const items = refine([query, []], ([x], [y]) => prefixCompare(x, y), index.sorted);
 
-    return Array.from(new Set([...items.flatMap(([_, refs]) => refs)]));
+    return [...items.flatMap(([_, refs]) => refs)];
 }
 
 export function searchFuzzySortedArray(query: Token, index: SortedArrayIndex): Reference[] {
@@ -41,5 +41,5 @@ export function searchFuzzySortedArray(query: Token, index: SortedArrayIndex): R
         .filter((x) => x.result !== null)
         .flatMap((x) => items[x.idx][1]);
 
-    return Array.from(new Set(results));
+    return results;
 }

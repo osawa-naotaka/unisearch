@@ -43,26 +43,43 @@ export type HybridPostprocessFn<T, U> = (index: HybridIndex<T, U>) => void;
 
 export const tokenIsTerm = (x: Term) => [x];
 export const noPostProcess = () => {};
-export const intersectAll = (refs: Reference[][]) => foldl1Array(intersect, refs);
+export const intersectAll = (refs: Reference[][]) => foldl1Array(intersectReference, refs);
 export const unionAll = (refs: Reference[][]) => foldl1Array(union, refs);
+
+export function intersectReference(a: Reference[], b: Reference[]): Reference[] {
+    const refs = [];
+    for(const x of a) {
+        const y = b.find((y) => y.id === x.id);
+        if(y) {
+            refs.push({id: x.id, n: y.n + x.n})
+        }
+    }
+    return refs;
+}
 
 export function generateIndexFn<T>(idxfn: IndexFn<T>, tttfn: TermToTokenFn) {
     return (ref: Reference, text: string, index: SingleIndex<T>) => {
-        const tokens = textToTerm([text]).flatMap(tttfn);
-        index.numtoken[ref.id] = (index.numtoken[ref.id] || 0) + tokens.length;
-        for (const token of tokens) {
-            idxfn(ref, token, index.index);
+        for (const term of textToTerm([text])) {
+            const tokens = tttfn(term);
+            index.numtoken[ref.id] = (index.numtoken[ref.id] || 0) + tokens.length;
+            for (const token of tokens) {
+                idxfn(ref, token, index.index)
+            }
         }
     };
 }
 
-export function generateSearchFn<T>(search: SearchFn<T>, tttfn: TermToTokenFn, aggfn: AggregateFn) {
+export function generateSinglePostprocessFn<T>(postfn: PostprocessFn<T>) {
+    return (index: SingleIndex<T>) => postfn(index.index);
+}
+
+export function generateSearchFn<T>(searchfn: SearchFn<T>, tttfn: TermToTokenFn, aggfn: AggregateFn) {
     return (query: string, index: SingleIndex<T>) =>
         foldl1Array(
             intersect,
-            textToTerm([query])
-                .map(tttfn)
-                .map((tokens) => aggfn(tokens.map((token) => search(token, index.index)))),
+            textToTerm([query]).map((term) =>
+                    aggfn(tttfn(term).map((token) => searchfn(token, index.index))),
+            ),
         );
 }
 

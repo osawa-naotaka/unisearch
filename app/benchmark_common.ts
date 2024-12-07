@@ -127,3 +127,7 @@ export function generateBenchmarkRunner(
 export function getAllKeywords(keyword_array: WikipediaKeyword[]): string[] {
     return keyword_array.flatMap(k => k.keywords);
 }
+
+export function getKeywords(n: number, keyword_array: WikipediaKeyword[]): string[] {
+    return keyword_array.flatMap(k => k.keywords.slice(0, n));
+}
