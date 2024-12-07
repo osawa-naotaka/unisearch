@@ -4,8 +4,8 @@ import { normalizeText } from "@src/preprocess";
 
 export type LinearIndex = string[];
 
-export function addToLinearIndex(ref: Reference, text: string, index: LinearIndex) {
-    index[ref.id] += normalizeText(text);
+export function addToLinearIndex(ref: Reference, doc: string, index: LinearIndex) {
+    index[ref.id] += normalizeText(doc);
 }
 
 function* indicesOf(keyword: string, target: string): Generator<number> {
@@ -27,28 +27,24 @@ function* fuzzyIndicesOf(keyword: string, target: string): Generator<number> {
 
 export function searchLinear(query: string, index: LinearIndex): Reference[] {
     const query_normalized = normalizeText(query);
-    return index.flatMap((item, id) =>
-        [...indicesOf(query_normalized, item)].map((pos) => ({
+    return index.flatMap((doc, id) => {
+        const results = [...indicesOf(query_normalized, doc)];
+        return results.length > 0 ? {
             id: id,
-            n: 1,
-            position: {
-                index: pos,
-                wordaround: item.slice(pos - 10, pos + query_normalized.length + 10),
-            },
-        })),
-    );
+            n: results.length,
+            position: results.map((x) => ({ index: x, wordaround: doc.slice(x - 10, x + query_normalized.length + 10)}))
+        } : [];
+    });
 }
 
 export function searchFuzzyLinear(query: string, index: LinearIndex): Reference[] {
     const query_normalized = normalizeText(query);
-    return index.flatMap((item, id) =>
-        [...fuzzyIndicesOf(query_normalized, item)].map((pos) => ({
+    return index.flatMap((doc, id) => {
+        const results = [...fuzzyIndicesOf(query_normalized, doc)];
+        return results.length > 0 ? {
             id: id,
-            n: 1,
-            position: {
-                index: pos,
-                wordaround: item.slice(pos - 10, pos + query_normalized.length + 10),
-            },
-        })),
-    );
+            n: results.length,
+            position: results.map((x) => ({ index: x, wordaround: doc.slice(x - 10, x + query_normalized.length + 10)}))
+        } : [];
+    });
 }

@@ -1,4 +1,4 @@
-import { foldl1Array, intersect } from "@src/algo";
+import { foldl1Array, intersect, union } from "@src/algo";
 import { textToTerm } from "@src/preprocess";
 import { isNonSpaceSeparatedChar } from "@src/util";
 
@@ -11,7 +11,7 @@ export type Reference = {
     position?: {
         index: number;
         wordaround?: string;
-    };
+    }[];
 };
 
 export type SingleIndex<T> = {
@@ -44,6 +44,7 @@ export type HybridPostprocessFn<T, U> = (index: HybridIndex<T, U>) => void;
 export const tokenIsTerm = (x: Term) => [x];
 export const noPostProcess = () => {};
 export const intersectAll = (refs: Reference[][]) => foldl1Array(intersect, refs);
+export const unionAll = (refs: Reference[][]) => foldl1Array(union, refs);
 
 export function generateIndexFn<T>(idxfn: IndexFn<T>, tttfn: TermToTokenFn) {
     return (ref: Reference, text: string, index: SingleIndex<T>) => {
