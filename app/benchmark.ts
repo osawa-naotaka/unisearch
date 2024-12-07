@@ -7,7 +7,7 @@ import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
 import { wikipedia_ja_keyword_long } from "@test/wikipedia_ja_keyword_long";
 import { calculateJsonSize } from "@src/util";
-import { generateIndexFn, generateSinglePostprocessFn, generateSearchFn, generateHybridIndexFn, generateHybridPostprocessFn, generateHybridSearchFn, noPostProcess, tokenIsTerm, intersectAll } from "@src/common";
+import { generateIndexFn, generatePostprocessFn, generateSearchFn, generateHybridIndexFn, generateHybridPostprocessFn, generateHybridSearchFn, noPostProcess, tokenIsTerm, intersectAll } from "@src/common";
 import { addToLinearIndex, searchLinear } from "@src/linear";
 import { generateNgram, generateNgramTrie } from "@src/algo";
 import { addToTrieIndex, searchTrie } from "@src/trie";
@@ -41,7 +41,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     // bigram
     const bigram_set: SearcherSet<SingleIndex<SortedArrayIndex>> = {
         index_fn: generateIndexFn(addToSortedArrayIndex, (x) => generateNgramTrie(2, x)),
-        post_fn: generateSinglePostprocessFn(createSortedArrayIndex),
+        post_fn: generatePostprocessFn(createSortedArrayIndex),
         search_fn: generateSearchFn(searchForwardSortedArray, (x) => generateNgram(2, x), intersectAll),
         index: { index: { unsorted: {}, sorted: [] }, numtoken: {} }
     }
@@ -50,7 +50,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     // trigram
     const trigram_set: SearcherSet<SingleIndex<SortedArrayIndex>> = {
         index_fn: generateIndexFn(addToSortedArrayIndex, (x) => generateNgramTrie(3, x)),
-        post_fn: generateSinglePostprocessFn(createSortedArrayIndex),
+        post_fn: generatePostprocessFn(createSortedArrayIndex),
         search_fn: generateSearchFn(searchForwardSortedArray, (x) => generateNgram(3, x), intersectAll),
         index: { index: { unsorted: {}, sorted: [] }, numtoken: {} }
     }
@@ -59,7 +59,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     // quadgram
     const quadgram_set: SearcherSet<SingleIndex<SortedArrayIndex>> = {
         index_fn: generateIndexFn(addToSortedArrayIndex, (x) => generateNgramTrie(4, x)),
-        post_fn: generateSinglePostprocessFn(createSortedArrayIndex),
+        post_fn: generatePostprocessFn(createSortedArrayIndex),
         search_fn: generateSearchFn(searchForwardSortedArray, (x) => generateNgram(4, x), intersectAll),
         index: { index: { unsorted: {}, sorted: [] }, numtoken: {} }
     }

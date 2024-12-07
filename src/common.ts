@@ -69,7 +69,7 @@ export function generateIndexFn<T>(idxfn: IndexFn<T>, tttfn: TermToTokenFn) {
     };
 }
 
-export function generateSinglePostprocessFn<T>(postfn: PostprocessFn<T>) {
+export function generatePostprocessFn<T>(postfn: PostprocessFn<T>) {
     return (index: SingleIndex<T>) => postfn(index.index);
 }
 
