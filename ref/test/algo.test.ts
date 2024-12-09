@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
-import { binarySearch, generate1ToNgram, generateNgram, generateNgramTrie, createBitapKey, bitapSearch } from '@src/algo';
-import { BinarySearchType } from '@src/algo';
-import { prefixCompare } from '@src/sortedarray';
+import { binarySearch, generate1ToNgram, generateNgram, generateNgramTrie, createBitapKey, bitapSearch } from '@ref/algo';
+import { BinarySearchType } from '@ref/algo';
+import { prefixCompare } from '@ref/sortedarray';
 
 test('1-gram for "t", is ["t"]', () =>
     expect(generateNgram(1, "t")).toStrictEqual(["t"]));
