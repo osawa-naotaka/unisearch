@@ -1,18 +1,18 @@
-import type { WikipediaArticle, WikipediaKeyword } from "@app/benchmark_common";
-import type { SingleIndex, HybridIndex, SearcherSet, Reference } from "@src/common";
-import type { LinearIndex } from "@src/linear";
-import type { TrieIndex } from "@src/trie";
-import type { SortedArrayIndex } from "@src/sortedarray";
+import type { WikipediaArticle, WikipediaKeyword } from "@ref/bench/benchmark_common";
+import type { SingleIndex, HybridIndex, SearcherSet, Reference } from "@ref/common";
+import type { LinearIndex } from "@ref/linear";
+import type { TrieIndex } from "@ref/trie";
+import type { SortedArrayIndex } from "@ref/sortedarray";
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
 import { wikipedia_ja_keyword_long } from "@test/wikipedia_ja_keyword_long";
-import { calculateJsonSize } from "@src/util";
-import { generateIndexFn, generatePostprocessFn, generateSearchFn, generateHybridIndexFn, generateHybridPostprocessFn, generateHybridSearchFn, noPostProcess, tokenIsTerm, intersectAll } from "@src/common";
-import { addToLinearIndex, searchLinear } from "@src/linear";
-import { generateNgram, generateNgramTrie } from "@src/algo";
-import { addToTrieIndex, searchTrie } from "@src/trie";
-import { addToSortedArrayIndex, createSortedArrayIndex, searchForwardSortedArray, searchFuzzySortedArray } from "@src/sortedarray";
-import { execBenchmark, generateBenchmarkRunner, getKeywords } from "@app/benchmark_common";
+import { calculateJsonSize } from "@ref/util";
+import { generateIndexFn, generatePostprocessFn, generateSearchFn, generateHybridIndexFn, generateHybridPostprocessFn, generateHybridSearchFn, noPostProcess, tokenIsTerm, intersectAll } from "@ref/common";
+import { addToLinearIndex, searchLinear } from "@ref/linear";
+import { generateNgram, generateNgramTrie } from "@ref/algo";
+import { addToTrieIndex, searchTrie } from "@ref/trie";
+import { addToSortedArrayIndex, createSortedArrayIndex, searchForwardSortedArray, searchFuzzySortedArray } from "@ref/sortedarray";
+import { execBenchmark, generateBenchmarkRunner, getKeywords } from "@ref/bench/benchmark_common";
 
 async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[], n: number) {
     console.log("initializing benchmark...");

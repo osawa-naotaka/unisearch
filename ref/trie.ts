@@ -1,6 +1,6 @@
-import { union } from "@src/algo";
-import type { Reference, Token } from "@src/common";
-import { firstLetter, restString } from "@src/util";
+import { union } from "@ref/algo";
+import type { Reference, Token } from "@ref/common";
+import { firstLetter, restString } from "@ref/util";
 
 type TrieNode = {
     refs: Reference[];

@@ -1,11 +1,11 @@
-import type { LinearIndex } from "@src/linear";
-import type { SortedArrayIndex } from "@src/sortedarray";
-import type { SearcherSet, SingleIndex, HybridIndex, Reference } from "@src/common";
+import type { LinearIndex } from "@ref/linear";
+import type { SortedArrayIndex } from "@ref/sortedarray";
+import type { SearcherSet, SingleIndex, HybridIndex, Reference } from "@ref/common";
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
-import { addToLinearIndex, searchLinear } from "@src/linear";
-import { addToSortedArrayIndex, createSortedArrayIndex, searchForwardSortedArray, searchFuzzySortedArray } from "@src/sortedarray";
-import { generateNgram, generateNgramTrie, zipWith, difference, intersect } from "@src/algo";
-import { generateHybridIndexFn, generateHybridPostprocessFn, generateHybridSearchFn, tokenIsTerm, noPostProcess, intersectAll } from "@src/common";
+import { addToLinearIndex, searchLinear } from "@ref/linear";
+import { addToSortedArrayIndex, createSortedArrayIndex, searchForwardSortedArray, searchFuzzySortedArray } from "@ref/sortedarray";
+import { generateNgram, generateNgramTrie, zipWith, difference, intersect } from "@ref/algo";
+import { generateHybridIndexFn, generateHybridPostprocessFn, generateHybridSearchFn, tokenIsTerm, noPostProcess, intersectAll } from "@ref/common";
 
 const keyword = "ロンドン";
 const article_begin = 0;

@@ -1,7 +1,7 @@
-import type { Reference } from "@src/common";
-import type { IndexFn, PostprocessFn, SearcherSet } from "@src/common";
-import { calculateJsonSize, calculateGzipedJsonSize } from "@src/util";
-import { zipWith, intersect, difference } from "@src/algo";
+import type { Reference } from "@ref/common";
+import type { IndexFn, PostprocessFn, SearcherSet } from "@ref/common";
+import { calculateJsonSize, calculateGzipedJsonSize } from "@ref/util";
+import { zipWith, intersect, difference } from "@ref/algo";
 
 type Result = {
     keyword: string,

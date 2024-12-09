@@ -1,13 +1,13 @@
-import type { SearcherSet } from "@src/common";
-import type { LinearIndex } from "@src/linear";
-import type { BloomIndex } from "@src/bloom";
-import type { WikipediaArticle, WikipediaKeyword } from "@app/benchmark_common";
-import { generateIndexFn, generateSearchFn, noPostProcess, intersectAll } from "@src/common";
-import { addToLinearIndex, searchLinear } from "@src/linear";
-import { addToBloomIndex, searchExactBloom } from "@src/bloom";
-import { generate1ToNgram, generateNgram } from "@src/algo";
-import { getAllKeywords, execBenchmark, generateBenchmarkRunner } from "@app/benchmark_common";
-import { calculateJsonSize } from "@src/util";
+import type { SearcherSet, SingleIndex } from "@ref/common";
+import type { LinearIndex } from "@ref/linear";
+import type { BloomIndex } from "@ref/bloom";
+import type { WikipediaArticle, WikipediaKeyword } from "@ref/bench/benchmark_common";
+import { generateIndexFn, generateSearchFn, noPostProcess, intersectAll } from "@ref/common";
+import { addToLinearIndex, searchLinear } from "@ref/linear";
+import { addToBloomIndex, searchExactBloom } from "@ref/bloom";
+import { generate1ToNgram, generateNgram } from "@ref/algo";
+import { getAllKeywords, execBenchmark, generateBenchmarkRunner } from "@ref/bench/benchmark_common";
+import { calculateJsonSize } from "@ref/util";
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
 
@@ -34,16 +34,16 @@ async function runBloom(run_hashes: number, run_bits: [number, number], wikipedi
 
     // prepare benchmark runner
     const runner = generateBenchmarkRunner(wikipedia_articles, keywords, ref_results);
-    const bloom_set: SearcherSet<BloomIndex> = {
+    const bloom_set: SearcherSet<SingleIndex<BloomIndex>> = {
         index_fn: generateIndexFn(addToBloomIndex, (x) => generate1ToNgram(4, x)),
         post_fn: noPostProcess,
         search_fn: generateSearchFn(searchExactBloom, (x) => generateNgram(4, x), intersectAll),
-        index: {index: {}, bits: run_bits[0], hashes: 2}
+        index: { index: {index: {}, bits: run_bits[0], hashes: 2}, numtoken: []}
     };
     
     for(let hashes = 2; hashes <= run_hashes; hashes++) {
         for(let bits = run_bits[0]; bits < run_bits[1]; bits = bits * 2) {
-            bloom_set.index = {index: {}, bits: bits, hashes: hashes};
+            bloom_set.index = { index: {index: {}, bits: bits, hashes: hashes}, numtoken: []};
             await runner(`BLOOM FILTER ${bits} bits, ${hashes} hashs`, bloom_set);
         }
     }    

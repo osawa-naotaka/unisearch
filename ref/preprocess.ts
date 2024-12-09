@@ -1,5 +1,5 @@
-import { compose } from "@src/algo";
-import type { Term } from "src/common";
+import { compose } from "@ref/algo";
+import type { Term } from "@ref/common";
 
 // 日本語正規化
 const normalizeJapanese = (input: string) =>

@@ -1,5 +1,5 @@
-import type { Token } from "@src/common";
-import { rangeArray } from "@src/util";
+import type { Token } from "@ref/common";
+import { rangeArray } from "@ref/util";
 
 export function generate1ToNgram(n: number, text: string): Token[] {
     return rangeArray(n).flatMap((x) => generateNgramInternal(x + 1, text));

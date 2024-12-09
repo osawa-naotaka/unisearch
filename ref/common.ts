@@ -1,6 +1,6 @@
-import { foldl1Array, intersect, union } from "@src/algo";
-import { textToTerm } from "@src/preprocess";
-import { isNonSpaceSeparatedChar } from "@src/util";
+import { foldl1Array, intersect, union } from "@ref/algo";
+import { textToTerm } from "@ref/preprocess";
+import { isNonSpaceSeparatedChar } from "@ref/util";
 
 export type DocId = number;
 export type Term = string;

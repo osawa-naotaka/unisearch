@@ -1,8 +1,8 @@
-import type { Reference, Token } from "@src/common";
-import { BinarySearchType } from "@src/algo";
-import { binarySearch, bitapSearch, createBitapKey, refine } from "@src/algo";
-import { updateRefs } from "@src/common";
-import { compareString } from "@src/util";
+import type { Reference, Token } from "@ref/common";
+import { BinarySearchType } from "@ref/algo";
+import { binarySearch, bitapSearch, createBitapKey, refine } from "@ref/algo";
+import { updateRefs } from "@ref/common";
+import { compareString } from "@ref/util";
 
 export type SortedArrayIndex = {
     unsorted: Record<Token, Reference[]>;

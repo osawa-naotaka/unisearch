@@ -1,5 +1,5 @@
-import type { Reference, Token } from "@src/common";
-import { updateRefs } from "@src/common";
+import type { Reference, Token } from "@ref/common";
+import { updateRefs } from "@ref/common";
 
 export type RecordIndex = Record<Token, Reference[]>;
 
