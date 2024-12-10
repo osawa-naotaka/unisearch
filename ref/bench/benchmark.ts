@@ -8,7 +8,7 @@ import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
 import { wikipedia_ja_keyword_long } from "@test/wikipedia_ja_keyword_long";
 import { calculateJsonSize } from "@ref/util";
 import { generateIndexFn, generatePostprocessFn, generateSearchFn, generateHybridIndexFn, generateHybridPostprocessFn, generateHybridSearchFn, noPostProcess, tokenIsTerm, intersectAll } from "@ref/common";
-import { addToLinearIndex, searchLinear } from "@ref/linear";
+import { addToLinearIndex, searchLinear, searchFuzzyLinear } from "@ref/linear";
 import { generateNgram, generateNgramTrie } from "@ref/algo";
 import { addToTrieIndex, searchTrie } from "@ref/trie";
 import { addToSortedArrayIndex, createSortedArrayIndex, searchForwardSortedArray, searchFuzzySortedArray } from "@ref/sortedarray";
@@ -37,6 +37,15 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
 
     // prepare benchmark runner
     const runner = generateBenchmarkRunner(wikipedia_articles, keywords, ref_results);
+
+    // linear fuzzy search
+    const linear_fuzzy_set: SearcherSet<SingleIndex<LinearIndex>> = {
+        index_fn: (ref: Reference, text: string, index: SingleIndex<LinearIndex>) => addToLinearIndex(ref, text, index.index),
+        post_fn: noPostProcess,
+        search_fn: (query: string, index: SingleIndex<LinearIndex>) => searchFuzzyLinear(query, index.index),
+        index: { index: [], numtoken: {} }
+    }
+    await runner("LINEAR FUZZY SEARCH", linear_fuzzy_set);
 
     // bigram
     const bigram_set: SearcherSet<SingleIndex<SortedArrayIndex>> = {
