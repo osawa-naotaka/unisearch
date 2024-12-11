@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import tsConfigPaths from 'vite-tsconfig-paths';
 import dts from 'vite-plugin-dts';
+import wasm from 'vite-plugin-wasm';
 
 export default defineConfig({
   build: {
@@ -12,5 +13,9 @@ export default defineConfig({
     outDir: './dist',
     emptyOutDir: true,
   },
-  plugins: [tsConfigPaths(), dts({ tsconfigPath: './tsconfig.app.json', rollupTypes: true })],
+  plugins: [
+    wasm(),
+    tsConfigPaths(),
+    dts({ tsconfigPath: './tsconfig.app.json', rollupTypes: true })
+  ],
 });

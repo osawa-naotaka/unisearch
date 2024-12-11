@@ -1,6 +1,7 @@
 import type { WikipediaArticle, WikipediaKeyword } from "@ref/bench/benchmark_common";
 import type { SingleIndex, HybridIndex, SearcherSet, Reference } from "@ref/common";
 import type { LinearIndex } from "@ref/linear";
+import type { WasmLinearIndex } from "@ref/wasmlinear";
 import type { TrieIndex } from "@ref/trie";
 import type { SortedArrayIndex } from "@ref/sortedarray";
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
@@ -9,10 +10,12 @@ import { wikipedia_ja_keyword_long } from "@test/wikipedia_ja_keyword_long";
 import { calculateJsonSize } from "@ref/util";
 import { generateIndexFn, generatePostprocessFn, generateSearchFn, generateHybridIndexFn, generateHybridPostprocessFn, generateHybridSearchFn, noPostProcess, tokenIsTerm, intersectAll } from "@ref/common";
 import { addToLinearIndex, searchLinear, searchFuzzyLinear } from "@ref/linear";
+import { addToWasmLinearIndex, searchWasmLinear } from "@ref/wasmlinear";
 import { generateNgram, generateNgramTrie } from "@ref/algo";
 import { addToTrieIndex, searchTrie } from "@ref/trie";
 import { addToSortedArrayIndex, createSortedArrayIndex, searchForwardSortedArray, searchFuzzySortedArray } from "@ref/sortedarray";
 import { execBenchmark, generateBenchmarkRunner, getKeywords } from "@ref/bench/benchmark_common";
+import { StringManager } from "bitap/pkg/bitap";
 
 async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[], n: number) {
     console.log("initializing benchmark...");
@@ -45,7 +48,16 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         search_fn: (query: string, index: SingleIndex<LinearIndex>) => searchFuzzyLinear(query, index.index),
         index: { index: [], numtoken: {} }
     }
-    await runner("LINEAR FUZZY SEARCH", linear_fuzzy_set);
+    await runner("LINEAR FUZZY", linear_fuzzy_set);
+
+    // linear wasm search
+    const linear_wasm_set: SearcherSet<SingleIndex<WasmLinearIndex>> = {
+        index_fn: (ref: Reference, text: string, index: SingleIndex<WasmLinearIndex>) => addToWasmLinearIndex(ref, text, index.index),
+        post_fn: noPostProcess,
+        search_fn: (query: string, index: SingleIndex<WasmLinearIndex>) => searchWasmLinear(query, index.index),
+        index: { index: new StringManager(), numtoken: {} }
+    }
+    await runner("LINEAR WASM", linear_wasm_set);
 
     // bigram
     const bigram_set: SearcherSet<SingleIndex<SortedArrayIndex>> = {
