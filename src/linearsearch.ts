@@ -1,31 +1,52 @@
 import type { LinearSearchIndex } from "@src/indexing";
 import type { Path } from "@src/indexing";
-import { extractStrings } from "@src/traverser";
-import { bitapSearch, createBitapKey } from "@src/algorithm";
+import { bitapSearch, createBitapKey, union } from "@src/algorithm";
 
-function* fuzzyIndicesOf(keyword: string, target: string): Generator<number> {
+function exactSearch(keyword: string, target: string): number[] {
+    const result: number[] = [];
+    let pos = target.indexOf(keyword);
+    while(pos !== -1) {
+        result.push(pos);
+        pos = target.indexOf(keyword, pos + keyword.length + 1);
+    }
+    return result;
+}
+
+function fuzzySearch(keyword: string, target: string, maxerror: number): number[] {
     const key = createBitapKey(keyword);
-    let pos = bitapSearch(key, 1, target);
+    const result = [];
+    let pos = bitapSearch(key, maxerror, target);
     while (pos !== null) {
-        yield pos;
+        result.push(pos);
         pos = bitapSearch(key, 1, target, pos + keyword.length + 1);
     }
+    return result;
 }
 
 type Reference = {
+    path: Path;
     pos: number;
     wordaround: string;
 };
 
 type SearchResult = {
     index: number,
-    keys: Path[],
+    keys: any,
     score: number,
-
+    refs: Reference[]
 };
 
-export function linearSearch<T>(query: string, index: LinearSearchIndex<T>) {
-    for(const [path, content] of extractStrings("", index.contents)) {
-        const pos = fuzzyIndicesOf(query, content)
+export function linearExactSearch(query: string, index: LinearSearchIndex): SearchResult[] {
+    const result = new Map<number, SearchResult>();
+    for(const path of index.search_targets.length === 0 ? Object.keys(index.index_entry) : index.search_targets) {
+        index.index_entry[path].forEach((text, id) => {
+            const pos = exactSearch(query, text);
+            if(pos.length !== 0) {
+                const cur = result.get(id) || {index: id, keys: index.key_fields.map((key) => index.index_entry[key]), score: 0, refs: []};
+                cur.refs = union(cur.refs, pos.map((p) => ({path: path, pos: p, wordaround: text.slice(p - 10, p + query.length + 10)})));
+                result.set(id, cur);
+            }
+        });
     }
+    return Array.from(result.values());
 }

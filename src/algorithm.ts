@@ -53,3 +53,9 @@ export function bitapSearch(key: BitapKey, maxErrors: number, text: string, pos 
 
     return null;
 }
+
+export function union<T>(a: T[], b?: T[]): T[] {
+    return b ? Array.from(new Set([...a, ...b])) : a;
+}
+
+

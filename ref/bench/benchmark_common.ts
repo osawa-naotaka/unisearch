@@ -30,7 +30,7 @@ type SearchCorrectness<T> = {
     false_negative: T
 };
 
-function benchmark<T, R>(fn: (args: T, idx: number) => R, args: T[]) : BenchmarkResult<R> {
+export function benchmark<T, R>(fn: (args: T, idx: number) => R, args: T[]) : BenchmarkResult<R> {
     const start = performance.now();
     const results = args.map((arg, idx) => fn(arg, idx));
     const end = performance.now();

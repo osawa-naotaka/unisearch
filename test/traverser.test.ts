@@ -56,9 +56,9 @@ test('traverse object No.10', () =>
         expect(extractStrings("", {key1: "string1", key2: "string2"})).toStrictEqual([["key1", "string1"], ["key2", "string2"]]));
     
     test('extract string No.3', () =>
-        expect(extractStrings("", ["string1", "string2"])).toStrictEqual([["0", "string1"], ["1", "string2"]]));
+        expect(extractStrings("", ["string1", "string2"])).toStrictEqual([["", "string1 string2"]]));
     
     test('extract string No.4', () =>
         expect(extractStrings("", {field1: ["string1", "string2"], field2: {field3: "string3", field4: 10}}))
-        .toStrictEqual([["field1.0", "string1"], ["field1.1", "string2"], ["field2.field3", "string3"]]));
+        .toStrictEqual([["field1", "string1 string2"], ["field2.field3", "string3"]]));
     
