@@ -8,20 +8,22 @@ import { linearExactSearch } from "@src/linearsearch";
 async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[], n: number) {
     console.log("initializing benchmark...");
     const keywords = getKeywords(n, wikipedia_keyword);
-    console.log(`select all ${keywords.length} keywords...`);
+    console.log(`select all ${keywords.length} keywords.`);
     console.log("selected keywords are:");
     console.log(keywords);
 
     const index_result = benchmark((arg) => createIndex(arg), [wikipedia_articles]);
     console.log(`indexing time: ${index_result.time} ms`);
-    console.log(index_result.results[0]);
 
     const index = index_result.results[0];
     if(index instanceof UniSearchError) {
-        throw index_result.results[0];
+        throw index;
     } else {
+        console.log(index);
+
         const search_result = benchmark((arg) => linearExactSearch(arg, index.index), keywords);
-        console.log(search_result);
+        console.log(`search time: ${search_result.time} ms`);
+        console.log(search_result.results);
     }
 }
 
