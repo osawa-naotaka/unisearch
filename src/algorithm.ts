@@ -57,3 +57,34 @@ export function bitapSearch(key: BitapKey, maxErrors: number, text: string, pos 
 export function union<T>(a: T[], b?: T[]): T[] {
     return b ? Array.from(new Set([...a, ...b])) : a;
 }
+
+type Pipe = {
+    <A extends unknown[], B, C>(f: (...args: A) => B, g: (x: B) => C): (...args: A) => C;
+
+    <A extends unknown[], B, C, D>(f: (...args: A) => B, g: (x: B) => C, h: (x: C) => D): (...args: A) => D;
+
+    <A extends unknown[], B, C, D, E>(
+        f: (...args: A) => B,
+        g: (x: B) => C,
+        h: (x: C) => D,
+        i: (x: D) => E,
+    ): (...args: A) => E;
+
+    <A extends unknown[], B, C, D, E, F>(
+        f: (...args: A) => B,
+        g: (x: B) => C,
+        h: (x: C) => D,
+        i: (x: D) => E,
+        j: (x: E) => F,
+    ): (...args: A) => F;
+
+    (...fns: AnyFunction[]): (...args: unknown[]) => unknown;
+};
+
+type AnyFunction = (...args: unknown[]) => unknown;
+
+export const pipe: Pipe = (...fns: AnyFunction[]) => {
+    return (...args: unknown[]) => {
+        return fns.reduce((acc: unknown, fn, idx) => (idx === 0 ? fn(...args) : fn(acc)), null);
+    };
+};

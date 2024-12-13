@@ -1,13 +1,14 @@
 import { bitapSearch, createBitapKey, union } from "@src/algorithm";
 import type { Path, SearchResult, UniSearchIndex } from "@src/common";
+import { defaultNormalizer } from "@src/preprocess";
 
-type LinearIndexEntry = Record<Path, string[]>;
+type LinearIndexEntry = Record<Path, string>[];
 
 export function setLinearIndexEntry(index_entry: LinearIndexEntry, path: Path, id: number, str: string) {
-    if (index_entry[path] === undefined) {
-        index_entry[path] = [];
+    if (index_entry[id] === undefined) {
+        index_entry[id] = {};
     }
-    index_entry[path][id] = str;
+    index_entry[id][path] = defaultNormalizer(str);
 }
 
 function exactSearch(keyword: string, target: string): number[] {
@@ -39,24 +40,29 @@ function searchToken(
     index: UniSearchIndex<LinearIndexEntry>,
 ): SearchResult[] {
     const result = new Map<number, SearchResult>();
-    for (const path of index.search_targets.length === 0 ? Object.keys(index.index_entry) : index.search_targets) {
-        index.index_entry[path].forEach((text, id) => {
-            const pos = search_fn(token, text);
+    index.index_entry.forEach((content, id) => {
+        for (const path of index.search_targets.length === 0 ? Object.keys(content) : index.search_targets) {
+            const pos = search_fn(token, content[path]);
             if (pos.length !== 0) {
                 const cur = result.get(id) || {
                     index: id,
-                    keys: index.key_fields.map((key) => index.index_entry[key][id]),
+                    keys: index.key_fields.map((key) => index.index_entry[id][key]),
                     score: 0,
                     refs: [],
                 };
                 cur.refs = union(
                     cur.refs,
-                    pos.map((p) => ({ token: token, path: path, pos: p, wordaround: text.slice(p - 10, p + token.length + 10) })),
+                    pos.map((p) => ({
+                        token: token,
+                        path: path,
+                        pos: p,
+                        wordaround: content[path].slice(p - 10, p + token.length + 10),
+                    })),
                 );
                 result.set(id, cur);
             }
-        });
-    }
+        }
+    });
     return Array.from(result.values());
 }
 
