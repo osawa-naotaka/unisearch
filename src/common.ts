@@ -5,10 +5,11 @@ export type Reference = {
     path: Path;
     pos: number;
     wordaround: string;
+    distance: number;
 };
 
 export type SearchResult = {
-    index: number;
+    id: number;
     keys: unknown;
     score: number;
     refs: Reference[];
