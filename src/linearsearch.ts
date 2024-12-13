@@ -3,6 +3,13 @@ import type { FieldNameMap, LinearIndexEntry, Path, SearchResult, UniIndex, UniS
 import { UniSearchError, UniSearchType, Version } from "@src/common";
 import { extractStringsAll, getValueByPath } from "@src/traverser";
 
+function setEntry(index_entry: LinearIndexEntry, path: Path, id: number, str: string) {
+    if (index_entry[path] === undefined) {
+        index_entry[path] = [];
+    }
+    index_entry[path][id] = str;    
+}
+
 export function createIndex(
     contents: unknown[],
     key_fields: Path[] = [],
@@ -21,9 +28,9 @@ export function createIndex(
                     const obj = getValueByPath(path, content);
                     if (obj === undefined) throw new UniSearchError(`unisearch: cannot find path ${path}`);
                     if (typeof obj === "string") {
-                        index_entry[path][id] = obj;
+                        setEntry(index_entry, path, id, obj);
                     } else if (Array.isArray(obj)) {
-                        index_entry[path][id] = obj.join(" ");
+                        setEntry(index_entry, path, id, obj.join(" "));
                     } else {
                         throw new UniSearchError(`unisearch: ${path} is not string or array of string.`);
                     }
@@ -35,10 +42,7 @@ export function createIndex(
                         const obj = getValueByPath(path, content);
                         if (obj === undefined) throw new UniSearchError(`unisearch: cannot find path ${path}`);
                         if (typeof obj !== "string") throw new UniSearchError(`unisearch: ${path} is not string.`);
-                        if (index_entry[path] === undefined) {
-                            index_entry[path] = [];
-                        }
-                        index_entry[path][id] = obj;
+                        setEntry(index_entry, path, id, obj)
                     }
                 }
             });
@@ -46,10 +50,7 @@ export function createIndex(
             // indexing all, including key entries
             contents.forEach((content, id) => {
                 for (const [path, obj] of extractStringsAll("", content)) {
-                    if (index_entry[path] === undefined) {
-                        index_entry[path] = [];
-                    }
-                    index_entry[path][id] = obj;
+                    setEntry(index_entry, path, id, obj);
                 }
             });
         }

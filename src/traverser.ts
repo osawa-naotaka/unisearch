@@ -1,6 +1,6 @@
 import type { Path } from "@src/common";
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
+function isPlainObject(value: unknown): value is Record<Path, unknown> {
     if (typeof value !== "object" || value === null) {
         return false;
     }
@@ -9,7 +9,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
     return proto === null || proto === Object.prototype;
 }
 
-export function getValueByPath(path: string, obj: unknown): unknown {
+export function getValueByPath(path: Path, obj: unknown): unknown {
     const keys = path.split(".");
 
     return path === ""
