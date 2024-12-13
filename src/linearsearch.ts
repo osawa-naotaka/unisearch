@@ -2,7 +2,7 @@ import { bitapSearch, createBitapKey, union } from "@src/algorithm";
 import type { Path, SearchResult, UniSearchIndex } from "@src/common";
 import { defaultNormalizer } from "@src/preprocess";
 
-type LinearIndexEntry = Record<Path, string>[];
+export type LinearIndexEntry = Record<Path, string>[];
 
 export function setLinearIndexEntry(index_entry: LinearIndexEntry, path: Path, id: number, str: string) {
     if (index_entry[id] === undefined) {

@@ -2,7 +2,7 @@ import type { WikipediaArticle, WikipediaKeyword } from "@ref/bench/benchmark_co
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
 import { getKeywords, benchmark } from "@ref/bench/benchmark_common";
-import { setLinearIndexEntry, linearExactSearch } from "@src/linearsearch";
+import { setLinearIndexEntry, linearExactSearch, linearFuzzySearch } from "@src/linearsearch";
 import { createIndex, UniSearchError, UniSearchType } from "@src/common";
 
 async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[], n: number) {
@@ -21,9 +21,14 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     } else {
         console.log(index);
 
-        const search_result = benchmark((arg) => linearExactSearch(arg, index.index), keywords);
-        console.log(`search time: ${search_result.time} ms`);
-        console.log(search_result.results);
+        const exact_result = benchmark((arg) => linearExactSearch(arg, index.index), keywords);
+        console.log(`exact search time: ${exact_result.time} ms`);
+        console.log(exact_result.results);
+
+        console.log("fuzzy search is too slow. exec search only first 100 keywords.");
+        const fuzzy_result = benchmark((arg) => linearFuzzySearch(arg, index.index), keywords.slice(0, 100));
+        console.log(`fuzzy search time: ${fuzzy_result.time} ms`);
+        console.log(fuzzy_result.results);    
     }
 }
 
