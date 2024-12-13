@@ -1,14 +1,13 @@
-import { getValueByPath, extractStringsAll } from "@src/traverser";
-import { union } from "@src/algorithm";
+import { extractStringsAll, getValueByPath } from "@src/traverser";
 
 export type Reference = {
+    token: string;
     path: Path;
     pos: number;
     wordaround: string;
 };
 
 export type SearchResult = {
-    query: string;
     index: number;
     keys: unknown;
     score: number;
@@ -77,7 +76,7 @@ export function createIndex<T>(
                         const obj = getValueByPath(path, content);
                         if (obj === undefined) throw new UniSearchError(`unisearch: cannot find path ${path}`);
                         if (typeof obj !== "string") throw new UniSearchError(`unisearch: ${path} is not string.`);
-                        set_fn(index_entry, path, id, obj)
+                        set_fn(index_entry, path, id, obj);
                     }
                 }
             });
@@ -106,28 +105,4 @@ export function createIndex<T>(
         }
         throw e;
     }
-}
-
-export function searchSingle<T>(search_fn: (query: string, text: string) => number[], query: string, index: UniSearchIndex<T>): SearchResult[] {
-    const result = new Map<number, SearchResult>();
-    for (const path of index.search_targets.length === 0 ? Object.keys(index.index_entry) : index.search_targets) {
-        index.index_entry[path].forEach((text, id) => {
-            const pos = search_fn(query, text);
-            if (pos.length !== 0) {
-                const cur = result.get(id) || {
-                    query: query,
-                    index: id,
-                    keys: index.key_fields.map((key) => index.index_entry[key][id]),
-                    score: 0,
-                    refs: [],
-                };
-                cur.refs = union(
-                    cur.refs,
-                    pos.map((p) => ({ path: path, pos: p, wordaround: text.slice(p - 10, p + query.length + 10) })),
-                );
-                result.set(id, cur);
-            }
-        });
-    }
-    return Array.from(result.values());
 }
