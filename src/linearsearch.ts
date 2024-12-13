@@ -16,9 +16,9 @@ export function createIndex(
         // indexing for search
         const index_entry: LinearIndexEntry = {};
         if (search_targets.length !== 0) {
-            for (let id = 0; id < contents.length; id++) {
+            contents.forEach((content, id) => {
                 for (const path of search_targets) {
-                    const obj = getValueByPath(path, contents[id]);
+                    const obj = getValueByPath(path, content);
                     if (obj === undefined) throw new UniSearchError(`unisearch: cannot find path ${path}`);
                     if (typeof obj === "string") {
                         index_entry[path][id] = obj;
@@ -32,7 +32,7 @@ export function createIndex(
                 // indexing for key entry
                 if (key_fields) {
                     for (const path of key_fields) {
-                        const obj = getValueByPath(path, contents[id]);
+                        const obj = getValueByPath(path, content);
                         if (obj === undefined) throw new UniSearchError(`unisearch: cannot find path ${path}`);
                         if (typeof obj !== "string") throw new UniSearchError(`unisearch: ${path} is not string.`);
                         if (index_entry[path] === undefined) {
@@ -41,17 +41,17 @@ export function createIndex(
                         index_entry[path][id] = obj;
                     }
                 }
-            }
+            });
         } else {
             // indexing all, including key entries
-            for (let id = 0; id < contents.length; id++) {
-                for (const [path, obj] of extractStringsAll("", contents[id])) {
+            contents.forEach((content, id) => {
+                for (const [path, obj] of extractStringsAll("", content)) {
                     if (index_entry[path] === undefined) {
                         index_entry[path] = [];
                     }
                     index_entry[path][id] = obj;
                 }
-            }
+            });
         }
 
         return {
