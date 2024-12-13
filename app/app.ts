@@ -2,8 +2,8 @@ import type { WikipediaArticle, WikipediaKeyword } from "@ref/bench/benchmark_co
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
 import { getKeywords, benchmark } from "@ref/bench/benchmark_common";
-import { createIndex, UniSearchError } from "@src/indexing";
-import { linearExactSearch } from "@src/linearsearch";
+import { createIndex, linearExactSearch } from "@src/linearsearch";
+import { UniSearchError } from "@src/common";
 
 async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[], n: number) {
     console.log("initializing benchmark...");
@@ -12,7 +12,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     console.log("selected keywords are:");
     console.log(keywords);
 
-    const index_result = benchmark((arg) => createIndex(arg), [wikipedia_articles]);
+    const index_result = benchmark((arg) => createIndex(arg, ["title"]), [wikipedia_articles]);
     console.log(`indexing time: ${index_result.time} ms`);
 
     const index = index_result.results[0];
