@@ -1,4 +1,4 @@
-import { bitapSearch, createBitapKey, union } from "@src/algorithm";
+import { bitapSearch, createBitapKey } from "@src/algorithm";
 import type { Path, SearchResult, UniSearchIndex } from "@src/common";
 import { defaultNormalizer } from "@src/preprocess";
 
@@ -36,52 +36,72 @@ const fuzzySearch =
 
 function searchToken(
     search_fn: (keyword: string, target: string) => [number, number][],
+    distance: number,
     token: string,
     index: UniSearchIndex<LinearIndexEntry>,
 ): SearchResult[] {
-    const result = new Map<number, SearchResult>();
+    const result: Map<number, SearchResult>[] = [];
+    for (let i = 0; i < distance + 1; i++) {
+        result[i] = new Map<number, SearchResult>();
+    }
 
     // search all index
     index.index_entry.forEach((content, id) => {
         for (const path of index.search_targets.length === 0 ? Object.keys(content) : index.search_targets) {
             const search_target = content[path];
-            const pos = search_fn(token, search_target);
-            if (pos.length !== 0) {
-                const cur = result.get(id) || {
-                    id: id,
-                    keys: index.key_fields.map((key) => index.index_entry[id][key]),
-                    score: 0,
-                    refs: [],
-                };
-                cur.refs = union(
-                    cur.refs,
-                    pos.map((p) => ({
+            const poses = search_fn(token, search_target);
+            if (poses.length !== 0) {
+                for (const [pos, dist] of poses) {
+                    const cur = result[dist].get(id) || {
+                        id: id,
+                        keys: index.key_fields.map((key) => index.index_entry[id][key]),
+                        score: 0,
+                        refs: [],
+                    };
+                    cur.refs.push({
                         token: token,
                         path: path,
-                        pos: p[0],
-                        wordaround: search_target.slice(Math.max(p[0] - 10, 0), p[0] + token.length + 10),
-                        distance: p[1]
-                    })),
-                );
-                result.set(id, cur);
+                        pos: pos,
+                        wordaround: search_target.slice(Math.max(pos - 10, 0), pos + token.length + 10),
+                        distance: dist,
+                    });
+                    result[dist].set(id, cur);
+                }
             }
         }
     });
 
-    // calculate score based on tf-idf
-    const idf = Math.log(index.index_entry.length / (result.size + 1)) + 1;
-    result.forEach((r) => {
-        const tf = r.refs.map((v) => v.token.length / index.index_entry[r.id][v.path].length / (v.distance + 1)).reduce((x, y) => x + y);
-        r.score = tf * idf;
-    });
+    let sorted_result: SearchResult[] = [];
+    for (let i = 0; i < distance + 1; i++) {
+        // calculate score based on tf-idf
+        const idf = Math.log(index.index_entry.length / (result[i].size + 1)) + 1;
+        for (const [_, r] of result[i]) {
+            const tf = r.refs
+                .map((v) => v.token.length / index.index_entry[r.id][v.path].length / (v.distance + 1))
+                .reduce((x, y) => x + y);
+            r.score = tf * idf;
+        }
 
-    return Array.from(result.values()).sort((a, b) => b.score - a.score);
+        // add sorted results
+        sorted_result = sorted_result.concat(Array.from(result[i].values()).sort((a, b) => b.score - a.score));
+
+        // remove ids of sorted results from far results.
+        for (let j = i + 1; j < distance + 1; j++) {
+            for (const [_, r] of result[i]) {
+                result[j].delete(r.id);
+            }
+        }
+    }
+
+    return sorted_result;
 }
 
 export function linearExactSearch(query: string, index: UniSearchIndex<LinearIndexEntry>): SearchResult[] {
-    return searchToken(exactSearch, query, index);
+    return searchToken(exactSearch, 0, query, index);
 }
 
-export function linearFuzzySearch(query: string, index: UniSearchIndex<LinearIndexEntry>): SearchResult[] {
-    return searchToken(fuzzySearch(1), query, index);
-}
+export const linearFuzzySearch =
+    (distance: number) =>
+    (query: string, index: UniSearchIndex<LinearIndexEntry>): SearchResult[] => {
+        return searchToken(fuzzySearch(distance), distance, query, index);
+    };
