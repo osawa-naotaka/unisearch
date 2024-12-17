@@ -118,48 +118,44 @@ export const float: Parser<number> = map(cat(int, char("."), frac), (x) => x[0] 
 <expr>    ::= <and> [<space>+ 'or' <space>+ <and>]*
 */
 
-type Exact = {
+export type Exact = {
     type: 'exact';
     str: string;
 };
 
-type Fuzzy = {
+export type Fuzzy = {
     type: 'fuzzy';
     str: string;
 };
 
-type Not = {
+export type Not = {
     type: 'not';
     node: ASTNode;
 }
 
-type Null = {
-    type: 'null';
-}
-
-type From = {
+export type From = {
     type: 'from';
     field: string;
     node: ASTNode;
 }
 
-type Weight = {
+export type Weight = {
     type: 'weight';
     weight: number;
     node: ASTNode;
 }
 
-type And = {
+export type And = {
     type: 'and';
     nodes: ASTNode[];
 }
 
-type Or = {
+export type Or = {
     type: 'or';
     nodes: ASTNode[];
 }
 
-export type ASTNode = Null | Exact | Fuzzy | Not | From | Weight | And | Or;
+export type ASTNode = Exact | Fuzzy | Not | From | Weight | And | Or;
 
 
 export const ident: Parser<Str> = rep(diff(getc, or(...['"', '(', ')', ...spaces].map(char))), 1);
