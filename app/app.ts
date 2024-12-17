@@ -21,12 +21,12 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     } else {
         console.log(index);
 
-        const exact_result = benchmark((arg) => linearExactSearch(arg, index.index), keywords);
+        const exact_result = benchmark(linearExactSearch(index.index), keywords);
         console.log(`exact search time: ${exact_result.time} ms`);
         console.log(exact_result.results);
 
         console.log("fuzzy search is too slow. exec search only first 100 keywords.");
-        const fuzzy_result = benchmark((arg) => linearFuzzySearch(1)(arg, index.index), keywords.slice(0, 100));
+        const fuzzy_result = benchmark(linearFuzzySearch(index.index)(1), keywords.slice(0, 100));
         console.log(`fuzzy search time: ${fuzzy_result.time} ms`);
         console.log(fuzzy_result.results);
     }

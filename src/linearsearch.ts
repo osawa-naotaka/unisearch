@@ -96,12 +96,13 @@ function searchToken(
     return sorted_result;
 }
 
-export function linearExactSearch(query: string, index: UniSearchIndex<LinearIndexEntry>): SearchResult[] {
+export const linearExactSearch = (index: UniSearchIndex<LinearIndexEntry>) => (query: string) : SearchResult[] => {
     return searchToken(exactSearch, 0, query, index);
 }
 
 export const linearFuzzySearch =
+    (index: UniSearchIndex<LinearIndexEntry>) =>
     (distance: number) =>
-    (query: string, index: UniSearchIndex<LinearIndexEntry>): SearchResult[] => {
+    (query: string): SearchResult[] => {
         return searchToken(fuzzySearch(distance), distance, query, index);
     };
