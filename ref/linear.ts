@@ -29,11 +29,16 @@ export function searchLinear(query: string, index: LinearIndex): Reference[] {
     const query_normalized = normalizeText(query);
     return index.flatMap((doc, id) => {
         const results = [...indicesOf(query_normalized, doc)];
-        return results.length > 0 ? {
-            id: id,
-            n: results.length,
-            position: results.map((x) => ({ index: x, wordaround: doc.slice(x - 10, x + query_normalized.length + 10)}))
-        } : [];
+        return results.length > 0
+            ? {
+                  id: id,
+                  n: results.length,
+                  position: results.map((x) => ({
+                      index: x,
+                      wordaround: doc.slice(x - 10, x + query_normalized.length + 10),
+                  })),
+              }
+            : [];
     });
 }
 
@@ -41,10 +46,15 @@ export function searchFuzzyLinear(query: string, index: LinearIndex): Reference[
     const query_normalized = normalizeText(query);
     return index.flatMap((doc, id) => {
         const results = [...fuzzyIndicesOf(query_normalized, doc)];
-        return results.length > 0 ? {
-            id: id,
-            n: results.length,
-            position: results.map((x) => ({ index: x, wordaround: doc.slice(x - 10, x + query_normalized.length + 10)}))
-        } : [];
+        return results.length > 0
+            ? {
+                  id: id,
+                  n: results.length,
+                  position: results.map((x) => ({
+                      index: x,
+                      wordaround: doc.slice(x - 10, x + query_normalized.length + 10),
+                  })),
+              }
+            : [];
     });
 }

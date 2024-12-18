@@ -1,20 +1,35 @@
+import { generateNgram, generateNgramTrie } from "@ref/algo";
 import type { WikipediaArticle, WikipediaKeyword } from "@ref/bench/benchmark_common";
-import type { SingleIndex, HybridIndex, SearcherSet, Reference } from "@ref/common";
+import { execBenchmark, generateBenchmarkRunner, getKeywords } from "@ref/bench/benchmark_common";
+import type { HybridIndex, Reference, SearcherSet, SingleIndex } from "@ref/common";
+import {
+    generateHybridIndexFn,
+    generateHybridPostprocessFn,
+    generateHybridSearchFn,
+    generateIndexFn,
+    generatePostprocessFn,
+    generateSearchFn,
+    intersectAll,
+    noPostProcess,
+    tokenIsTerm,
+} from "@ref/common";
 import type { LinearIndex } from "@ref/linear";
-import type { WasmLinearIndex } from "@ref/wasmlinear";
-import type { TrieIndex } from "@ref/trie";
+import { addToLinearIndex, searchFuzzyLinear, searchLinear } from "@ref/linear";
 import type { SortedArrayIndex } from "@ref/sortedarray";
+import {
+    addToSortedArrayIndex,
+    createSortedArrayIndex,
+    searchForwardSortedArray,
+    searchFuzzySortedArray,
+} from "@ref/sortedarray";
+import type { TrieIndex } from "@ref/trie";
+import { addToTrieIndex, searchTrie } from "@ref/trie";
+import { calculateJsonSize } from "@ref/util";
+import type { WasmLinearIndex } from "@ref/wasmlinear";
+import { addToWasmLinearIndex, searchWasmLinear } from "@ref/wasmlinear";
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
 import { wikipedia_ja_keyword_long } from "@test/wikipedia_ja_keyword_long";
-import { calculateJsonSize } from "@ref/util";
-import { generateIndexFn, generatePostprocessFn, generateSearchFn, generateHybridIndexFn, generateHybridPostprocessFn, generateHybridSearchFn, noPostProcess, tokenIsTerm, intersectAll } from "@ref/common";
-import { addToLinearIndex, searchLinear, searchFuzzyLinear } from "@ref/linear";
-import { addToWasmLinearIndex, searchWasmLinear } from "@ref/wasmlinear";
-import { generateNgram, generateNgramTrie } from "@ref/algo";
-import { addToTrieIndex, searchTrie } from "@ref/trie";
-import { addToSortedArrayIndex, createSortedArrayIndex, searchForwardSortedArray, searchFuzzySortedArray } from "@ref/sortedarray";
-import { execBenchmark, generateBenchmarkRunner, getKeywords } from "@ref/bench/benchmark_common";
 import { StringManager } from "bitap/pkg/bitap";
 
 async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[], n: number) {
@@ -23,18 +38,19 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     console.log(`select all ${keywords.length} keywords...`);
     console.log("selected keywords are:");
     console.log(keywords);
-    
+
     // article size
-    console.log("articles size: " + calculateJsonSize(wikipedia_articles));
-    
+    console.log(`articles size: ${calculateJsonSize(wikipedia_articles)}`);
+
     // linear search
     console.log("LINEAR SEARCH");
     const linear_search_set: SearcherSet<SingleIndex<LinearIndex>> = {
-        index_fn: (ref: Reference, text: string, index: SingleIndex<LinearIndex>) => addToLinearIndex(ref, text, index.index),
+        index_fn: (ref: Reference, text: string, index: SingleIndex<LinearIndex>) =>
+            addToLinearIndex(ref, text, index.index),
         post_fn: noPostProcess,
         search_fn: (query: string, index: SingleIndex<LinearIndex>) => searchLinear(query, index.index),
-        index: { index: [], numtoken: {} }
-    }
+        index: { index: [], numtoken: {} },
+    };
     const ref_results = await execBenchmark(linear_search_set, keywords, wikipedia_articles);
     console.log(ref_results);
 
@@ -43,20 +59,22 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
 
     // linear fuzzy search
     const linear_fuzzy_set: SearcherSet<SingleIndex<LinearIndex>> = {
-        index_fn: (ref: Reference, text: string, index: SingleIndex<LinearIndex>) => addToLinearIndex(ref, text, index.index),
+        index_fn: (ref: Reference, text: string, index: SingleIndex<LinearIndex>) =>
+            addToLinearIndex(ref, text, index.index),
         post_fn: noPostProcess,
         search_fn: (query: string, index: SingleIndex<LinearIndex>) => searchFuzzyLinear(query, index.index),
-        index: { index: [], numtoken: {} }
-    }
+        index: { index: [], numtoken: {} },
+    };
     await runner("LINEAR FUZZY", linear_fuzzy_set);
 
     // linear wasm search
     const linear_wasm_set: SearcherSet<SingleIndex<WasmLinearIndex>> = {
-        index_fn: (ref: Reference, text: string, index: SingleIndex<WasmLinearIndex>) => addToWasmLinearIndex(ref, text, index.index),
+        index_fn: (ref: Reference, text: string, index: SingleIndex<WasmLinearIndex>) =>
+            addToWasmLinearIndex(ref, text, index.index),
         post_fn: noPostProcess,
         search_fn: (query: string, index: SingleIndex<WasmLinearIndex>) => searchWasmLinear(query, index.index),
-        index: { index: new StringManager(), numtoken: {} }
-    }
+        index: { index: new StringManager(), numtoken: {} },
+    };
     await runner("LINEAR WASM", linear_wasm_set);
 
     // bigram
@@ -64,68 +82,79 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         index_fn: generateIndexFn(addToSortedArrayIndex, (x) => generateNgramTrie(2, x)),
         post_fn: generatePostprocessFn(createSortedArrayIndex),
         search_fn: generateSearchFn(searchForwardSortedArray, (x) => generateNgram(2, x), intersectAll),
-        index: { index: { unsorted: {}, sorted: [] }, numtoken: {} }
-    }
+        index: { index: { unsorted: {}, sorted: [] }, numtoken: {} },
+    };
     await runner("BIGRAM SORTED-ARRAY", bigram_set);
-    
+
     // trigram
     const trigram_set: SearcherSet<SingleIndex<SortedArrayIndex>> = {
         index_fn: generateIndexFn(addToSortedArrayIndex, (x) => generateNgramTrie(3, x)),
         post_fn: generatePostprocessFn(createSortedArrayIndex),
         search_fn: generateSearchFn(searchForwardSortedArray, (x) => generateNgram(3, x), intersectAll),
-        index: { index: { unsorted: {}, sorted: [] }, numtoken: {} }
-    }
+        index: { index: { unsorted: {}, sorted: [] }, numtoken: {} },
+    };
     await runner("TRIGRAM SORTED-ARRAY", trigram_set);
-    
+
     // quadgram
     const quadgram_set: SearcherSet<SingleIndex<SortedArrayIndex>> = {
         index_fn: generateIndexFn(addToSortedArrayIndex, (x) => generateNgramTrie(4, x)),
         post_fn: generatePostprocessFn(createSortedArrayIndex),
         search_fn: generateSearchFn(searchForwardSortedArray, (x) => generateNgram(4, x), intersectAll),
-        index: { index: { unsorted: {}, sorted: [] }, numtoken: {} }
-    }
+        index: { index: { unsorted: {}, sorted: [] }, numtoken: {} },
+    };
     await runner("QUADGRAM SORTED-ARRAY", quadgram_set);
-    
+
     // Trie trigram
     const trie_trigram_set: SearcherSet<SingleIndex<TrieIndex>> = {
         index_fn: generateIndexFn(addToTrieIndex, (x) => generateNgramTrie(3, x)),
         post_fn: noPostProcess,
         search_fn: generateSearchFn(searchTrie, (x) => generateNgram(3, x), intersectAll),
-        index: { index: {refs: [], children: {}}, numtoken: {} }
-    }
+        index: { index: { refs: [], children: {} }, numtoken: {} },
+    };
     await runner("TRIGRAM TRIE", trie_trigram_set);
 
     // Hybrid: en sorted arrya, ja trigram sorted array
     const hybrid_bigram_set: SearcherSet<HybridIndex<SortedArrayIndex, SortedArrayIndex>> = {
         index_fn: generateHybridIndexFn(
-            addToSortedArrayIndex, (x) => generateNgramTrie(3, x),
-            addToSortedArrayIndex, tokenIsTerm,
+            addToSortedArrayIndex,
+            (x) => generateNgramTrie(3, x),
+            addToSortedArrayIndex,
+            tokenIsTerm,
         ),
         post_fn: generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
         search_fn: generateHybridSearchFn(
-            searchForwardSortedArray, (x) => generateNgram(3, x), intersectAll,
-            searchForwardSortedArray, tokenIsTerm, intersectAll
+            searchForwardSortedArray,
+            (x) => generateNgram(3, x),
+            intersectAll,
+            searchForwardSortedArray,
+            tokenIsTerm,
+            intersectAll,
         ),
-        index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] }, numtoken: {} }
-    }
+        index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] }, numtoken: {} },
+    };
     await runner("HYBRID en:SORTED-ARRAY ja:TRIGRAM SORTED-ARRAY", hybrid_bigram_set);
 
     // Hybrid: en sorted arrya, ja trigram sorted array
     const hybrid_fuzzy_bigram_set: SearcherSet<HybridIndex<SortedArrayIndex, SortedArrayIndex>> = {
         index_fn: generateHybridIndexFn(
-            addToSortedArrayIndex, (x) => generateNgramTrie(3, x),
-            addToSortedArrayIndex, tokenIsTerm,
+            addToSortedArrayIndex,
+            (x) => generateNgramTrie(3, x),
+            addToSortedArrayIndex,
+            tokenIsTerm,
         ),
         post_fn: generateHybridPostprocessFn(createSortedArrayIndex, createSortedArrayIndex),
         search_fn: generateHybridSearchFn(
-            searchForwardSortedArray, (x) => generateNgram(3, x), intersectAll,
-            searchFuzzySortedArray, tokenIsTerm, intersectAll
+            searchForwardSortedArray,
+            (x) => generateNgram(3, x),
+            intersectAll,
+            searchFuzzySortedArray,
+            tokenIsTerm,
+            intersectAll,
         ),
-        index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] }, numtoken: {} }
-    }
+        index: { ja: { unsorted: {}, sorted: [] }, en: { unsorted: {}, sorted: [] }, numtoken: {} },
+    };
     await runner("HYBRID en:FUZZY SORTED-ARRAY ja:TRIGRAM SORTED-ARRAY", hybrid_fuzzy_bigram_set);
 }
-
 
 const num_articles = 100;
 console.log("JAPANESE benchmark.");

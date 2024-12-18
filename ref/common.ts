@@ -48,10 +48,10 @@ export const unionAll = (refs: Reference[][]) => foldl1Array(union, refs);
 
 export function intersectReference(a: Reference[], b: Reference[]): Reference[] {
     const refs = [];
-    for(const x of a) {
+    for (const x of a) {
         const y = b.find((y) => y.id === x.id);
-        if(y) {
-            refs.push({id: x.id, n: y.n + x.n})
+        if (y) {
+            refs.push({ id: x.id, n: y.n + x.n });
         }
     }
     return refs;
@@ -63,7 +63,7 @@ export function generateIndexFn<T>(idxfn: IndexFn<T>, tttfn: TermToTokenFn) {
             const tokens = tttfn(term);
             index.numtoken[ref.id] = (index.numtoken[ref.id] || 0) + tokens.length;
             for (const token of tokens) {
-                idxfn(ref, token, index.index)
+                idxfn(ref, token, index.index);
             }
         }
     };
@@ -77,9 +77,7 @@ export function generateSearchFn<T>(searchfn: SearchFn<T>, tttfn: TermToTokenFn,
     return (query: string, index: SingleIndex<T>) =>
         foldl1Array(
             intersect,
-            textToTerm([query]).map((term) =>
-                    aggfn(tttfn(term).map((token) => searchfn(token, index.index))),
-            ),
+            textToTerm([query]).map((term) => aggfn(tttfn(term).map((token) => searchfn(token, index.index)))),
         );
 }
 
@@ -95,13 +93,13 @@ export function generateHybridIndexFn<T, U>(
                 const tokens = tttfn_ja(term);
                 index.numtoken[ref.id] = (index.numtoken[ref.id] || 0) + tokens.length;
                 for (const token of tokens) {
-                    idxfn_ja(ref, token, index.ja)
+                    idxfn_ja(ref, token, index.ja);
                 }
             } else {
                 const tokens = tttfn_en(term);
                 index.numtoken[ref.id] = (index.numtoken[ref.id] || 0) + tokens.length;
                 for (const token of tokens) {
-                    idxfn_en(ref, token, index.en)
+                    idxfn_en(ref, token, index.en);
                 }
             }
         }
@@ -137,7 +135,7 @@ export function generateHybridSearchFn<T, U>(
         );
 }
 
-export function updateRefs(refs: Reference[], ref: Reference) : Reference[] {
+export function updateRefs(refs: Reference[], ref: Reference): Reference[] {
     const old_ref = refs?.find((x) => x.id === ref.id);
     const new_ref = { id: ref.id, n: (old_ref?.n || 0) + ref.n };
     const new_refs = refs?.filter((x) => x.id !== ref.id) || [];

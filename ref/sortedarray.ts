@@ -1,6 +1,6 @@
-import type { Reference, Token } from "@ref/common";
 import { BinarySearchType } from "@ref/algo";
 import { binarySearch, bitapSearch, createBitapKey, refine } from "@ref/algo";
+import type { Reference, Token } from "@ref/common";
 import { updateRefs } from "@ref/common";
 import { compareString } from "@ref/util";
 

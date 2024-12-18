@@ -1,11 +1,11 @@
 import type { WikipediaArticle, WikipediaKeyword } from "@ref/bench/benchmark_common";
+import { benchmark, getKeywords } from "@ref/bench/benchmark_common";
+import { UniSearchError } from "@src/base";
+import { createIndex } from "@src/indexing";
+import { LinearIndex } from "@src/method/linearsearch";
+import { search } from "@src/search";
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
-import { getKeywords, benchmark } from "@ref/bench/benchmark_common";
-import { LinearIndex } from "@src/method/linearsearch";
-import { createIndex } from "@src/indexing";
-import { UniSearchError } from "@src/base";
-import { search } from "@src/search";
 
 async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[], n: number) {
     console.log("initializing benchmark...");
@@ -18,20 +18,23 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     console.log(`indexing time: ${index_result.time} ms`);
 
     const index = index_result.results[0];
-    if(index instanceof UniSearchError) {
+    if (index instanceof UniSearchError) {
         throw index;
-    } else {
-        console.log(index);
-
-        const exact_result = benchmark((x) => search(index, x), keywords.map((x) => `"${x}"`));
-        console.log(`exact search time: ${exact_result.time} ms`);
-        console.log(exact_result.results);
-
-        console.log("fuzzy search is too slow. exec search only first 100 keywords.");
-        const fuzzy_result = benchmark((x) => search(index, x), keywords.slice(0, 100));
-        console.log(`fuzzy search time: ${fuzzy_result.time} ms`);
-        console.log(fuzzy_result.results);
     }
+
+    console.log(index);
+
+    const exact_result = benchmark(
+        (x) => search(index, x),
+        keywords.map((x) => `"${x}"`),
+    );
+    console.log(`exact search time: ${exact_result.time} ms`);
+    console.log(exact_result.results);
+
+    console.log("fuzzy search is too slow. exec search only first 100 keywords.");
+    const fuzzy_result = benchmark((x) => search(index, x), keywords.slice(0, 100));
+    console.log(`fuzzy search time: ${fuzzy_result.time} ms`);
+    console.log(fuzzy_result.results);
 }
 
 await runAll(wikipedia_ja_extracted, wikipedia_ja_keyword, 20);

@@ -12,5 +12,5 @@ export function searchExactRecord(query: Token, index: RecordIndex): Reference[]
 }
 
 export function searchForwardRecord(query: Token, index: RecordIndex): Reference[] {
-    return Object.entries(index).flatMap(([token, refs]) => token.startsWith(query) ? refs : []);
+    return Object.entries(index).flatMap(([token, refs]) => (token.startsWith(query) ? refs : []));
 }
