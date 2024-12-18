@@ -13,16 +13,12 @@ export type FieldNameMap = Record<FieldName, Path>;
 export class UniSearchError extends Error {}
 
 // index
-export type UniSearchIndex<T> = {
-    field_names: Record<FieldName, Path>;
-    key_fields: Path[];
-    search_targets: Path[];
-    index_entry: T;
-};
-
 export type UniIndex<T> = {
     version: string;
-    index: UniSearchIndex<T>;
+    field_names: Record<FieldName, Path>;
+    key_field: Path | null;
+    search_targets: Path[];
+    index_entry: T;
 };
 
 // query
@@ -36,7 +32,7 @@ export type Reference = {
 
 export type SearchResult = {
     id: number;
-    keys: unknown;
+    key: string | null;
     score: number;
     refs: Reference[];
 };
@@ -46,5 +42,5 @@ export type SearchResult = {
 export interface SearchIndex<T> {
     index_entry: T;
     setToIndex(id: number, path: Path, str: string): void;
-    search(search_targets: Path[], key_fields: Path[], distance: number, keyword: string): SearchResult[];
+    search(search_targets: Path[], key_field: Path | null, distance: number, keyword: string): SearchResult[];
 }

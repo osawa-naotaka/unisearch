@@ -2,17 +2,18 @@ import { extractStringsAll, getValueByPath } from "@src/traverser";
 import { UniIndex, UniSearchError, Path, FieldNameMap, Version, SearchIndex } from "@src/base";
 
 export function createIndex<T>(
-    search_index: SearchIndex<T>,
+    SearchClass: new() => SearchIndex<T>,
     contents: unknown[],
-    key_fields: Path[] = [],
+    key_field: Path | null = null,
     search_targets: Path[] = [],
     field_names: FieldNameMap = {},
-): UniIndex<T> | UniSearchError {
+): UniIndex<SearchIndex<T>> | UniSearchError {
     try {
         if (!Array.isArray(contents)) throw new UniSearchError("unisearch: contents must be array.");
         if (contents.length === 0) throw new UniSearchError("unisearch: contents must not be empty.");
 
         // indexing for search
+        const search_index = new SearchClass();
         if (search_targets.length !== 0) {
             contents.forEach((content, id) => {
                 for (const path of search_targets) {
@@ -28,17 +29,15 @@ export function createIndex<T>(
                 }
 
                 // indexing for key entry
-                if (key_fields) {
-                    for (const path of key_fields) {
-                        const obj = getValueByPath(path, content);
-                        if (obj === undefined) throw new UniSearchError(`unisearch: cannot find path ${path}`);
-                        if (typeof obj !== "string") throw new UniSearchError(`unisearch: ${path} is not string.`);
-                        search_index.setToIndex(id, path, obj);
-                    }
+                if (key_field) {
+                    const obj = getValueByPath(key_field, content);
+                    if (obj === undefined) throw new UniSearchError(`unisearch: cannot find path ${key_field}`);
+                    if (typeof obj !== "string") throw new UniSearchError(`unisearch: ${key_field} is not string.`);
+                    search_index.setToIndex(id, key_field, obj);
                 }
             });
         } else {
-            // indexing all, including key entries
+            // indexing all, including key entry
             contents.forEach((content, id) => {
                 for (const [path, obj] of extractStringsAll("", content)) {
                     search_index.setToIndex(id, path, obj);
@@ -48,12 +47,10 @@ export function createIndex<T>(
 
         return {
             version: Version,
-            index: {
-                field_names: field_names,
-                key_fields: key_fields,
-                search_targets: search_targets,
-                index_entry: search_index.index_entry,
-            },
+            field_names: field_names,
+            key_field: key_field,
+            search_targets: search_targets,
+            index_entry: search_index,
         };
     } catch (e) {
         if (e instanceof UniSearchError) {

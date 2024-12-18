@@ -13,22 +13,22 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     console.log("selected keywords are:");
     console.log(keywords);
 
-    const linear_index = new LinearIndex();
-    const index_result = benchmark((arg) => createIndex(linear_index, arg, ["title"]), [wikipedia_articles]);
+    const index_result = benchmark((arg) => createIndex(LinearIndex, arg, "title"), [wikipedia_articles]);
     console.log(`indexing time: ${index_result.time} ms`);
 
     const index = index_result.results[0];
     if(index instanceof UniSearchError) {
         throw index;
     } else {
+        const linear_index = index.index_entry;
         console.log(index);
 
-        const exact_result = benchmark((x) => linear_index.search([], [], 0, x), keywords);
+        const exact_result = benchmark((x) => linear_index.search([], null, 0, x), keywords);
         console.log(`exact search time: ${exact_result.time} ms`);
         console.log(exact_result.results);
 
         console.log("fuzzy search is too slow. exec search only first 100 keywords.");
-        const fuzzy_result = benchmark((x) => linear_index.search([], [], 1, x), keywords.slice(0, 100));
+        const fuzzy_result = benchmark((x) => linear_index.search([], null, 1, x), keywords.slice(0, 100));
         console.log(`fuzzy search time: ${fuzzy_result.time} ms`);
         console.log(fuzzy_result.results);
     }

@@ -14,8 +14,8 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         this.index_entry[id][path] = defaultNormalizer(str);        
     }
 
-    public search(search_targets: Path[], key_fields: Path[], distance: number, keyword: string): SearchResult[] {
-        return this.searchToken(distance === 0 ? this.exactSearch : this.fuzzySearch(distance), search_targets, key_fields, keyword);
+    public search(search_targets: Path[], key_field: Path | null, distance: number, keyword: string): SearchResult[] {
+        return this.searchToken(distance === 0 ? this.exactSearch : this.fuzzySearch(distance), search_targets, key_field, keyword);
     }
 
     private exactSearch(keyword: string, target: string): [number, number][] {
@@ -42,7 +42,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
     private searchToken(
         search_fn: (keyword: string, target: string) => [number, number][],
         search_targets: Path[],
-        key_fields: Path[],
+        key_field: Path | null,
         token: string
     ): SearchResult[] {
         const result = new Map<number, SearchResult>();
@@ -56,7 +56,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
                     for (const [pos, dist] of poses) {
                         const cur = result.get(id) || {
                             id: id,
-                            keys: key_fields.map((key) => this.index_entry[id][key]),
+                            key: key_field ? this.index_entry[id][key_field] : null,
                             score: 0,
                             refs: [],
                         };
