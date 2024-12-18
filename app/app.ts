@@ -2,7 +2,7 @@ import type { WikipediaArticle, WikipediaKeyword } from "@ref/bench/benchmark_co
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
 import { getKeywords, benchmark } from "@ref/bench/benchmark_common";
-import { LinearIndex } from "@src/linearsearch";
+import { LinearIndex } from "@src/method/linearsearch";
 import { createIndex } from "@src/indexing";
 import { UniSearchError } from "@src/base";
 
