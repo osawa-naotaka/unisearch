@@ -5,6 +5,7 @@ import { getKeywords, benchmark } from "@ref/bench/benchmark_common";
 import { LinearIndex } from "@src/method/linearsearch";
 import { createIndex } from "@src/indexing";
 import { UniSearchError } from "@src/base";
+import { search } from "@src/search";
 
 async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[], n: number) {
     console.log("initializing benchmark...");
@@ -20,15 +21,14 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     if(index instanceof UniSearchError) {
         throw index;
     } else {
-        const linear_index = index.index_entry;
         console.log(index);
 
-        const exact_result = benchmark((x) => linear_index.search([], null, 0, x), keywords);
+        const exact_result = benchmark((x) => search(index, x), keywords.map((x) => `"${x}"`));
         console.log(`exact search time: ${exact_result.time} ms`);
         console.log(exact_result.results);
 
         console.log("fuzzy search is too slow. exec search only first 100 keywords.");
-        const fuzzy_result = benchmark((x) => linear_index.search([], null, 1, x), keywords.slice(0, 100));
+        const fuzzy_result = benchmark((x) => search(index, x), keywords.slice(0, 100));
         console.log(`fuzzy search time: ${fuzzy_result.time} ms`);
         console.log(fuzzy_result.results);
     }
