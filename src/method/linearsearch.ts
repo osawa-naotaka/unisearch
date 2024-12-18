@@ -77,6 +77,14 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             }
         });
 
+        const idf = Math.log(this.index_entry.length / (result.size + 1)) + 1;
+        for (const [_, r] of result) {
+            const tf = r.refs
+                .map((v) => v.token.length / this.index_entry[r.id][v.path].length / (v.distance + 1))
+                .reduce((x, y) => x + y);
+            r.score = tf * idf;
+        }
+
         return [...result.values()];
     }
 }

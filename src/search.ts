@@ -3,7 +3,7 @@ import { ASTNode, expr } from "@src/parse";
 
 export function search<T>(index: UniIndex<SearchIndex<T>>, query: string): SearchResult[] | UniSearchError {
     const ast = expr([...query]);
-    return ast ? evalQuery(index)(ast.val) : new UniSearchError("fail to parse query");
+    return ast ? evalQuery(index)(ast.val).sort((a, b) => b.score - a.score) : new UniSearchError("fail to parse query");
 }
 
 const evalQuery = <T>(index: UniIndex<SearchIndex<T>>) => (ast: ASTNode): SearchResult[] => {
@@ -17,7 +17,7 @@ const evalQuery = <T>(index: UniIndex<SearchIndex<T>>) => (ast: ASTNode): Search
 }
 
 function unionResults(results: SearchResult[][]): SearchResult[] {
-    return Array.from(results.reduce((prev, cur) => {
+    return results.reduce((prev, cur) => {
         const result: SearchResult[] = prev;
         for(const c of cur) {
             const p = result.find((x) => x.id === c.id);
@@ -29,16 +29,16 @@ function unionResults(results: SearchResult[][]): SearchResult[] {
             }
         }
         return result;
-    }).values());    
+    });    
 }
 
 function intersectResults(results: SearchResult[][]): SearchResult[] {
-    return Array.from(results.reduce((prev, cur) => {
+    return results.reduce((prev, cur) => {
         const result: SearchResult[] = [];
         for(const p of prev) {
             const c = cur.find((x) => x.id === p.id);
             if(c) result.push({id: c.id, key: c.key, score: c.score + p.score, refs: [...p.refs, ...c.refs]});
         }
         return result;
-    }).values());    
+    });    
 }
