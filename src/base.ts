@@ -15,6 +15,7 @@ export class UniSearchError extends Error {}
 // index
 export type UniIndex<T> = {
     version: string;
+    type: string;
     field_names: Record<FieldName, Path>;
     key_field: Path | null;
     search_targets: Path[];

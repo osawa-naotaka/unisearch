@@ -5,7 +5,11 @@ import { defaultNormalizer } from "@src/preprocess";
 export type LinearIndexEntry = Record<Path, string>[];
 
 export class LinearIndex implements SearchIndex<LinearIndexEntry> {
-    public readonly index_entry: LinearIndexEntry = [];
+    public readonly index_entry: LinearIndexEntry;
+
+    constructor(index?: LinearIndexEntry) {
+        this.index_entry = index || [];
+    }
 
     public setToIndex(id: number, path: Path, str: string): void {
         if (this.index_entry[id] === undefined) {
