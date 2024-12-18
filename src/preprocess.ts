@@ -34,5 +34,5 @@ export function splitByKatakana(text: string[]): string[] {
     return matches;
 }
 
-export const defaultNormalizer = (text: string) => pipe(normalizeJapanese, normalizeUnicode, toLowerCase)(text);
-export const defaultSpritter = (text: string[]) => pipe(splitByDelimiter, splitByNonSpaceSeparatedChar)(text);
+export const defaultNormalizer = pipe(normalizeJapanese, normalizeUnicode, toLowerCase);
+export const defaultSpritter = pipe(splitByDelimiter, splitByNonSpaceSeparatedChar);
