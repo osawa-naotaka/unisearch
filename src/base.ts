@@ -1,4 +1,3 @@
-
 // version
 export const Version = "1.0";
 
@@ -37,7 +36,6 @@ export type SearchResult = {
     score: number;
     refs: Reference[];
 };
-
 
 // interface
 export interface SearchIndex<T> {

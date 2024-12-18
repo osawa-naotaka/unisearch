@@ -1,9 +1,10 @@
-import { extractStringsAll, getValueByPath } from "@src/traverser";
-import { UniIndex, UniSearchError, Path, FieldNameMap, Version, SearchIndex } from "@src/base";
+import type { FieldNameMap, Path, SearchIndex, UniIndex } from "@src/base";
+import { UniSearchError, Version } from "@src/base";
 import { IndexTypes } from "@src/indextypes";
+import { extractStringsAll, getValueByPath } from "@src/traverser";
 
 export function createIndex<T>(
-    SearchClass: new() => SearchIndex<T>,
+    SearchClass: new () => SearchIndex<T>,
     contents: unknown[],
     key_field: Path | null = null,
     search_targets: Path[] = [],
@@ -69,17 +70,17 @@ export function createIndexFromObject<T>(index: UniIndex<T>): UniIndex<SearchInd
         field_names: index.field_names,
         key_field: index.key_field,
         search_targets: index.search_targets,
-        index_entry: new IndexTypes[index.type](index.index_entry)
-    }
+        index_entry: new IndexTypes[index.type](index.index_entry),
+    };
 }
 
-export function indexToObject<T>(index: UniIndex<SearchIndex<T>>) : UniIndex<T> {
+export function indexToObject<T>(index: UniIndex<SearchIndex<T>>): UniIndex<T> {
     return {
         version: index.version,
         type: index.type,
         field_names: index.field_names,
         key_field: index.key_field,
         search_targets: index.search_targets,
-        index_entry: index.index_entry.index_entry
-    }
+        index_entry: index.index_entry.index_entry,
+    };
 }
