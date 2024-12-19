@@ -14,7 +14,10 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     console.log("selected keywords are:");
     console.log(keywords);
 
-    const index_result = benchmark((arg) => createIndex(LinearIndex, arg, {key_field: "title"}), [wikipedia_articles]);
+    const index_result = benchmark(
+        (arg) => createIndex(LinearIndex, arg, { key_field: "title" }),
+        [wikipedia_articles],
+    );
     console.log(`indexing time: ${index_result.time} ms`);
 
     const index = index_result.results[0];

@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { UniSearchError } from "@src/base";
 import { createIndex } from "@src/indexing";
 import { LinearIndex } from "@src/method/linearsearch";
-import { search, evalQuery } from "@src/search";
+import { search } from "@src/search";
 
 describe("search test", () => {
     const contents = [
@@ -160,30 +160,6 @@ describe("search test", () => {
                     },
                 ]
             }
-        ])
-    );
-
-    test("AND search 2", () =>
-        expect(evalQuery(index.index_entry, index.env)(
-            {type: 'and', nodes: [
-                {type: 'exact', str: 'タイトル3'},
-            ]}
-        ))
-        .toStrictEqual([
-            {
-                id: 2,
-                key: "タイトル3",
-                score: 1.4054651081081644,
-                refs: [
-                    {
-                        token: "タイトル3",
-                        path: "title",
-                        pos: 0,
-                        wordaround: "タイトル3",
-                        distance: 0,
-                    },
-                ]
-            },
         ])
     );
 

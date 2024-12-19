@@ -15,13 +15,14 @@ export const toLowerCase = (input: string) => input.toLocaleLowerCase("en-US");
 
 export function splitBySpace(text: string[]): string[] {
     const separators =
+        // biome-ignore lint: ignore control charactor \u000D
         /[\u0020\u00A0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u0009\u000A\u000B\u000C\u000D\u0085\u2028\u2029\u200B]/u;
     return text.flatMap((t) => t.split(separators).filter(Boolean));
 }
 
 export function splitByDelimiter(text: string[]): string[] {
     const separators =
-        // biome-ignore lint: bug of biome?
+        // biome-ignore lint: ignore control charactor \u0000 ?
         /[\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007F\u0080-\u00BF\u02B0-\u02FF\u2000-\u206F\u3000-\u3004\u3007-\u303F\u30fb\uFF00-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\uFFE0-\uFFFF]/u;
     return text.flatMap((t) => t.split(separators).filter(Boolean));
 }

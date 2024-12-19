@@ -10,24 +10,29 @@ export function search<T>(index: UniIndex<SearchIndex<T>>, query: string): Searc
         ? evalQuery(
               index.index_entry,
               createWithProp(index.env, "distance", 1),
-          )(ast.val).sort((a, b) => b.score - a.score)
+          )(ast.val).results.sort((a, b) => b.score - a.score)
         : new UniSearchError("fail to parse query");
 }
 
-export function createWithProp<T>(obj: SearchEnv, prop: string, val: T): SearchEnv {
+function createWithProp<T>(obj: SearchEnv, prop: string, val: T): SearchEnv {
     const new_obj = Object.create(obj);
     new_obj[prop] = val;
     return new_obj;
 }
 
-export const evalQuery =
+type QueryResult = {
+    type: "includes" | "excludes";
+    results: SearchResult[];
+};
+
+const evalQuery =
     <T>(index: SearchIndex<T>, env: SearchEnv) =>
-    (ast: ASTNode): SearchResult[] => {
+    (ast: ASTNode): QueryResult => {
         switch (ast.type) {
             case "exact":
-                return index.search(createWithProp(env, "distance", 0), ast.str);
+                return { type: "includes", results: index.search(createWithProp(env, "distance", 0), ast.str) };
             case "fuzzy":
-                return index.search(env, ast.str);
+                return { type: "includes", results: index.search(env, ast.str) };
             case "from":
                 return evalQuery(index, createWithProp(env, "search_targets", [ast.field]))(ast.node); // fix it.
             case "weight":
@@ -39,14 +44,14 @@ export const evalQuery =
             case "or":
                 return unionResults(ast.nodes.map(evalQuery(index, env)));
             default:
-                return [];
+                return { type: "excludes", results: [] };
         }
     };
 
-function unionResults(results: SearchResult[][]): SearchResult[] {
+function unionResults(results: QueryResult[]): QueryResult {
     return results.reduce((prev, cur) => {
-        const result: SearchResult[] = prev;
-        for (const c of cur) {
+        const result: SearchResult[] = prev.results;
+        for (const c of cur.results) {
             const p = result.find((x) => x.id === c.id);
             if (p) {
                 p.refs = [...p.refs, ...c.refs];
@@ -55,22 +60,22 @@ function unionResults(results: SearchResult[][]): SearchResult[] {
                 result.push(c);
             }
         }
-        return result;
+        return { type: "includes", results: result };
     });
 }
 
-function intersectResults(results: SearchResult[][]): SearchResult[] {
+function intersectResults(results: QueryResult[]): QueryResult {
     return results.reduce((prev, cur) => {
         const result: SearchResult[] = [];
-        for (const p of prev) {
-            const c = cur.find((x) => x.id === p.id);
+        for (const p of prev.results) {
+            const c = cur.results.find((x) => x.id === p.id);
             if (c) result.push({ id: c.id, key: c.key, score: c.score + p.score, refs: [...p.refs, ...c.refs] });
         }
-        return result;
+        return { type: "includes", results: result };
     });
 }
 
 function normalizeQuery(q: string): string {
     const terms = splitBySpace([q]);
-    return terms.map((t) => t === "OR" ? "OR" : defaultNormalizer(t)).join(" ");
+    return terms.map((t) => (t === "OR" ? "OR" : defaultNormalizer(t))).join(" ");
 }
