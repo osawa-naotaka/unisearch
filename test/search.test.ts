@@ -196,4 +196,72 @@ describe("search test", () => {
             }
         ])
     );
+
+    test("NOT search 1", () =>
+        expect(search(index, '"テキスト" -"タイトル１" -"タイトル２"'))
+        .toStrictEqual([
+            {
+                id: 2,
+                key: "タイトル3",
+                score: 0.4070388157418395,
+                refs: [
+                    {
+                        token: "テキスト",
+                        path: "text",
+                        pos: 0,
+                        wordaround: "テキスト3.1テキスト3.2",
+                        distance: 0,
+                    },
+                    {
+                        token: "テキスト",
+                        path: "text",
+                        pos: 7,
+                        wordaround: "テキスト3.1テキスト3.2テキスト3.3",
+                        distance: 0,
+                    },
+                    {
+                        token: "テキスト",
+                        path: "text",
+                        pos: 14,
+                        wordaround: "3.1テキスト3.2テキスト3.3",
+                        distance: 0,
+                    },
+                ]
+            },
+        ])
+    );
+
+    test("NOT search 2", () =>
+        expect(search(index, '-"タイトル１" -"タイトル２" "テキスト"'))
+        .toStrictEqual([
+            {
+                id: 2,
+                key: "タイトル3",
+                score: 0.4070388157418395,
+                refs: [
+                    {
+                        token: "テキスト",
+                        path: "text",
+                        pos: 0,
+                        wordaround: "テキスト3.1テキスト3.2",
+                        distance: 0,
+                    },
+                    {
+                        token: "テキスト",
+                        path: "text",
+                        pos: 7,
+                        wordaround: "テキスト3.1テキスト3.2テキスト3.3",
+                        distance: 0,
+                    },
+                    {
+                        token: "テキスト",
+                        path: "text",
+                        pos: 14,
+                        wordaround: "3.1テキスト3.2テキスト3.3",
+                        distance: 0,
+                    },
+                ]
+            },
+        ])
+    );
 });
