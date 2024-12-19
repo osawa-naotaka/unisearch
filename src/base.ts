@@ -15,13 +15,19 @@ export class UniSearchError extends Error {}
 export type UniIndex<T> = {
     version: string;
     type: string;
-    field_names: Record<FieldName, Path>;
-    key_field: Path | null;
-    search_targets: Path[];
+    env: SearchEnv;
     index_entry: T;
 };
 
 // query
+export type SearchEnv = {
+    field_names?: Record<FieldName, Path>;
+    key_field?: Path;
+    search_targets?: Path[];
+    weight?: number;
+    distance?: number;
+};
+
 export type Reference = {
     token: string;
     path: Path;
@@ -41,5 +47,5 @@ export type SearchResult = {
 export interface SearchIndex<T> {
     index_entry: T;
     setToIndex(id: number, path: Path, str: string): void;
-    search(search_targets: Path[], key_field: Path | null, distance: number, keyword: string): SearchResult[];
+    search(env: SearchEnv, keyword: string): SearchResult[];
 }

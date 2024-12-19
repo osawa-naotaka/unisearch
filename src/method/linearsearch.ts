@@ -1,5 +1,5 @@
 import { bitapSearch, createBitapKey } from "@src/algorithm";
-import type { Path, SearchIndex, SearchResult } from "@src/base";
+import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/base";
 import { defaultNormalizer } from "@src/preprocess";
 
 export type LinearIndexEntry = Record<Path, string>[];
@@ -18,11 +18,11 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         this.index_entry[id][path] = defaultNormalizer(str);
     }
 
-    public search(search_targets: Path[], key_field: Path | null, distance: number, keyword: string): SearchResult[] {
+    public search(env: SearchEnv, keyword: string): SearchResult[] {
         return this.searchToken(
-            distance === 0 ? this.exactSearch : this.fuzzySearch(distance),
-            search_targets,
-            key_field,
+            env.distance === undefined || env.distance === 0 ? this.exactSearch : this.fuzzySearch(env.distance),
+            env.search_targets,
+            env.key_field,
             keyword,
         );
     }
@@ -52,15 +52,15 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
 
     private searchToken(
         search_fn: (keyword: string, target: string) => [number, number][],
-        search_targets: Path[],
-        key_field: Path | null,
+        search_targets: Path[] | undefined,
+        key_field: Path | undefined,
         token: string,
     ): SearchResult[] {
         const result = new Map<number, SearchResult>();
 
         // search all index
         this.index_entry.forEach((content, id) => {
-            for (const path of search_targets.length === 0 ? Object.keys(content) : search_targets) {
+            for (const path of search_targets || Object.keys(content)) {
                 const search_target = content[path];
                 const poses = search_fn(token, search_target);
                 if (poses.length !== 0) {

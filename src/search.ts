@@ -15,9 +15,9 @@ const evalQuery =
     (ast: ASTNode): SearchResult[] => {
         switch (ast.type) {
             case "exact":
-                return index.index_entry.search(index.search_targets, index.key_field, 0, ast.str);
+                return index.index_entry.search(index.env, ast.str);
             case "fuzzy":
-                return index.index_entry.search(index.search_targets, index.key_field, 1, ast.str);
+                return index.index_entry.search(index.env, ast.str);
             case "and":
                 return intersectResults(ast.nodes.map(evalQuery(index)));
             case "or":
