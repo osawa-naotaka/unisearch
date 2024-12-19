@@ -309,4 +309,15 @@ describe("unisearch query parser", () => {
         ]}, rest: []})
     );
 
+    test("expr 3", () =>
+        expect(expr([...'"タイトル3" OR "タイトル2"']))
+        .toStrictEqual({val: {type: 'or', nodes: [
+            {type: 'and', nodes: [
+                {type: 'exact', str: 'タイトル3'},
+            ]},
+            {type: 'and', nodes: [
+                {type: 'exact', str: 'タイトル2'},
+            ]},
+        ]}, rest: []})
+    );
 });

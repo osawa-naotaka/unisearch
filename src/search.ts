@@ -2,25 +2,25 @@ import type { SearchEnv, SearchIndex, SearchResult, UniIndex } from "@src/base";
 import { UniSearchError } from "@src/base";
 import type { ASTNode } from "@src/parse";
 import { expr } from "@src/parse";
-import { defaultNormalizer } from "./preprocess";
+import { defaultNormalizer, splitBySpace } from "@src/preprocess";
 
 export function search<T>(index: UniIndex<SearchIndex<T>>, query: string): SearchResult[] | UniSearchError {
-    const ast = expr([...defaultNormalizer(query)]);
+    const ast = expr([...normalizeQuery(query)]);
     return ast
         ? evalQuery(
               index.index_entry,
-              createWithProp(createWithProp(index.env, "distance", 1), "weight", 1),
+              createWithProp(index.env, "distance", 1),
           )(ast.val).sort((a, b) => b.score - a.score)
         : new UniSearchError("fail to parse query");
 }
 
-function createWithProp<T>(obj: SearchEnv, prop: string, val: T): SearchEnv {
+export function createWithProp<T>(obj: SearchEnv, prop: string, val: T): SearchEnv {
     const new_obj = Object.create(obj);
     new_obj[prop] = val;
     return new_obj;
 }
 
-const evalQuery =
+export const evalQuery =
     <T>(index: SearchIndex<T>, env: SearchEnv) =>
     (ast: ASTNode): SearchResult[] => {
         switch (ast.type) {
@@ -68,4 +68,9 @@ function intersectResults(results: SearchResult[][]): SearchResult[] {
         }
         return result;
     });
+}
+
+function normalizeQuery(q: string): string {
+    const terms = splitBySpace([q]);
+    return terms.map((t) => t === "OR" ? "OR" : defaultNormalizer(t)).join(" ");
 }

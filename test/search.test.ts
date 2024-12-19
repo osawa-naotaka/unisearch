@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { UniSearchError } from "@src/base";
 import { createIndex } from "@src/indexing";
 import { LinearIndex } from "@src/method/linearsearch";
-import { search } from "@src/search";
+import { search, evalQuery } from "@src/search";
 
 describe("search test", () => {
     const contents = [
@@ -136,7 +136,7 @@ describe("search test", () => {
         ])
     );
 
-    test("and search 1", () =>
+    test("AND search 1", () =>
         expect(search(index, '"タイトル3" "テキスト3.1"'))
         .toStrictEqual([
             {
@@ -163,13 +163,37 @@ describe("search test", () => {
         ])
     );
 
+    test("AND search 2", () =>
+        expect(evalQuery(index.index_entry, index.env)(
+            {type: 'and', nodes: [
+                {type: 'exact', str: 'タイトル3'},
+            ]}
+        ))
+        .toStrictEqual([
+            {
+                id: 2,
+                key: "タイトル3",
+                score: 1.4054651081081644,
+                refs: [
+                    {
+                        token: "タイトル3",
+                        path: "title",
+                        pos: 0,
+                        wordaround: "タイトル3",
+                        distance: 0,
+                    },
+                ]
+            },
+        ])
+    );
+
     test("OR search 1", () =>
         expect(search(index, '"タイトル3" OR "タイトル2"'))
         .toStrictEqual([
             {
                 id: 2,
                 key: "タイトル3",
-                score: 1.8739534774775524,
+                score: 1.4054651081081644,
                 refs: [
                     {
                         token: "タイトル3",
@@ -183,7 +207,7 @@ describe("search test", () => {
             {
                 id: 1,
                 key: "タイトル2",
-                score: 1.8739534774775524,
+                score: 1.4054651081081644,
                 refs: [
                     {
                         token: "タイトル2",
@@ -194,8 +218,6 @@ describe("search test", () => {
                     },
                 ]
             }
-
         ])
     );
-
 });
