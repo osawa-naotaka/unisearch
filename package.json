@@ -8,10 +8,11 @@
         "build": "tsc && vite build",
         "check": "biome check ./src",
         "check-write": "biome check --write ./src",
-        "test": "vitest"
+        "test": "vitest --ui"
     },
     "devDependencies": {
         "@biomejs/biome": "1.9.4",
+        "@vitest/ui": "^2.1.8",
         "typescript": "~5.6.2",
         "vite": "^5.4.10",
         "vite-plugin-dts": "^4.3.0",

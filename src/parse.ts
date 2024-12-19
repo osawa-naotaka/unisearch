@@ -117,7 +117,7 @@ export const float: Parser<number> = map(cat(int, char("."), frac), (x) => x[0] 
 <token>   ::= <exact> | <fuzzy>
 <term>    ::= <token> | '-' <token>
 <group>   ::= <term> | '(' <space>* <expr> <space>* ')'
-<adj>     ::= 'from:' <string> <space>+ <group> | 'weight:' <number> <space>+ <group> | group
+<adj>     ::= 'from:' <string> <space>+ <adj> | 'weight:' <number> <space>+ <adj> | group
 <and>     ::= <adj> (<space>+ <adj>)*
 <expr>    ::= <and> [<space>+ 'or' <space>+ <and>]*
 */
@@ -149,6 +149,12 @@ export type Weight = {
     node: ASTNode;
 };
 
+export type Distance = {
+    type: "distance";
+    distance: number;
+    node: ASTNode;
+};
+
 export type And = {
     type: "and";
     nodes: ASTNode[];
@@ -159,7 +165,7 @@ export type Or = {
     nodes: ASTNode[];
 };
 
-export type ASTNode = Exact | Fuzzy | Not | From | Weight | And | Or;
+export type ASTNode = Exact | Fuzzy | Not | From | Weight | Distance | And | Or;
 
 export const ident: Parser<Str> = rep(diff(getc, or(...['"', "(", ")", ...spaces].map(char))), 1);
 export const fuzzy: Parser<ASTNode> = map(diff(ident, str("OR")), (x) => ({ type: "fuzzy", str: x.join("") }));
@@ -176,17 +182,24 @@ export const not: Parser<ASTNode> = map(cat(char("-"), token), (x) => ({ type: "
 export const term: Parser<ASTNode> = or(not, token);
 export const paren: Parser<ASTNode> = map(cat(char("("), space, expr, space, char(")")), (x) => x[2]);
 export const group: Parser<ASTNode> = or(term, paren);
-export const from: Parser<ASTNode> = map(cat(str("from:"), ident, space1, group), (x) => ({
+export const from: Parser<ASTNode> = map(cat(str("from:"), ident, space1, adj), (x) => ({
     type: "from",
     field: x[1].join(""),
     node: x[3],
 }));
-export const weight: Parser<ASTNode> = map(cat(str("weight:"), or(float, int), space1, group), (x) => ({
+export const weight: Parser<ASTNode> = map(cat(str("weight:"), or(float, int), space1, adj), (x) => ({
     type: "weight",
     weight: x[1],
     node: x[3],
 }));
-export const adj: Parser<ASTNode> = or(from, weight, group);
+export const distance: Parser<ASTNode> = map(cat(str("distance:"), int, space1, adj), (x) => ({
+    type: "distance",
+    distance: x[1],
+    node: x[3],
+}));
+export function adj(s: Str): ParserOut<ASTNode> {
+    return or(from, weight, distance, group)(s);
+}
 export const and: Parser<ASTNode> = map(cat(adj, rep(map(cat(space1, adj), (x) => x[1]))), (x) => ({
     type: "and",
     nodes: [x[0], ...x[1]],

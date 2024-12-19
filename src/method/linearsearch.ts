@@ -23,6 +23,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             env.distance === undefined || env.distance === 0 ? this.exactSearch : this.fuzzySearch(env.distance),
             env.search_targets,
             env.key_field,
+            env.weight || 1,
             keyword,
         );
     }
@@ -45,7 +46,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             let pos = bitapSearch(key, maxerror, target);
             while (pos !== null) {
                 result.push(pos);
-                pos = bitapSearch(key, 1, target, pos[0] + keyword.length + 1);
+                pos = bitapSearch(key, maxerror, target, pos[0] + keyword.length + 1);
             }
             return result;
         };
@@ -54,6 +55,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         search_fn: (keyword: string, target: string) => [number, number][],
         search_targets: Path[] | undefined,
         key_field: Path | undefined,
+        weight: number,
         token: string,
     ): SearchResult[] {
         const result = new Map<number, SearchResult>();
@@ -89,7 +91,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             const tf = r.refs
                 .map((v) => v.token.length / this.index_entry[r.id][v.path].length / (v.distance + 1))
                 .reduce((x, y) => x + y);
-            r.score = tf * idf;
+            r.score = tf * idf * weight;
         }
 
         return [...result.values()];

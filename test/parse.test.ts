@@ -256,6 +256,18 @@ describe("unisearch query parser", () => {
         ]}, rest: []})
     );
 
+    test("or 1", () =>
+        expect(expr([...'a OR b']))
+        .toStrictEqual({val: {type: 'or', nodes: [
+            {type: 'and', nodes: [
+                {type: 'fuzzy', str: 'a'},
+            ]},
+            {type: 'and', nodes: [
+                {type: 'fuzzy', str: 'b'},
+            ]},
+        ]}, rest: []})
+    );
+    
     test("expr 1", () =>
         expect(expr([...'a "bcd" OR -"efg" from:title hij']))
         .toStrictEqual({val: {type: 'or', nodes: [
