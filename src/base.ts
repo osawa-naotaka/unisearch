@@ -47,7 +47,7 @@ export type SearchResult = {
 export interface SearchIndex<T> {
     index_entry: T;
     setToIndex(id: number, path: Path, str: string): void;
-    addKey(id: number, path: Path, key: string): void;
+    addKey(id: number, key: string): void;
     fixIndex(): void;
     search(env: SearchEnv, keyword: string): SearchResult[];
 }

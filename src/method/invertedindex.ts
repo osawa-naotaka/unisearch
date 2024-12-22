@@ -29,7 +29,7 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
         this.temporal_index_entry.set(path, dict);
     }
 
-    public addKey(id: number, _path: Path, key: string): void {
+    public addKey(id: number, key: string): void {
         this.index_entry.key[id] = key;
     }
 

@@ -44,7 +44,7 @@ export function createIndex<T>(
                 const obj = getValueByPath(env.key_field, content);
                 if (obj === undefined) throw new UniSearchError(`unisearch: cannot find path ${env.key_field}`);
                 if (typeof obj !== "string") throw new UniSearchError(`unisearch: ${env.key_field} is not string.`);
-                search_index.addKey(id, env.key_field, obj);
+                search_index.addKey(id, obj);
             }
         });
 

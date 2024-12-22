@@ -1,24 +1,24 @@
 import { bitapSearch, createBitapKey } from "@src/algorithm";
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/base";
 
-export type LinearIndexEntry = Record<Path, string>[];
+export type LinearIndexEntry = {key: string[], index: Record<Path, string>[]};
 
 export class LinearIndex implements SearchIndex<LinearIndexEntry> {
     public readonly index_entry: LinearIndexEntry;
 
     constructor(index?: LinearIndexEntry) {
-        this.index_entry = index || [];
+        this.index_entry = index || {key: [], index: []};
     }
 
     public setToIndex(id: number, path: Path, str: string): void {
-        if (this.index_entry[id] === undefined) {
-            this.index_entry[id] = {};
+        if (this.index_entry.index[id] === undefined) {
+            this.index_entry.index[id] = {};
         }
-        this.index_entry[id][path] = str;
+        this.index_entry.index[id][path] = str;
     }
 
-    public addKey(id: number, path: Path, key: string): void {
-        this.setToIndex(id, path, key);
+    public addKey(id: number, key: string): void {
+        this.index_entry.key[id] = key;
     }
 
     public fixIndex(): void { }
@@ -27,7 +27,6 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         return this.searchToken(
             env.distance === undefined || env.distance === 0 ? this.exactSearch : this.fuzzySearch(env.distance),
             env.search_targets,
-            env.key_field,
             env.weight || 1,
             keyword,
         );
@@ -59,14 +58,13 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
     private searchToken(
         search_fn: (keyword: string, target: string) => [number, number][],
         search_targets: Path[] | undefined,
-        key_field: Path | undefined,
         weight: number,
         token: string,
     ): SearchResult[] {
         const result = new Map<number, SearchResult>();
 
         // search all index
-        this.index_entry.forEach((content, id) => {
+        this.index_entry.index.forEach((content, id) => {
             for (const path of search_targets || Object.keys(content)) {
                 const search_target = content[path];
                 const poses = search_fn(token, search_target);
@@ -74,7 +72,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
                     for (const [pos, dist] of poses) {
                         const cur = result.get(id) || {
                             id: id,
-                            key: key_field ? this.index_entry[id][key_field] : null,
+                            key: this.index_entry.key[id],
                             score: 0,
                             refs: [],
                         };
@@ -91,10 +89,10 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             }
         });
 
-        const idf = Math.log(this.index_entry.length / (result.size + 1)) + 1;
+        const idf = Math.log(this.index_entry.index.length / (result.size + 1)) + 1;
         for (const [_, r] of result) {
             const tf = r.refs
-                .map((v) => v.token.length / this.index_entry[r.id][v.path].length / (v.distance + 1))
+                .map((v) => v.token.length / this.index_entry.index[r.id][v.path].length / (v.distance + 1))
                 .reduce((x, y) => x + y);
             r.score = tf * idf * weight;
         }

@@ -40,9 +40,9 @@ export function Hybrid<T1, T2>(name: string, ja: IndexClass, en: IndexClass): In
                 }
             }
 
-            public addKey(id: number, path: Path, key: string): void {
-                this.ja.addKey(id, path, key);
-                this.en.addKey(id, path, key);
+            public addKey(id: number, key: string): void {
+                this.ja.addKey(id, key);
+                this.en.addKey(id, key);
             }
 
             public fixIndex(): void {

@@ -21,7 +21,7 @@ describe("search test", () => {
         .toStrictEqual([
             {
                 id: 1,
-                key: "タイトル2",
+                key: "タイトル２",
                 score: 1.4054651081081644,
                 refs: [
                     {
@@ -41,7 +41,7 @@ describe("search test", () => {
         .toStrictEqual([
             {
                 id: 2,
-                key: "タイトル3",
+                key: "タイトル３",
                 score: 1.0039036486486888,
                 refs: [
                     {
@@ -75,7 +75,7 @@ describe("search test", () => {
         .toStrictEqual([
             {
                 id: 1,
-                key: "タイトル2",
+                key: "タイトル２",
                 score: 0.7027325540540822,
                 refs: [
                     {
@@ -101,7 +101,7 @@ describe("search test", () => {
         .toStrictEqual([
             {
                 id: 1,
-                key: "タイトル2",
+                key: "タイトル２",
                 score: 1.4054651081081644 * 2,
                 refs: [
                     {
@@ -121,7 +121,7 @@ describe("search test", () => {
         .toStrictEqual([
             {
                 id: 1,
-                key: "タイトル2",
+                key: "タイトル２",
                 score: 0.2810930216216329,
                 refs: [
                     {
@@ -141,7 +141,7 @@ describe("search test", () => {
         .toStrictEqual([
             {
                 id: 2,
-                key: "タイトル3",
+                key: "タイトル３",
                 score: 1.8739534774775524,
                 refs: [
                     {
@@ -168,7 +168,7 @@ describe("search test", () => {
         .toStrictEqual([
             {
                 id: 2,
-                key: "タイトル3",
+                key: "タイトル３",
                 score: 1.4054651081081644,
                 refs: [
                     {
@@ -182,7 +182,7 @@ describe("search test", () => {
             },
             {
                 id: 1,
-                key: "タイトル2",
+                key: "タイトル２",
                 score: 1.4054651081081644,
                 refs: [
                     {
@@ -202,7 +202,7 @@ describe("search test", () => {
         .toStrictEqual([
             {
                 id: 2,
-                key: "タイトル3",
+                key: "タイトル３",
                 score: 0.4070388157418395,
                 refs: [
                     {
@@ -236,7 +236,7 @@ describe("search test", () => {
         .toStrictEqual([
             {
                 id: 2,
-                key: "タイトル3",
+                key: "タイトル３",
                 score: 0.4070388157418395,
                 refs: [
                     {

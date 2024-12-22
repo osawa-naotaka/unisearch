@@ -29,8 +29,8 @@ export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass 
                 }
             }
 
-            public addKey(id: number, path: Path, key: string): void {
-                this.ngram_index.addKey(id, path, key);
+            public addKey(id: number, key: string): void {
+                this.ngram_index.addKey(id, key);
             }
 
             public fixIndex(): void {
