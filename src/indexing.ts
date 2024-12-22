@@ -2,6 +2,7 @@ import type { SearchEnv, SearchIndex, UniIndex } from "@src/base";
 import { UniSearchError, Version, Path } from "@src/base";
 import { IndexTypes } from "@src/indextypes";
 import { extractStringsAll, getValueByPath } from "@src/traverser";
+import { defaultNormalizer } from "@src/preprocess";
 
 export type IndexClass = new (index?: any) => SearchIndex<any>;
 
@@ -24,9 +25,9 @@ export function createIndex<T>(
                     const obj = getValueByPath(path, content);
                     if (obj === undefined) throw new UniSearchError(`unisearch: cannot find path ${path}`);
                     if (typeof obj === "string") {
-                        search_index.setToIndex(id, path, obj);
+                        search_index.setToIndex(id, path, defaultNormalizer(obj));
                     } else if (Array.isArray(obj)) {
-                        search_index.setToIndex(id, path, obj.join(" "));
+                        search_index.setToIndex(id, path, defaultNormalizer(obj.join(" ")));
                     } else {
                         throw new UniSearchError(`unisearch: ${path} is not string or array of string.`);
                     }
@@ -34,7 +35,7 @@ export function createIndex<T>(
             } else {
                 // indexing all
                 for (const [path, obj] of extractStringsAll("", content)) {
-                    search_index.setToIndex(id, path, obj);
+                    search_index.setToIndex(id, path, defaultNormalizer(obj));
                 }
             }
 

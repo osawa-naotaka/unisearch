@@ -1,6 +1,5 @@
 import { bitapSearch, createBitapKey } from "@src/algorithm";
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/base";
-import { defaultNormalizer } from "@src/preprocess";
 
 export type LinearIndexEntry = Record<Path, string>[];
 
@@ -15,7 +14,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         if (this.index_entry[id] === undefined) {
             this.index_entry[id] = {};
         }
-        this.index_entry[id][path] = defaultNormalizer(str);
+        this.index_entry[id][path] = str;
     }
 
     public addKey(id: number, path: Path, key: string): void {

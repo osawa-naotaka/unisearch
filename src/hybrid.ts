@@ -1,7 +1,7 @@
 
 import { SearchIndex, Path, SearchEnv, SearchResult } from "@src/base";
 import { IndexClass } from "@src/indexing";
-import { defaultNormalizer, defaultSpritter, isNonSpaceSeparatedChar } from "@src/preprocess";
+import { defaultSpritter, isNonSpaceSeparatedChar } from "@src/preprocess";
 
 export type HybridIndexEntry<T1, T2> = {ja: T1, en: T2};
 
@@ -30,7 +30,7 @@ export function Hybrid<T1, T2>(name: string, ja: IndexClass, en: IndexClass): In
     
             public setToIndex(id: number, path: Path, str: string): void {
                 const segmenter = new Intl.Segmenter('ja', { granularity: 'grapheme' });
-                const tokens = defaultSpritter([defaultNormalizer(str)]);
+                const tokens = defaultSpritter([str]);
                 for(const t of tokens) {
                     if(isNonSpaceSeparatedChar([...t][0])) {
                         this.ja.setToIndex(id, path, t);
@@ -51,7 +51,7 @@ export function Hybrid<T1, T2>(name: string, ja: IndexClass, en: IndexClass): In
             }
     
             public search(env: SearchEnv, keyword: string): SearchResult[] {
-                const tokens = defaultSpritter([defaultNormalizer(keyword)]);
+                const tokens = defaultSpritter([keyword]);
                 const results = [];
                 for(const t of tokens) {
                     if(isNonSpaceSeparatedChar([...t][0])) {

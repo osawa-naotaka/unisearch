@@ -11,7 +11,7 @@ export function search<T>(index: UniIndex<SearchIndex<T>>, query: string): Searc
     return r.type === "excludes" ? [] : r.results.sort((a, b) => b.score - a.score);
 }
 
-function createWithProp<T>(obj: SearchEnv, prop: string, val: T): SearchEnv {
+export function createWithProp<T>(obj: SearchEnv, prop: string, val: T): SearchEnv {
     const new_obj = Object.create(obj);
     new_obj[prop] = val;
     return new_obj;

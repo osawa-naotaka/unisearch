@@ -2,6 +2,7 @@ import { IndexClass } from "@src/indexing";
 import { SearchIndex, SearchEnv, SearchResult } from "@src/base";
 import { Path } from "@src/base";
 import { generateNgramToTail, generateNgram } from "@src/algorithm";
+import { createWithProp } from "./search";
 
 export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass {
     const name = `N${num_gram}gram`;
@@ -40,7 +41,7 @@ export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass 
                 const tokens = generateNgram(num_gram, keyword);
                 const results = [];
                 for(const t of tokens) {
-                    results.push(this.ngram_index.search(env, t));
+                    results.push(this.ngram_index.search(createWithProp(env, "distance", 0), t));   // forward match
                 }
                 return intersectResults(results);
             }
