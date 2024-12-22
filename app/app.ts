@@ -40,18 +40,23 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     console.log(`fuzzy search time: ${fuzzy_result.time} ms`);
     console.log(fuzzy_result.results);
 
-    const hybrid_index = createIndex(HyblidBigramInvertedIndex, wikipedia_articles);
+    const hybrid_index_result = benchmark(
+        (arg) => createIndex(HyblidBigramInvertedIndex, arg, { key_field: "title" }),
+        [wikipedia_articles],
+    );
+    console.log(`hybrid indexing time: ${hybrid_index_result.time} ms`);
+
+    const hybrid_index = hybrid_index_result.results[0];
     if (hybrid_index instanceof UniSearchError) {
-        throw index;
+        throw hybrid_index;
     }
     console.log(hybrid_index);
-    const et = search(hybrid_index, "et");
-    console.log(et);
     const hybrid_result = benchmark(
         (x) => search(hybrid_index, x),
         keywords.map((x) => `"${x}"`),
     );
-    console.log(hybrid_result);
+    console.log(`hybrid search time: ${hybrid_result.time} ms`);
+    console.log(hybrid_result.results);
 }
 
 await runAll(wikipedia_ja_extracted, wikipedia_ja_keyword, 20);

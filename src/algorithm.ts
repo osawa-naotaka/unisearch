@@ -106,6 +106,28 @@ export function bitapSearch(key: BitapKey, maxErrors: number, text: string, pos 
         }
     }
 
+    // additional check for deletion
+    for(let i = 0; i < maxErrors; i++) {
+        let replace = 0;
+        let insertion = 0;
+        let deletion = 0;
+
+        for (let distance = 0; distance < maxErrors + 1; distance++) {
+            const next_state_candidate = (state[distance] << 1) | 1;
+            const next_state = replace | insertion | deletion;
+
+            replace = next_state_candidate;
+            insertion = state[distance];
+            deletion = next_state;
+
+            state[distance] = next_state;
+
+            if ((state[distance] & matchbit) !== 0) {
+                return [text.length - key.length, distance];
+            }
+        }        
+    }
+
     return null;
 }
 
