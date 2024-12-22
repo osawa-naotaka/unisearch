@@ -3,8 +3,10 @@ import { UniSearchError, Version } from "@src/base";
 import { IndexTypes } from "@src/indextypes";
 import { extractStringsAll, getValueByPath } from "@src/traverser";
 
+export type IndexClass = new (index?: any) => SearchIndex<any>;
+
 export function createIndex<T>(
-    SearchClass: new () => SearchIndex<T>,
+    index_class: IndexClass,
     contents: unknown[],
     env: SearchEnv = {},
 ): UniIndex<SearchIndex<T>> | UniSearchError {
@@ -13,7 +15,7 @@ export function createIndex<T>(
         if (contents.length === 0) throw new UniSearchError("unisearch: contents must not be empty.");
 
         // indexing for search
-        const search_index = new SearchClass();
+        const search_index = new index_class();
 
         contents.forEach((content, id) => {
             if (env.search_targets) {
@@ -29,25 +31,27 @@ export function createIndex<T>(
                         throw new UniSearchError(`unisearch: ${path} is not string or array of string.`);
                     }
                 }
-
-                // indexing for key entry
-                if (env.key_field) {
-                    const obj = getValueByPath(env.key_field, content);
-                    if (obj === undefined) throw new UniSearchError(`unisearch: cannot find path ${env.key_field}`);
-                    if (typeof obj !== "string") throw new UniSearchError(`unisearch: ${env.key_field} is not string.`);
-                    search_index.setToIndex(id, env.key_field, obj);
-                }
             } else {
-                // indexing all, including key entry
+                // indexing all
                 for (const [path, obj] of extractStringsAll("", content)) {
                     search_index.setToIndex(id, path, obj);
                 }
             }
+
+            // register key entry
+            if (env.key_field) {
+                const obj = getValueByPath(env.key_field, content);
+                if (obj === undefined) throw new UniSearchError(`unisearch: cannot find path ${env.key_field}`);
+                if (typeof obj !== "string") throw new UniSearchError(`unisearch: ${env.key_field} is not string.`);
+                search_index.addKey(id, env.key_field, obj);
+            }
         });
+
+        search_index.fixIndex();
 
         return {
             version: Version,
-            type: SearchClass.name,
+            type: index_class.name,
             env: env,
             index_entry: search_index,
         };

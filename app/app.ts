@@ -2,10 +2,11 @@ import type { WikipediaArticle, WikipediaKeyword } from "@ref/bench/benchmark_co
 import { benchmark, getKeywords } from "@ref/bench/benchmark_common";
 import { UniSearchError } from "@src/base";
 import { createIndex } from "@src/indexing";
-import { LinearIndex } from "@src/method/linearsearch";
+import { LinearIndex } from "@src/method/linearindex";
 import { search } from "@src/search";
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
+import { HyblidBigramInvertedIndex } from "@src/indextypes";
 
 async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[], n: number) {
     console.log("initializing benchmark...");
@@ -38,6 +39,19 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     const fuzzy_result = benchmark((x) => search(index, x), keywords.slice(0, 100));
     console.log(`fuzzy search time: ${fuzzy_result.time} ms`);
     console.log(fuzzy_result.results);
+
+    const hybrid_index = createIndex(HyblidBigramInvertedIndex, wikipedia_articles);
+    if (hybrid_index instanceof UniSearchError) {
+        throw index;
+    }
+    console.log(hybrid_index);
+    const et = search(hybrid_index, "et");
+    console.log(et);
+    const hybrid_result = benchmark(
+        (x) => search(hybrid_index, x),
+        keywords.map((x) => `"${x}"`),
+    );
+    console.log(hybrid_result);
 }
 
 await runAll(wikipedia_ja_extracted, wikipedia_ja_keyword, 20);

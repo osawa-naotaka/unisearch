@@ -1,3 +1,58 @@
+export const BinarySearchType = {
+    Exact: 0,
+    FindStart: 1,
+    FindEnd: 2,
+} as const;
+
+export type BinarySearchType = (typeof BinarySearchType)[keyof typeof BinarySearchType];
+
+export function binarySearch<T>(
+    key: T,
+    comp: (a: T, b: T) => number,
+    array: T[],
+    type: BinarySearchType,
+): number | null {
+    if(array.length === 0) return null;
+    let left = 0;
+    let right = array.length - 1;
+    let match: number | null = null;
+
+    while (left <= right) {
+        const mid = Math.floor((left + right) / 2);
+        const r = comp(key, array[mid]);
+
+        if (r === 0) {
+            switch (type) {
+                case BinarySearchType.Exact:
+                    return mid;
+                case BinarySearchType.FindStart:
+                    match = mid;
+                    right = mid - 1;
+                    break;
+                case BinarySearchType.FindEnd:
+                    match = mid;
+                    left = mid + 1;
+                    break;
+            }
+        } else {
+            if (r > 0) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+    }
+
+    return match;
+}
+
+export function refine<T>(key: T, comp: (a: T, b: T) => number, array: T[]): T[] {
+    const startIndex = binarySearch(key, comp, array, BinarySearchType.FindStart);
+    const endIndex = binarySearch(key, comp, array, BinarySearchType.FindEnd);
+
+    return startIndex !== null && endIndex !== null ? array.slice(startIndex, endIndex + 1) : [];
+}
+
 type BitapKey = {
     mask: Map<string, number>;
     length: number;
@@ -88,3 +143,38 @@ export const pipe: Pipe = (...fns: AnyFunction[]) => {
         return fns.reduce((acc: unknown, fn, idx) => (idx === 0 ? fn(...args) : fn(acc)), null);
     };
 };
+
+export function generate1ToNgram(n: number, text: string): string[] {
+    return [...Array(n).keys()].flatMap((x) => generateNgramInternal(x + 1, text));
+}
+
+export function generateNgram(n: number, text: string): string[] {
+    return text.length < n ? [text] : generateNgramInternal(n, text);
+}
+
+export function generateNgramToTail(n: number, text: string): string[] {
+    const grams = generateNgram(n, text);
+    if (n < text.length) {
+        for (let i = text.length - n; i < text.length - 1; i++) {
+            grams.push(text.slice(i + 1));
+        }
+    } else if (text.length !== 1) {
+        for (let i = 1; i < text.length; i++) {
+            grams.push(text.slice(i));
+        }
+    }
+    return grams;
+}
+
+function generateNgramInternal(n: number, text: string): string[] {
+    if (text.length === 0) throw new Error("call generateNgram with null string.");
+    if (text.length < n) {
+        return [];
+    }
+
+    const grams: string[] = [];
+    for (let i = 0; i <= text.length - n; i++) {
+        grams.push(text.slice(i, i + n));
+    }
+    return grams;
+}

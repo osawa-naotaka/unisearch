@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { UniSearchError } from "@src/base";
 import { createIndex } from "@src/indexing";
-import { LinearIndex } from "@src/method/linearsearch";
+import { LinearIndex } from "@src/method/linearindex";
 import { search } from "@src/search";
 
 describe("search test", () => {

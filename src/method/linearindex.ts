@@ -18,6 +18,12 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         this.index_entry[id][path] = defaultNormalizer(str);
     }
 
+    public addKey(id: number, path: Path, key: string): void {
+        this.setToIndex(id, path, key);
+    }
+
+    public fixIndex(): void { }
+
     public search(env: SearchEnv, keyword: string): SearchResult[] {
         return this.searchToken(
             env.distance === undefined || env.distance === 0 ? this.exactSearch : this.fuzzySearch(env.distance),
