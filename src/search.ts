@@ -34,7 +34,13 @@ const evalQuery =
                 const r = evalQuery(index, env)(ast.node)
                 return { type: "excludes", results: r.results };
             case "from":
-                return evalQuery(index, createWithProp(env, "search_targets", [ast.field]))(ast.node); // fix it.
+                if(env.field_names) {
+                    const path = env.field_names[ast.field];
+                    if(path) {
+                        return evalQuery(index, createWithProp(env, "search_targets", [path]))(ast.node);
+                    }
+                }
+                return evalQuery(index, env)(ast.node);
             case "weight":
                 return evalQuery(index, createWithProp(env, "weight", ast.weight))(ast.node);
             case "distance":

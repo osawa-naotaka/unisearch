@@ -1,5 +1,5 @@
 import type { SearchEnv, SearchIndex, UniIndex } from "@src/base";
-import { UniSearchError, Version } from "@src/base";
+import { UniSearchError, Version, Path } from "@src/base";
 import { IndexTypes } from "@src/indextypes";
 import { extractStringsAll, getValueByPath } from "@src/traverser";
 
@@ -47,6 +47,17 @@ export function createIndex<T>(
             }
         });
 
+        // create field name map
+        if(env.field_names === undefined) {
+            env.field_names = {};
+            for(const path of env.search_targets || extractStringsAll("", contents[0]).map(([path]) => path)) {
+                const name = nameOf(path);
+                if (name !== undefined) {
+                    env.field_names[name] = path;
+                }
+            }
+        }
+
         search_index.fixIndex();
 
         return {
@@ -79,4 +90,8 @@ export function indexToObject<T>(index: UniIndex<SearchIndex<T>>): UniIndex<T> {
         env: index.env,
         index_entry: index.index_entry.index_entry,
     };
+}
+
+function nameOf(path: Path): string | undefined {
+    return path.split(".").pop();
 }
