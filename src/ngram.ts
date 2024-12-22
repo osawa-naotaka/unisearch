@@ -1,7 +1,7 @@
-import { IndexClass } from "@src/indexing";
-import { SearchIndex, SearchEnv, SearchResult } from "@src/base";
-import { Path } from "@src/base";
-import { generateNgramToTail, generateNgram } from "@src/algorithm";
+import { generateNgram, generateNgramToTail } from "@src/algorithm";
+import type { SearchEnv, SearchIndex, SearchResult } from "@src/base";
+import type { Path } from "@src/base";
+import type { IndexClass } from "@src/indexing";
 import { createWithProp } from "./search";
 
 export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass {
@@ -12,7 +12,7 @@ export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass 
             public readonly index_entry: T;
 
             constructor(index?: T) {
-                if(index) {
+                if (index) {
                     this.index_entry = index;
                     this.ngram_index = new index_class(this.index_entry);
                 } else {
@@ -20,11 +20,11 @@ export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass 
                     this.index_entry = this.ngram_index.index_entry;
                 }
             }
-    
+
             public setToIndex(id: number, path: Path, str: string): void {
-                const segmenter = new Intl.Segmenter('ja', { granularity: 'grapheme' });
+                const segmenter = new Intl.Segmenter("ja", { granularity: "grapheme" });
                 const tokens = generateNgramToTail(num_gram, str);
-                for(const t of tokens) {
+                for (const t of tokens) {
                     this.ngram_index.setToIndex(id, path, t);
                 }
             }
@@ -36,18 +36,18 @@ export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass 
             public fixIndex(): void {
                 this.ngram_index.fixIndex();
             }
-    
+
             public search(env: SearchEnv, keyword: string): SearchResult[] {
                 const tokens = generateNgram(num_gram, keyword);
                 const results = [];
-                for(const t of tokens) {
-                    results.push(this.ngram_index.search(createWithProp(env, "distance", 0), t));   // forward match
+                for (const t of tokens) {
+                    results.push(this.ngram_index.search(createWithProp(env, "distance", 0), t)); // forward match
                 }
                 return intersectResults(results);
             }
-        }    
+        },
     }[name];
-} 
+}
 
 function intersectResults(results: SearchResult[][]): SearchResult[] {
     return results.reduce((prev, cur) => {
@@ -56,6 +56,6 @@ function intersectResults(results: SearchResult[][]): SearchResult[] {
             const c = cur.find((x) => x.id === p.id);
             if (c) result.push({ id: c.id, key: c.key, score: c.score + p.score, refs: [...p.refs, ...c.refs] });
         }
-        return result ;
+        return result;
     });
 }

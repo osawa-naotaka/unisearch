@@ -1,13 +1,13 @@
 import { bitapSearch, createBitapKey } from "@src/algorithm";
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/base";
 
-export type LinearIndexEntry = {key: string[], index: Record<Path, string>[]};
+export type LinearIndexEntry = { key: string[]; index: Record<Path, string>[] };
 
 export class LinearIndex implements SearchIndex<LinearIndexEntry> {
     public readonly index_entry: LinearIndexEntry;
 
     constructor(index?: LinearIndexEntry) {
-        this.index_entry = index || {key: [], index: []};
+        this.index_entry = index || { key: [], index: [] };
     }
 
     public setToIndex(id: number, path: Path, str: string): void {
@@ -21,7 +21,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         this.index_entry.key[id] = key;
     }
 
-    public fixIndex(): void { }
+    public fixIndex(): void {}
 
     public search(env: SearchEnv, keyword: string): SearchResult[] {
         return this.searchToken(

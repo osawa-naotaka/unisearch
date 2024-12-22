@@ -12,7 +12,7 @@ export function binarySearch<T>(
     array: T[],
     type: BinarySearchType,
 ): number | null {
-    if(array.length === 0) return null;
+    if (array.length === 0) return null;
     let left = 0;
     let right = array.length - 1;
     let match: number | null = null;
@@ -107,7 +107,7 @@ export function bitapSearch(key: BitapKey, maxErrors: number, text: string, pos 
     }
 
     // additional check for deletion
-    for(let i = 0; i < maxErrors; i++) {
+    for (let i = 0; i < maxErrors; i++) {
         let replace = 0;
         let insertion = 0;
         let deletion = 0;
@@ -125,7 +125,7 @@ export function bitapSearch(key: BitapKey, maxErrors: number, text: string, pos 
             if ((state[distance] & matchbit) !== 0) {
                 return [text.length - key.length, distance];
             }
-        }        
+        }
     }
 
     return null;

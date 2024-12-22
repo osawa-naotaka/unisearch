@@ -1,4 +1,5 @@
 import { pipe } from "@src/algorithm";
+import { UniSearchError } from "./base";
 
 export const normalizeJapanese = (input: string) =>
     input
@@ -30,49 +31,49 @@ export function splitByDelimiter(text: string[]): string[] {
 // Unicode ranges for non-space-separated scripts
 const nonSpaceSeparatedRanges = [
     // CJK Scripts
-    [0x2E80, 0x31FF],   // CJK Radicals, Kangxi Radicals, etc.
-    [0x3400, 0x9FFF],   // CJK Unified Ideographs Extension A, CJK Unified Ideographs
-    [0xF900, 0xFAFF],   // CJK Compatibility Ideographs
-    [0x20000, 0x2CEAF], // CJK Unified Ideographs Extension B-H
-    
+    [0x2e80, 0x31ff], // CJK Radicals, Kangxi Radicals, etc.
+    [0x3400, 0x9fff], // CJK Unified Ideographs Extension A, CJK Unified Ideographs
+    [0xf900, 0xfaff], // CJK Compatibility Ideographs
+    [0x20000, 0x2ceaf], // CJK Unified Ideographs Extension B-H
+
     // Korean
-    [0xAC00, 0xD7AF],   // Hangul Syllables
-    [0x1100, 0x11FF],   // Hangul Jamo
-    [0x3130, 0x318F],   // Hangul Compatibility Jamo
-    
+    [0xac00, 0xd7af], // Hangul Syllables
+    [0x1100, 0x11ff], // Hangul Jamo
+    [0x3130, 0x318f], // Hangul Compatibility Jamo
+
     // Southeast Asian Scripts
-    [0x0E00, 0x0E7F],   // Thai
-    [0x0E80, 0x0EFF],   // Lao
-    [0x1000, 0x109F],   // Myanmar
-    [0x1780, 0x17FF],   // Khmer
-    [0x1A00, 0x1A1F],   // Buginese
-    [0x1B00, 0x1B7F],   // Balinese
-    [0xA980, 0xA9DF],   // Javanese
-    
+    [0x0e00, 0x0e7f], // Thai
+    [0x0e80, 0x0eff], // Lao
+    [0x1000, 0x109f], // Myanmar
+    [0x1780, 0x17ff], // Khmer
+    [0x1a00, 0x1a1f], // Buginese
+    [0x1b00, 0x1b7f], // Balinese
+    [0xa980, 0xa9df], // Javanese
+
     // South Asian Scripts
-    [0x0D80, 0x0DFF],   // Sinhala
-    [0x0980, 0x09FF],   // Bengali
-    [0x0900, 0x097F],   // Devanagari
-    [0x0A80, 0x0AFF],   // Gujarati
-    [0x0C80, 0x0CFF],   // Kannada
-    [0x0B00, 0x0B7F],   // Oriya
-    [0x0D00, 0x0D7F],   // Malayalam
+    [0x0d80, 0x0dff], // Sinhala
+    [0x0980, 0x09ff], // Bengali
+    [0x0900, 0x097f], // Devanagari
+    [0x0a80, 0x0aff], // Gujarati
+    [0x0c80, 0x0cff], // Kannada
+    [0x0b00, 0x0b7f], // Oriya
+    [0x0d00, 0x0d7f], // Malayalam
 ];
 
 export function isNonSpaceSeparatedChar(char: string): boolean {
-    const codePoint = Array.from(char)[0].codePointAt(0)!;
-    
-    return nonSpaceSeparatedRanges.some(([start, end]) => 
-        codePoint >= start && codePoint <= end
-    );
+    if (char.length === 0) throw new UniSearchError("unisearch: internal error on isNonSpaceSeparatedChar 1.");
+    const codePoint = Array.from(char)[0].codePointAt(0);
+    if (codePoint === undefined) throw new UniSearchError("unisearch: internal error on isNonSpaceSeparatedChar 2.");
+
+    return nonSpaceSeparatedRanges.some(([start, end]) => codePoint >= start && codePoint <= end);
 }
 
 export function splitByNonSpaceSeparatedChar(text: string[]): string[] {
-    const segmenter = new Intl.Segmenter('und', { granularity: 'grapheme' });
+    const segmenter = new Intl.Segmenter("und", { granularity: "grapheme" });
     const result: string[] = [];
-    
+
     for (const t of text) {
-        let currentGroup = '';
+        let currentGroup = "";
         let isCurrentNonSpaceSeparated: boolean | null = null;
 
         // Iterate through grapheme clusters
@@ -84,7 +85,7 @@ export function splitByNonSpaceSeparatedChar(text: string[]): string[] {
                 if (currentGroup) {
                     result.push(currentGroup);
                 }
-                currentGroup = '';
+                currentGroup = "";
             }
 
             currentGroup += segment;

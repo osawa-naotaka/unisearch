@@ -1,12 +1,12 @@
 import type { SearchEnv, SearchIndex, SearchResult, UniIndex } from "@src/base";
-import { UniSearchError } from "@src/base";
+import type { UniSearchError } from "@src/base";
 import type { ASTNode } from "@src/parse";
 import { expr } from "@src/parse";
 import { defaultNormalizer, splitBySpace } from "@src/preprocess";
 
 export function search<T>(index: UniIndex<SearchIndex<T>>, query: string): SearchResult[] | UniSearchError {
     const ast = expr([...normalizeQuery(query)]);
-    if(ast === null) return [];
+    if (ast === null) return [];
     const r = evalQuery(index.index_entry, createWithProp(index.env, "distance", 1))(ast.val);
     return r.type === "excludes" ? [] : r.results.sort((a, b) => b.score - a.score);
 }
@@ -30,13 +30,14 @@ const evalQuery =
                 return { type: "includes", results: index.search(createWithProp(env, "distance", 0), ast.str) };
             case "fuzzy":
                 return { type: "includes", results: index.search(env, ast.str) };
-            case "not":
-                const r = evalQuery(index, env)(ast.node)
+            case "not": {
+                const r = evalQuery(index, env)(ast.node);
                 return { type: "excludes", results: r.results };
+            }
             case "from":
-                if(env.field_names) {
+                if (env.field_names) {
                     const path = env.field_names[ast.field];
-                    if(path) {
+                    if (path) {
                         return evalQuery(index, createWithProp(env, "search_targets", [path]))(ast.node);
                     }
                 }
@@ -57,7 +58,7 @@ const evalQuery =
 function unionResults(results: QueryResult[]): QueryResult {
     const filtered = results.filter((r) => r.type === "includes");
     return filtered.reduce((prev, cur) => {
-        const result: SearchResult[] = prev.results;        
+        const result: SearchResult[] = prev.results;
         for (const c of cur.results) {
             const p = result.find((x) => x.id === c.id);
             if (p) {
@@ -72,13 +73,13 @@ function unionResults(results: QueryResult[]): QueryResult {
 }
 
 function intersectResults(results: QueryResult[]): QueryResult {
-    const sorted = results.sort((a, b) => b.type < a.type ? -1 : 1);
+    const sorted = results.sort((a, b) => (b.type < a.type ? -1 : 1));
 
     return sorted.reduce((prev, cur) => {
         const result: SearchResult[] = [];
         for (const p of prev.results) {
             const c = cur.results.find((x) => x.id === p.id);
-            if(cur.type === "includes") {
+            if (cur.type === "includes") {
                 if (c) result.push({ id: c.id, key: c.key, score: c.score + p.score, refs: [...p.refs, ...c.refs] });
             } else {
                 if (!c) result.push(p);

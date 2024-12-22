@@ -1,9 +1,10 @@
 import type { SearchEnv, SearchIndex, UniIndex } from "@src/base";
-import { UniSearchError, Version, Path } from "@src/base";
+import { type Path, UniSearchError, Version } from "@src/base";
 import { IndexTypes } from "@src/indextypes";
-import { extractStringsAll, getValueByPath } from "@src/traverser";
 import { defaultNormalizer } from "@src/preprocess";
+import { extractStringsAll, getValueByPath } from "@src/traverser";
 
+// biome-ignore lint: using any. fix it.
 export type IndexClass = new (index?: any) => SearchIndex<any>;
 
 export function createIndex<T>(
@@ -49,9 +50,9 @@ export function createIndex<T>(
         });
 
         // create field name map
-        if(env.field_names === undefined) {
+        if (env.field_names === undefined) {
             env.field_names = {};
-            for(const path of env.search_targets || extractStringsAll("", contents[0]).map(([path]) => path)) {
+            for (const path of env.search_targets || extractStringsAll("", contents[0]).map(([path]) => path)) {
                 const name = nameOf(path);
                 if (name !== undefined) {
                     env.field_names[name] = path;

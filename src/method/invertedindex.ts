@@ -5,8 +5,8 @@ type Term = string;
 type Id = number;
 type TF = number;
 type PostingList = [Id, TF][];
-type Dictionary = [Term, PostingList][]
-export type InvertedIndexEntry = { key: string[], index: Record<Path, Dictionary> };
+type Dictionary = [Term, PostingList][];
+export type InvertedIndexEntry = { key: string[]; index: Record<Path, Dictionary> };
 
 type TemporalPostingList = Map<Id, TF>;
 type TemporalDictionary = Map<Term, TemporalPostingList>;
@@ -34,10 +34,10 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
     }
 
     public fixIndex(): void {
-        for(const [path, dict] of this.temporal_index_entry) {
+        for (const [path, dict] of this.temporal_index_entry) {
             const d: Dictionary = [];
-            for(const [term, plist] of dict) {
-                d.push([term, Array.from(plist)])
+            for (const [term, plist] of dict) {
+                d.push([term, Array.from(plist)]);
             }
             d.sort(this.comp);
             this.index_entry.index[path] = d;
@@ -47,14 +47,17 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
     public search(env: SearchEnv, keyword: string): SearchResult[] {
         const results = new Map<Id, SearchResult>();
         const bitapkey = createBitapKey(keyword);
-        for(const path of env.search_targets || Object.keys(this.index_entry.index)) {
-            const res: Dictionary = env.distance === 0
-                ? refine([keyword, []], this.prefixComp, this.index_entry.index[path] || [])
-                : refine([[...keyword][0], []], this.prefixComp, this.index_entry.index[path] || []).filter(([term]) => bitapSearch(bitapkey, env.distance || 0, term) !== null);
-            for(const [term, plist] of res) {
-                for(const [id, tf] of plist) {
+        for (const path of env.search_targets || Object.keys(this.index_entry.index)) {
+            const res: Dictionary =
+                env.distance === 0
+                    ? refine([keyword, []], this.prefixComp, this.index_entry.index[path] || [])
+                    : refine([[...keyword][0], []], this.prefixComp, this.index_entry.index[path] || []).filter(
+                          ([term]) => bitapSearch(bitapkey, env.distance || 0, term) !== null,
+                      );
+            for (const [term, plist] of res) {
+                for (const [id, tf] of plist) {
                     const r = results.get(id) || { id: id, key: this.index_entry.key[id], score: 0, refs: [] };
-                    r.refs.push({ token: term, path: path, pos: 0, wordaround: "", distance: 0 });  // todo: fix distance
+                    r.refs.push({ token: term, path: path, pos: 0, wordaround: "", distance: 0 }); // todo: fix distance
                     r.score += tf;
                     results.set(id, r);
                 }
