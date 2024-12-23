@@ -11,10 +11,10 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
 
     constructor(index?: LinearIndexEntry) {
         this.index_entry = index || { key: [], index: [] };
-        
+
         if (index) {
             index.index.forEach((rec, idx) => {
-                if(this.grapheme_index[idx] === undefined) {
+                if (this.grapheme_index[idx] === undefined) {
                     this.grapheme_index[idx] = {};
                 }
                 for (const k of Object.keys(rec)) {
@@ -50,7 +50,8 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
                 (pos, target) => target.slice(Math.max(pos - 10, 0), pos + keyword.length + 10),
                 env.search_targets,
                 env.weight || 1,
-                keyword);
+                keyword,
+            );
         }
 
         return this.searchToken(
@@ -63,15 +64,17 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         );
     }
 
-    private exactSearch = (keyword: string) => (target: string): [number, number][] => {
-        const result: [number, number][] = [];
-        let pos = target.indexOf(keyword);
-        while (pos !== -1) {
-            result.push([pos, 0]);
-            pos = target.indexOf(keyword, pos + keyword.length + 1);
-        }
-        return result;
-    }
+    private exactSearch =
+        (keyword: string) =>
+        (target: string): [number, number][] => {
+            const result: [number, number][] = [];
+            let pos = target.indexOf(keyword);
+            while (pos !== -1) {
+                result.push([pos, 0]);
+                pos = target.indexOf(keyword, pos + keyword.length + 1);
+            }
+            return result;
+        };
 
     private fuzzySearch =
         (maxerror: number, bitapkey: BitapKey) =>

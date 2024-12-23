@@ -15,8 +15,8 @@ export const getc: Parser<Char> = (s) => {
 };
 
 export const eos: Parser<Char> = (s) => {
-    return s.length === 0 ? {val: "", rest: []} : null;
-}
+    return s.length === 0 ? { val: "", rest: [] } : null;
+};
 
 type CondFn<T> = (c: T) => boolean;
 type IsFn = (fn: CondFn<Char>) => Parser<Char>;
@@ -173,16 +173,19 @@ export type Or = {
 
 export type ASTNode = Exact | Fuzzy | Not | From | Weight | Distance | And | Or;
 
-export const escgetc: Parser<Char> = or(map(cat(char("\\"), getc), (x) => x[1]), getc)
+export const escgetc: Parser<Char> = or(
+    map(cat(char("\\"), getc), (x) => x[1]),
+    getc,
+);
 export const nstr: Parser<Str> = rep(diff(escgetc, or(...['"', "(", ")", ...spaces].map(char))), 1);
 export const fuzzy: Parser<ASTNode> = map(diff(nstr, str("OR")), (x) => ({ type: "fuzzy", str: x.join("") }));
 
 const dquote: Parser<Char> = map(char('"'), () => "");
 
-export const exact: Parser<ASTNode> = map(
-    cat(dquote, rep(diff(escgetc, or(char('"')))), or(dquote, eos)),
-    (x) => ({ type: "exact", str: x[1].join("") }),
-);
+export const exact: Parser<ASTNode> = map(cat(dquote, rep(diff(escgetc, or(char('"')))), or(dquote, eos)), (x) => ({
+    type: "exact",
+    str: x[1].join(""),
+}));
 
 export const token: Parser<ASTNode> = or(exact, fuzzy);
 export const not: Parser<ASTNode> = map(cat(char("-"), token), (x) => ({ type: "not", node: x[1] }));
