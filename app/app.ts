@@ -1,12 +1,14 @@
 import type { WikipediaArticle, WikipediaKeyword } from "@ref/bench/benchmark_common";
 import { benchmark, getKeywords } from "@ref/bench/benchmark_common";
+import { calculateGzipedJsonSize } from "@ref/util";
 import { UniSearchError } from "@src/base";
-import { createIndex } from "@src/indexing";
+import { createIndex, indexToObject } from "@src/indexing";
+import { HyblidBigramInvertedIndex } from "@src/indextypes";
 import { LinearIndex } from "@src/method/linearindex";
 import { search } from "@src/search";
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
+import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
-import { HyblidBigramInvertedIndex } from "@src/indextypes";
 
 async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[], n: number) {
     console.log("initializing benchmark...");
@@ -27,6 +29,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     }
 
     console.log(index);
+    console.log(`gziped index size: ${await calculateGzipedJsonSize(indexToObject(index))}`);
 
     const exact_result = benchmark(
         (x) => search(index, x),
@@ -51,6 +54,8 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         throw hybrid_index;
     }
     console.log(hybrid_index);
+    console.log(`gziped index size: ${await calculateGzipedJsonSize(indexToObject(hybrid_index))}`);
+
     const hybrid_result = benchmark(
         (x) => search(hybrid_index, x),
         keywords.map((x) => `"${x}"`),
