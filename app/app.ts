@@ -32,12 +32,12 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         (x) => search(index, x),
         keywords.map((x) => `"${x}"`),
     );
-    console.log(`exact search time: ${exact_result.time} ms`);
+    console.log(`exact search time per one keyword: ${exact_result.time / keywords.length} ms`);
     console.log(exact_result.results);
 
     console.log("fuzzy search is too slow. exec search only first 100 keywords.");
     const fuzzy_result = benchmark((x) => search(index, x), keywords.slice(0, 100));
-    console.log(`fuzzy search time: ${fuzzy_result.time} ms`);
+    console.log(`fuzzy search time per one keyword: ${fuzzy_result.time / 100} ms`);
     console.log(fuzzy_result.results);
 
     const hybrid_index_result = benchmark(
@@ -55,7 +55,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
         (x) => search(hybrid_index, x),
         keywords.map((x) => `"${x}"`),
     );
-    console.log(`hybrid search time: ${hybrid_result.time} ms`);
+    console.log(`hybrid search time per keyword: ${hybrid_result.time / keywords.length} ms`);
     console.log(hybrid_result.results);
 }
 
