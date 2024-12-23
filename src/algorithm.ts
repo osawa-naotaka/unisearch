@@ -53,7 +53,7 @@ export function refine<T>(key: T, comp: (a: T, b: T) => number, array: T[]): T[]
     return startIndex !== null && endIndex !== null ? array.slice(startIndex, endIndex + 1) : [];
 }
 
-type BitapKey = {
+export type BitapKey = {
     mask: Map<string, number>;
     length: number;
 };

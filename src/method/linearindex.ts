@@ -1,4 +1,5 @@
 import { bitapSearch, createBitapKey } from "@src/algorithm";
+import type { BitapKey } from "@src/algorithm";
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/base";
 import { splitByGrapheme } from "@src/preprocess";
 
@@ -6,9 +7,21 @@ export type LinearIndexEntry = { key: string[]; index: Record<Path, string>[] };
 
 export class LinearIndex implements SearchIndex<LinearIndexEntry> {
     public readonly index_entry: LinearIndexEntry;
+    private grapheme_index: Record<Path, string[]>[] = [];
 
     constructor(index?: LinearIndexEntry) {
         this.index_entry = index || { key: [], index: [] };
+        
+        if (index) {
+            index.index.forEach((rec, idx) => {
+                if(this.grapheme_index[idx] === undefined) {
+                    this.grapheme_index[idx] = {};
+                }
+                for (const k of Object.keys(rec)) {
+                    this.grapheme_index[idx][k] = splitByGrapheme(rec[k]);
+                }
+            });
+        }
     }
 
     public setToIndex(id: number, path: Path, str: string): void {
@@ -16,6 +29,11 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             this.index_entry.index[id] = {};
         }
         this.index_entry.index[id][path] = str;
+
+        if (this.grapheme_index[id] === undefined) {
+            this.grapheme_index[id] = {};
+        }
+        this.grapheme_index[id][path] = splitByGrapheme(str);
     }
 
     public addKey(id: number, key: string): void {
@@ -25,15 +43,27 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
     public fixIndex(): void {}
 
     public search(env: SearchEnv, keyword: string): SearchResult[] {
+        if (env.distance === undefined || env.distance === 0) {
+            return this.searchToken(
+                this.index_entry.index,
+                this.exactSearch(keyword),
+                (pos, target) => target.slice(Math.max(pos - 10, 0), pos + keyword.length + 10),
+                env.search_targets,
+                env.weight || 1,
+                keyword);
+        }
+
         return this.searchToken(
-            env.distance === undefined || env.distance === 0 ? this.exactSearch : this.fuzzySearch(env.distance),
+            this.grapheme_index,
+            this.fuzzySearch(env.distance, createBitapKey(splitByGrapheme(keyword))),
+            (pos, target) => target.slice(Math.max(pos - 10, 0), pos + keyword.length + 10).join(""),
             env.search_targets,
             env.weight || 1,
             keyword,
         );
     }
 
-    private exactSearch(keyword: string, target: string): [number, number][] {
+    private exactSearch = (keyword: string) => (target: string): [number, number][] => {
         const result: [number, number][] = [];
         let pos = target.indexOf(keyword);
         while (pos !== -1) {
@@ -44,12 +74,14 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
     }
 
     private fuzzySearch =
-        (maxerror: number) =>
-        (keyword: string, target: string): [number, number][] =>
-            bitapSearch(createBitapKey(splitByGrapheme(keyword)), maxerror, splitByGrapheme(target));
+        (maxerror: number, bitapkey: BitapKey) =>
+        (target: string[]): [number, number][] =>
+            bitapSearch(bitapkey, maxerror, target);
 
-    private searchToken(
-        search_fn: (keyword: string, target: string) => [number, number][],
+    private searchToken<T extends string | string[]>(
+        index: Record<Path, T>[],
+        search_fn: (target: T) => [number, number][],
+        wordaround_fn: (pos: number, target: T) => string,
         search_targets: Path[] | undefined,
         weight: number,
         token: string,
@@ -57,10 +89,10 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         const result = new Map<number, SearchResult>();
 
         // search all index
-        this.index_entry.index.forEach((content, id) => {
+        index.forEach((content, id) => {
             for (const path of search_targets || Object.keys(content)) {
                 const search_target = content[path];
-                const poses = search_fn(token, search_target);
+                const poses = search_fn(search_target);
                 if (poses.length !== 0) {
                     for (const [pos, dist] of poses) {
                         const cur = result.get(id) || {
@@ -73,7 +105,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
                             token: token,
                             path: path,
                             pos: pos,
-                            wordaround: search_target.slice(Math.max(pos - 10, 0), pos + token.length + 10),
+                            wordaround: wordaround_fn(pos, search_target),
                             distance: dist,
                         });
                         result.set(id, cur);
