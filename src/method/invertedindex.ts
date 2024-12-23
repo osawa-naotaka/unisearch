@@ -1,5 +1,6 @@
 import { bitapSearch, createBitapKey, refine } from "@src/algorithm";
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/base";
+import { splitByGrapheme } from "@src/preprocess";
 
 type Term = string;
 type Id = number;
@@ -46,18 +47,32 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
 
     public search(env: SearchEnv, keyword: string): SearchResult[] {
         const results = new Map<Id, SearchResult>();
-        const bitapkey = createBitapKey(keyword);
         for (const path of env.search_targets || Object.keys(this.index_entry.index)) {
-            const res: Dictionary =
-                env.distance === 0
-                    ? refine([keyword, []], this.prefixComp, this.index_entry.index[path] || [])
-                    : refine([[...keyword][0], []], this.prefixComp, this.index_entry.index[path] || []).filter(
-                          ([term]) => bitapSearch(bitapkey, env.distance || 0, term) !== null,
-                      );
-            for (const [term, plist] of res) {
+            let res: [string, PostingList, number][] = [];
+            if (env.distance === 0) {
+                res = refine([keyword, []], this.prefixComp, this.index_entry.index[path] || []).map(
+                    ([term, plist]) => [term, plist, 0],
+                );
+            } else {
+                const bitapkey = createBitapKey(splitByGrapheme(keyword));
+                const refined = refine(
+                    [splitByGrapheme(keyword)[0], []],
+                    this.prefixComp,
+                    this.index_entry.index[path] || [],
+                );
+                for (const [term, plist] of refined) {
+                    const r = bitapSearch(bitapkey, env.distance || 0, splitByGrapheme(term));
+                    if (r.length !== 0) {
+                        const min_dist = r.sort((a, b) => b[1] - a[1])[0][1];
+                        res.push([term, plist, min_dist]);
+                    }
+                }
+            }
+
+            for (const [term, plist, distance] of res) {
                 for (const [id, tf] of plist) {
                     const r = results.get(id) || { id: id, key: this.index_entry.key[id], score: 0, refs: [] };
-                    r.refs.push({ token: term, path: path, pos: 0, wordaround: "", distance: 0 }); // todo: fix distance
+                    r.refs.push({ token: term, path: path, distance: distance });
                     r.score += tf;
                     results.set(id, r);
                 }

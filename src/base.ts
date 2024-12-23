@@ -31,8 +31,8 @@ export type SearchEnv = {
 export type Reference = {
     token: string;
     path: Path;
-    pos: number;
-    wordaround: string;
+    pos?: number;
+    wordaround?: string;
     distance: number;
 };
 

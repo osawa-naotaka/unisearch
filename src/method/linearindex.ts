@@ -1,5 +1,6 @@
 import { bitapSearch, createBitapKey } from "@src/algorithm";
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/base";
+import { splitByGrapheme } from "@src/preprocess";
 
 export type LinearIndexEntry = { key: string[]; index: Record<Path, string>[] };
 
@@ -44,16 +45,8 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
 
     private fuzzySearch =
         (maxerror: number) =>
-        (keyword: string, target: string): [number, number][] => {
-            const key = createBitapKey(keyword);
-            const result: [number, number][] = [];
-            let pos = bitapSearch(key, maxerror, target);
-            while (pos !== null) {
-                result.push(pos);
-                pos = bitapSearch(key, maxerror, target, pos[0] + keyword.length + 1);
-            }
-            return result;
-        };
+        (keyword: string, target: string): [number, number][] =>
+            bitapSearch(createBitapKey(splitByGrapheme(keyword)), maxerror, splitByGrapheme(target));
 
     private searchToken(
         search_fn: (keyword: string, target: string) => [number, number][],
