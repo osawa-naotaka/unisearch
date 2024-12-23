@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { getc, is, char, cat, rep, space, str, digit, int, frac, float } from '@src/parse';
+import { getc, eos, is, char, cat, rep, space, str, digit, int, frac, float, escgetc } from '@src/parse';
 import { fuzzy, exact, token, not, term, paren, group, from, weight, adj, and, expr } from '@src/parse';
 
 describe("parser elements", () => {
@@ -10,6 +10,19 @@ describe("parser elements", () => {
     test("getc null", () =>
         expect(getc([...""]))
         .toStrictEqual(null)
+    );
+
+    test("eos 1", () => 
+        expect(eos([..."abc"]))
+        .toStrictEqual(null)
+    );
+    test("eos 2", () => 
+        expect(eos([...""]))
+        .toStrictEqual({val: "", rest: []})
+    );
+    test("eos null", () =>
+        expect(eos([]))
+        .toStrictEqual({val: "", rest: []})
     );
 
     test("is 1", () =>
@@ -136,6 +149,23 @@ describe("parser elements", () => {
 });
 
 describe("unisearch query parser", () => {
+    test("escgetc 1", () =>
+        expect(escgetc([..."bcdaaa"]))
+        .toStrictEqual({val: "b", rest: [..."cdaaa"]})
+    );
+    test("escgetc 2", () =>
+        expect(escgetc([..."\ bcdaaa"]))
+        .toStrictEqual({val: " ", rest: [..."bcdaaa"]})
+    );
+    test("escgetc 3", () =>
+        expect(escgetc([..."\" bcdaaa"]))
+        .toStrictEqual({val: "\"", rest: [..." bcdaaa"]})
+    );
+    test("escgetc 4", () =>
+        expect(escgetc([..."\\\" bcdaaa"]))
+        .toStrictEqual({val: "\"", rest: [..." bcdaaa"]})
+    );
+
     test("fuzzy 1", () =>
         expect(fuzzy([..."bcdaaa"]))
         .toStrictEqual({val: {type: 'fuzzy', str: "bcdaaa"}, rest: []})
@@ -164,6 +194,11 @@ describe("unisearch query parser", () => {
     test("exact 3", () =>
         expect(exact([...'"bcd acc" efg']))
         .toStrictEqual({val: {type: 'exact', str: "bcd acc"}, rest: [..." efg"]})
+    );
+
+    test("exact 4", () =>
+        expect(exact([...'"bcd acc']))
+        .toStrictEqual({val: {type: 'exact', str: "bcd acc"}, rest: []})
     );
 
     test("exact null", () =>
@@ -220,10 +255,40 @@ describe("unisearch query parser", () => {
         expect(from([...'from:title def ghi']))
         .toStrictEqual({val: {type: 'from', field: "title", node: {type: 'fuzzy', str: "def"}}, rest: [..." ghi"]})
     );
-  
+
+    test("from 2", () =>
+        expect(from([...'from:title ']))
+        .toStrictEqual(null)
+    );
+
+    test("from 3", () =>
+        expect(from([...'from: title ']))
+        .toStrictEqual(null)
+    );
+
     test("weight 1", () =>
         expect(weight([...'weight:1 def ghi']))
         .toStrictEqual({val: {type: 'weight', weight: 1, node: {type: 'fuzzy', str: "def"}}, rest: [..." ghi"]})
+    );
+
+    test("weight 2", () =>
+        expect(weight([...'weight:1.2 def ghi']))
+        .toStrictEqual({val: {type: 'weight', weight: 1.2, node: {type: 'fuzzy', str: "def"}}, rest: [..." ghi"]})
+    );
+
+    test("weight 3", () =>
+        expect(weight([...'weight:1']))
+        .toStrictEqual(null)
+    );
+
+    test("weight 4", () =>
+        expect(weight([...'weight: 1 abc']))
+        .toStrictEqual(null)
+    );
+
+    test("weight 5", () =>
+        expect(weight([...'weight:1. abc']))
+        .toStrictEqual({val: {type: 'weight', weight: 1, node: {type: 'fuzzy', str: "abc"}}, rest: []})
     );
 
     test("adj 1", () =>
@@ -268,6 +333,33 @@ describe("unisearch query parser", () => {
         ]}, rest: []})
     );
     
+    test("paren 1", () =>
+        expect(paren([...'(a)']))
+        .toStrictEqual({val: {type: 'or', nodes: [
+            {type: 'and', nodes: [
+                {type: 'fuzzy', str: 'a'},
+            ]},
+        ]}, rest: []})
+    ); 
+
+    test("paren 2", () =>
+        expect(paren([...'(a']))
+        .toStrictEqual({val: {type: 'or', nodes: [
+            {type: 'and', nodes: [
+                {type: 'fuzzy', str: 'a'},
+            ]},
+        ]}, rest: []})
+    ); 
+
+    test("paren 3", () =>
+        expect(paren([...'(a)) abc']))
+        .toStrictEqual({val: {type: 'or', nodes: [
+            {type: 'and', nodes: [
+                {type: 'fuzzy', str: 'a'},
+            ]},
+        ]}, rest: [...") abc"]})
+    );
+
     test("expr 1", () =>
         expect(expr([...'a "bcd" OR -"efg" from:title hij']))
         .toStrictEqual({val: {type: 'or', nodes: [
@@ -281,15 +373,6 @@ describe("unisearch query parser", () => {
             ]},
         ]}, rest: []})
     );
-
-    test("paren 1", () =>
-        expect(paren([...'(a)']))
-        .toStrictEqual({val: {type: 'or', nodes: [
-            {type: 'and', nodes: [
-                {type: 'fuzzy', str: 'a'},
-            ]},
-        ]}, rest: []})
-    ); 
 
     test("expr 2", () =>
         expect(expr([...'a ("bcd" OR -"efg") from:title hij']))
@@ -320,4 +403,124 @@ describe("unisearch query parser", () => {
             ]},
         ]}, rest: []})
     );
+
+    test("expr 4", () =>
+        expect(expr([...'a ("bcd" OR -"efg")) from:title hij']))
+        .toStrictEqual({val: {type: 'or', nodes: [
+            {type: 'and', nodes: [
+                {type: 'fuzzy', str: 'a'},
+                {type: 'or', nodes: [
+                    {type: 'and', nodes: [
+                        {type: 'exact', str: "bcd"},
+                    ]},
+                    {type: 'and', nodes: [
+                        {type: 'not', node: {type: 'exact', str: "efg"}},    
+                    ]},
+                ]},
+            ]},
+        ]}, rest: [...") from:title hij"]})
+    );
+
+    test("expr 5", () =>
+        expect(expr([...'a ("bcd" OR -"efg" from:title hij']))
+        .toStrictEqual({val: {type: 'or', nodes: [
+            {type: 'and', nodes: [
+                {type: 'fuzzy', str: 'a'},
+                {type: 'or', nodes: [
+                    {type: 'and', nodes: [
+                        {type: 'exact', str: "bcd"},
+                    ]},
+                    {type: 'and', nodes: [
+                        {type: 'not', node: {type: 'exact', str: "efg"}},
+                        {type: 'from', field: "title", node: {type: 'fuzzy', str: 'hij'}},
+                    ]},
+                ]},
+            ]},
+        ]}, rest: []})
+    );
+
+    test("expr 6", () =>
+        expect(expr([...'a ("bcd" OR (-"efg" from:title hij)) c']))
+        .toStrictEqual({val: {type: 'or', nodes: [
+            {type: 'and', nodes: [
+                {type: 'fuzzy', str: 'a'},
+                {type: 'or', nodes: [
+                    {type: 'and', nodes: [
+                        {type: 'exact', str: "bcd"},
+                    ]},
+                    {type: 'and', nodes: [
+                        {type: 'or', nodes: [
+                            {type: 'and', nodes: [
+                                {type: 'not', node: {type: 'exact', str: "efg"}},
+                                {type: 'from', field: "title", node: {type: 'fuzzy', str: 'hij'}},
+                            ]},
+                        ]},
+                    ]},
+                ]},
+                {type: 'fuzzy', str: 'c'},
+            ]},
+        ]}, rest: []})
+    );
+
+    test("expr 7", () =>
+        expect(expr([...'a ("bcd" OR (-"efg" from:title hij) ) c']))
+        .toStrictEqual({val: {type: 'or', nodes: [
+            {type: 'and', nodes: [
+                {type: 'fuzzy', str: 'a'},
+                {type: 'or', nodes: [
+                    {type: 'and', nodes: [
+                        {type: 'exact', str: "bcd"},
+                    ]},
+                    {type: 'and', nodes: [
+                        {type: 'or', nodes: [
+                            {type: 'and', nodes: [
+                                {type: 'not', node: {type: 'exact', str: "efg"}},
+                                {type: 'from', field: "title", node: {type: 'fuzzy', str: 'hij'}},
+                            ]},
+                        ]},
+                    ]},
+                ]},
+                {type: 'fuzzy', str: 'c'},
+            ]},
+        ]}, rest: []})
+    );
+
+    test("expr 8", () =>
+        expect(expr([...'a ("bcd" OR (-"efg \\\"from:title hij) ) c']))
+        .toStrictEqual({val: {type: 'or', nodes: [
+            {type: 'and', nodes: [
+                {type: 'fuzzy', str: 'a'},
+                {type: 'or', nodes: [
+                    {type: 'and', nodes: [
+                        {type: 'exact', str: "bcd"},
+                    ]},
+                    {type: 'and', nodes: [
+                        {type: 'or', nodes: [
+                            {type: 'and', nodes: [
+                                {type: 'not', node: {type: 'exact', str: "efg \"from:title hij) ) c"}},
+                            ]},
+                        ]},
+                    ]},
+                ]},
+            ]},
+        ]}, rest: []})
+    );
+
+    test("expr 9", () =>
+        expect(expr([...'a from:title ( "bcd" -"efg" ) ']))
+        .toStrictEqual({val: {type: 'or', nodes: [
+            {type: 'and', nodes: [
+                {type: 'fuzzy', str: 'a'},
+                {type: 'from', field: "title", node:
+                    {type: 'or', nodes: [
+                        {type: 'and', nodes: [
+                            {type: 'exact', str: "bcd"},
+                            {type: 'not', node: {type: 'exact', str: "efg"}}
+                        ]},
+                    ]},
+                },
+            ]},
+        ]}, rest: [..." "]})
+    );
+
 });

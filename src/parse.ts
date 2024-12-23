@@ -14,6 +14,10 @@ export const getc: Parser<Char> = (s) => {
     return { val: car, rest: cdr };
 };
 
+export const eos: Parser<Char> = (s) => {
+    return s.length === 0 ? {val: "", rest: []} : null;
+}
+
 type CondFn<T> = (c: T) => boolean;
 type IsFn = (fn: CondFn<Char>) => Parser<Char>;
 export const is: IsFn = (fn: CondFn<Char>) => (s) => {
@@ -98,26 +102,28 @@ type StrFn = (s: string) => Parser<Str>;
 export const str: StrFn = (s) => cat(...[...s].map(char));
 
 export const digit: Parser<number> = map(or(...[...digits].map(char)), (x) => Number.parseInt(x, 10));
-export const int: Parser<number> = map(rep(digit), (x) => x.reduce((p, c) => p * 10 + c, 0));
+export const int: Parser<number> = map(rep(digit, 1), (x) => x.reduce((p, c) => p * 10 + c, 0));
 export const frac: Parser<number> = map(rep(digit), (x) => x.reduceRight((p, c) => p / 10 + c, 0) / 10);
 export const float: Parser<number> = map(cat(int, char("."), frac), (x) => x[0] + x[2]);
 
 // parser for UNISEARCH BNF
 /*
 <space>   ::= \u0020\u00A0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u0009\u000A\u000B\u000C\u000D\u0085\u2028\u2029\u200B
-<char>    ::= [^<space>"]
+<char>    ::= [^<space>"()] | '\'[^<space>"()]
 <digit>   ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
-<number>  ::= <digit>+ | <digit>+ '.' <digit>+
-<string>  ::= <char>+
+<number>  ::= <digit>+ | <digit>+ '.' <digit>*
+<nstr>    ::= <char>+
 <exstr>   ::=  [^\"]+
+<eos>     ::= (end of string)
 
-<exact>   ::=  '"' <exstr> '"'
-<fuzzy>   ::= <string>
+<exact>   ::=  '"' <exstr> ('"' | <eos>)
+<fuzzy>   ::= <nstr>
+    <fuzzy> does not includes "OR"
 
 <token>   ::= <exact> | <fuzzy>
 <term>    ::= <token> | '-' <token>
-<group>   ::= <term> | '(' <space>* <expr> <space>* ')'
-<adj>     ::= 'from:' <string> <space>+ <adj> | 'weight:' <number> <space>+ <adj> | group
+<group>   ::= <term> | '(' <space>* <expr> <space>* (')' | <eos>)
+<adj>     ::= 'from:' <nstr> <space>+ <adj> | 'weight:' <number> <space>+ <adj> | group
 <and>     ::= <adj> (<space>+ <adj>)*
 <expr>    ::= <and> [<space>+ 'or' <space>+ <and>]*
 */
@@ -167,22 +173,23 @@ export type Or = {
 
 export type ASTNode = Exact | Fuzzy | Not | From | Weight | Distance | And | Or;
 
-export const ident: Parser<Str> = rep(diff(getc, or(...['"', "(", ")", ...spaces].map(char))), 1);
-export const fuzzy: Parser<ASTNode> = map(diff(ident, str("OR")), (x) => ({ type: "fuzzy", str: x.join("") }));
+export const escgetc: Parser<Char> = or(map(cat(char("\\"), getc), (x) => x[1]), getc)
+export const nstr: Parser<Str> = rep(diff(escgetc, or(...['"', "(", ")", ...spaces].map(char))), 1);
+export const fuzzy: Parser<ASTNode> = map(diff(nstr, str("OR")), (x) => ({ type: "fuzzy", str: x.join("") }));
 
-const dquote: Parser<Str> = map(char('"'), () => []);
+const dquote: Parser<Char> = map(char('"'), () => "");
 
 export const exact: Parser<ASTNode> = map(
-    cat(dquote, rep(diff(getc, or(char('"'), char("("), char(")")))), dquote),
+    cat(dquote, rep(diff(escgetc, or(char('"')))), or(dquote, eos)),
     (x) => ({ type: "exact", str: x[1].join("") }),
 );
 
 export const token: Parser<ASTNode> = or(exact, fuzzy);
 export const not: Parser<ASTNode> = map(cat(char("-"), token), (x) => ({ type: "not", node: x[1] }));
 export const term: Parser<ASTNode> = or(not, token);
-export const paren: Parser<ASTNode> = map(cat(char("("), space, expr, space, char(")")), (x) => x[2]);
+export const paren: Parser<ASTNode> = map(cat(char("("), space, expr, space, or(char(")"), eos)), (x) => x[2]);
 export const group: Parser<ASTNode> = or(term, paren);
-export const from: Parser<ASTNode> = map(cat(str("from:"), ident, space1, adj), (x) => ({
+export const from: Parser<ASTNode> = map(cat(str("from:"), nstr, space1, adj), (x) => ({
     type: "from",
     field: x[1].join(""),
     node: x[3],

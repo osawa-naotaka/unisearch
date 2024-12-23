@@ -8,7 +8,8 @@
         "build": "tsc && vite build",
         "check": "biome check ./src",
         "check-write": "biome check --write ./src",
-        "test": "vitest --ui"
+        "test": "vitest",
+        "test-ui": "vitest --ui"
     },
     "devDependencies": {
         "@biomejs/biome": "1.9.4",
