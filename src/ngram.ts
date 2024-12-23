@@ -2,7 +2,8 @@ import { generateNgram, generateNgramToTail } from "@src/algorithm";
 import type { SearchEnv, SearchIndex, SearchResult } from "@src/base";
 import type { Path } from "@src/base";
 import type { IndexClass } from "@src/indexing";
-import { createWithProp } from "./search";
+import { splitByGrapheme } from "@src/preprocess";
+import { createWithProp, intersectResults } from "@src/search";
 
 export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass {
     const name = `N${num_gram}gram`;
@@ -22,8 +23,7 @@ export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass 
             }
 
             public setToIndex(id: number, path: Path, str: string): void {
-                const segmenter = new Intl.Segmenter("ja", { granularity: "grapheme" });
-                const tokens = generateNgramToTail(num_gram, str);
+                const tokens = generateNgramToTail(num_gram, splitByGrapheme(str));
                 for (const t of tokens) {
                     this.ngram_index.setToIndex(id, path, t);
                 }
@@ -38,24 +38,12 @@ export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass 
             }
 
             public search(env: SearchEnv, keyword: string): SearchResult[] {
-                const tokens = generateNgram(num_gram, keyword);
-                const results = [];
-                for (const t of tokens) {
-                    results.push(this.ngram_index.search(createWithProp(env, "distance", 0), t)); // forward match
-                }
-                return intersectResults(results);
+                return intersectResults(
+                    generateNgram(num_gram, splitByGrapheme(keyword)).map((t) =>
+                        this.ngram_index.search(createWithProp(env, "distance", 0), t),
+                    ),
+                );
             }
         },
     }[name];
-}
-
-function intersectResults(results: SearchResult[][]): SearchResult[] {
-    return results.reduce((prev, cur) => {
-        const result: SearchResult[] = [];
-        for (const p of prev) {
-            const c = cur.find((x) => x.id === p.id);
-            if (c) result.push({ id: c.id, key: c.key, score: c.score + p.score, refs: [...p.refs, ...c.refs] });
-        }
-        return result;
-    });
 }

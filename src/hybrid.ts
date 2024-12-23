@@ -1,6 +1,7 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/base";
 import type { IndexClass } from "@src/indexing";
-import { defaultSpritter, isNonSpaceSeparatedChar } from "@src/preprocess";
+import { hybridSpritter, isNonSpaceSeparatedChar } from "@src/preprocess";
+import { intersectResults } from "@src/search";
 
 export type HybridIndexEntry<T1, T2> = { ja: T1; en: T2 };
 
@@ -28,10 +29,9 @@ export function Hybrid<T1, T2>(name: string, ja: IndexClass, en: IndexClass): In
             }
 
             public setToIndex(id: number, path: Path, str: string): void {
-                const segmenter = new Intl.Segmenter("ja", { granularity: "grapheme" });
-                const tokens = defaultSpritter([str]);
+                const tokens = hybridSpritter([str]);
                 for (const t of tokens) {
-                    if (isNonSpaceSeparatedChar([...t][0])) {
+                    if (isNonSpaceSeparatedChar(t)) {
                         this.ja.setToIndex(id, path, t);
                     } else {
                         this.en.setToIndex(id, path, t);
@@ -50,10 +50,10 @@ export function Hybrid<T1, T2>(name: string, ja: IndexClass, en: IndexClass): In
             }
 
             public search(env: SearchEnv, keyword: string): SearchResult[] {
-                const tokens = defaultSpritter([keyword]);
+                const tokens = hybridSpritter([keyword]);
                 const results = [];
                 for (const t of tokens) {
-                    if (isNonSpaceSeparatedChar([...t][0])) {
+                    if (isNonSpaceSeparatedChar(t)) {
                         results.push(this.ja.search(env, keyword));
                     } else {
                         results.push(this.en.search(env, keyword));
@@ -63,15 +63,4 @@ export function Hybrid<T1, T2>(name: string, ja: IndexClass, en: IndexClass): In
             }
         },
     }[name];
-}
-
-function intersectResults(results: SearchResult[][]): SearchResult[] {
-    return results.reduce((prev, cur) => {
-        const result: SearchResult[] = [];
-        for (const p of prev) {
-            const c = cur.find((x) => x.id === p.id);
-            if (c) result.push({ id: c.id, key: c.key, score: c.score + p.score, refs: [...p.refs, ...c.refs] });
-        }
-        return result;
-    });
 }

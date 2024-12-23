@@ -47,15 +47,15 @@ const evalQuery =
             case "distance":
                 return evalQuery(index, createWithProp(env, "distance", ast.distance))(ast.node);
             case "and":
-                return intersectResults(ast.nodes.map(evalQuery(index, env)));
+                return intersectQueryResults(ast.nodes.map(evalQuery(index, env)));
             case "or":
-                return unionResults(ast.nodes.map(evalQuery(index, env)));
+                return unionQueryResults(ast.nodes.map(evalQuery(index, env)));
             default:
                 return { type: "excludes", results: [] };
         }
     };
 
-function unionResults(results: QueryResult[]): QueryResult {
+function unionQueryResults(results: QueryResult[]): QueryResult {
     const filtered = results.filter((r) => r.type === "includes");
     return filtered.reduce((prev, cur) => {
         const result: SearchResult[] = prev.results;
@@ -72,7 +72,7 @@ function unionResults(results: QueryResult[]): QueryResult {
     });
 }
 
-function intersectResults(results: QueryResult[]): QueryResult {
+function intersectQueryResults(results: QueryResult[]): QueryResult {
     const sorted = results.sort((a, b) => (b.type < a.type ? -1 : 1));
 
     return sorted.reduce((prev, cur) => {
@@ -86,6 +86,17 @@ function intersectResults(results: QueryResult[]): QueryResult {
             }
         }
         return { type: "includes", results: result };
+    });
+}
+
+export function intersectResults(results: SearchResult[][]): SearchResult[] {
+    return results.reduce((prev, cur) => {
+        const result: SearchResult[] = [];
+        for (const p of prev) {
+            const c = cur.find((x) => x.id === p.id);
+            if (c) result.push({ id: c.id, key: c.key, score: c.score + p.score, refs: [...p.refs, ...c.refs] });
+        }
+        return result;
     });
 }
 

@@ -107,5 +107,14 @@ export function splitByKatakana(text: string[]): string[] {
     return matches;
 }
 
+export function splitByGrapheme(str: string): string[] {
+    const r = [];
+    const segmenter = new Intl.Segmenter("und", { granularity: "grapheme" });
+    for (const { segment } of segmenter.segment(str)) {
+        r.push(segment);
+    }
+    return r;
+}
+
 export const defaultNormalizer = pipe(normalizeJapanese, normalizeUnicode, toLowerCase);
-export const defaultSpritter = pipe(splitByDelimiter, splitByNonSpaceSeparatedChar);
+export const hybridSpritter = pipe(splitByDelimiter, splitByNonSpaceSeparatedChar);

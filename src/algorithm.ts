@@ -166,37 +166,37 @@ export const pipe: Pipe = (...fns: AnyFunction[]) => {
     };
 };
 
-export function generate1ToNgram(n: number, text: string): string[] {
-    return [...Array(n).keys()].flatMap((x) => generateNgramInternal(x + 1, text));
+export function generate1ToNgram(n: number, graphemes: string[]): string[] {
+    return [...Array(n).keys()].flatMap((x) => generateNgramInternal(x + 1, graphemes));
 }
 
-export function generateNgram(n: number, text: string): string[] {
-    return text.length < n ? [text] : generateNgramInternal(n, text);
+export function generateNgram(n: number, graphemes: string[]): string[] {
+    return graphemes.length < n ? [graphemes.join("")] : generateNgramInternal(n, graphemes);
 }
 
-export function generateNgramToTail(n: number, text: string): string[] {
-    const grams = generateNgram(n, text);
-    if (n < text.length) {
-        for (let i = text.length - n; i < text.length - 1; i++) {
-            grams.push(text.slice(i + 1));
+export function generateNgramToTail(n: number, graphemes: string[]): string[] {
+    const grams = generateNgram(n, graphemes);
+    if (n < graphemes.length) {
+        for (let i = graphemes.length - n; i < graphemes.length - 1; i++) {
+            grams.push(graphemes.slice(i + 1).join(""));
         }
-    } else if (text.length !== 1) {
-        for (let i = 1; i < text.length; i++) {
-            grams.push(text.slice(i));
+    } else if (graphemes.length !== 1) {
+        for (let i = 1; i < graphemes.length; i++) {
+            grams.push(graphemes.slice(i).join(""));
         }
     }
     return grams;
 }
 
-function generateNgramInternal(n: number, text: string): string[] {
-    if (text.length === 0) throw new Error("call generateNgram with null string.");
-    if (text.length < n) {
+function generateNgramInternal(n: number, graphemes: string[]): string[] {
+    if (graphemes.length === 0) throw new Error("call generateNgram with null string.");
+    if (graphemes.length < n) {
         return [];
     }
 
     const grams: string[] = [];
-    for (let i = 0; i <= text.length - n; i++) {
-        grams.push(text.slice(i, i + n));
+    for (let i = 0; i <= graphemes.length - n; i++) {
+        grams.push(graphemes.slice(i, i + n).join(""));
     }
     return grams;
 }
