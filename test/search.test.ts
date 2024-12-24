@@ -48,7 +48,7 @@ describe("search test", () => {
                         token: "テキスト3",
                         path: "text",
                         pos: 0,
-                        wordaround: "テキスト3.1テキスト3.2テ",
+                        wordaround: "テキスト3.1テキスト3.2テキスト3.3",
                         distance: 0,
                     },
                     {
@@ -62,7 +62,7 @@ describe("search test", () => {
                         token: "テキスト3",
                         path: "text",
                         pos: 14,
-                        wordaround: "3.1テキスト3.2テキスト3.3",
+                        wordaround: "テキスト3.1テキスト3.2テキスト3.3",
                         distance: 0,
                     },
                 ]
@@ -155,7 +155,7 @@ describe("search test", () => {
                         token: "テキスト3.1",
                         path: "text",
                         pos: 0,
-                        wordaround: "テキスト3.1テキスト3.2テキス",
+                        wordaround: "テキスト3.1テキスト3.2テキスト3.3",
                         distance: 0,
                     },
                 ]
@@ -209,7 +209,7 @@ describe("search test", () => {
                         token: "テキスト",
                         path: "text",
                         pos: 0,
-                        wordaround: "テキスト3.1テキスト3.2",
+                        wordaround: "テキスト3.1テキスト3.2テキスト3.3",
                         distance: 0,
                     },
                     {
@@ -223,7 +223,7 @@ describe("search test", () => {
                         token: "テキスト",
                         path: "text",
                         pos: 14,
-                        wordaround: "3.1テキスト3.2テキスト3.3",
+                        wordaround: "テキスト3.1テキスト3.2テキスト3.3",
                         distance: 0,
                     },
                 ]
@@ -243,7 +243,7 @@ describe("search test", () => {
                         token: "テキスト",
                         path: "text",
                         pos: 0,
-                        wordaround: "テキスト3.1テキスト3.2",
+                        wordaround: "テキスト3.1テキスト3.2テキスト3.3",
                         distance: 0,
                     },
                     {
@@ -257,7 +257,7 @@ describe("search test", () => {
                         token: "テキスト",
                         path: "text",
                         pos: 14,
-                        wordaround: "3.1テキスト3.2テキスト3.3",
+                        wordaround: "テキスト3.1テキスト3.2テキスト3.3",
                         distance: 0,
                     },
                 ]

@@ -30,6 +30,6 @@
             "@test/*": ["test/*"]
         }
     },
-    "include": ["src"],
+    "include": ["src", "ref", "app", "test"],
     "exclude": ["dist"]
 }

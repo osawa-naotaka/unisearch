@@ -7,7 +7,7 @@ import { HyblidBigramInvertedIndex } from "@src/frontend/indextypes";
 import { LinearIndex } from "@src/method/linearindex";
 import { search } from "@src/frontend/search";
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
-import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
+// import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
 
 async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[], n: number) {
