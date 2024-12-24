@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { extractStringsAll, getValueByPath } from '@src/traverser';
+import { extractStringsAll, getValueByPath } from '@src/util/traverser';
 
 describe("getValueByPath", () => {
     test('select root object', () => 

@@ -1,8 +1,8 @@
-import type { SearchEnv, SearchIndex, UniIndex } from "@src/base";
-import { type Path, UniSearchError, Version } from "@src/base";
-import { IndexTypes } from "@src/indextypes";
-import { defaultNormalizer } from "@src/preprocess";
-import { extractStringsAll, getValueByPath } from "@src/traverser";
+import type { SearchEnv, SearchIndex, UniIndex } from "@src/frontend/base";
+import { type Path, UniSearchError, Version } from "@src/frontend/base";
+import { IndexTypes } from "@src/frontend/indextypes";
+import { defaultNormalizer } from "@src/util/preprocess";
+import { extractStringsAll, getValueByPath } from "@src/util/traverser";
 
 // biome-ignore lint: using any. fix it.
 export type IndexClass = new (index?: any) => SearchIndex<any>;

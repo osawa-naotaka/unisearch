@@ -1,6 +1,6 @@
 import { test, expect } from "vitest";
-import { generate1ToNgram, generateNgram, generateNgramToTail } from "@src/algorithm";
-import { splitByGrapheme } from "@src/preprocess";
+import { generate1ToNgram, generateNgram, generateNgramToTail } from "@src/util/algorithm";
+import { splitByGrapheme } from "@src/util/preprocess";
 
 test('1-gram for "t", is ["t"]', () => expect(generateNgram(1, splitByGrapheme("t"))).toStrictEqual(["t"]));
 

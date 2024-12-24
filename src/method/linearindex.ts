@@ -1,7 +1,7 @@
-import { bitapSearch, createBitapKey } from "@src/algorithm";
-import type { BitapKey } from "@src/algorithm";
-import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/base";
-import { splitByGrapheme } from "@src/preprocess";
+import { bitapSearch, createBitapKey } from "@src/util/algorithm";
+import type { BitapKey } from "@src/util/algorithm";
+import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
+import { splitByGrapheme } from "@src/util/preprocess";
 
 export type LinearIndexEntry = { key: string[]; index: Record<Path, string>[] };
 

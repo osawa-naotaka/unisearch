@@ -1,8 +1,8 @@
-import { Hybrid } from "@src/hybrid";
-import type { IndexClass } from "@src/indexing";
+import { Hybrid } from "@src/method/hybrid";
+import type { IndexClass } from "@src/frontend/indexing";
 import { InvertedIndex } from "@src/method/invertedindex";
 import { LinearIndex } from "@src/method/linearindex";
-import { Ngram } from "@src/ngram";
+import { Ngram } from "@src/method/ngram";
 
 export const HyblidBigramInvertedIndex = Hybrid("HyblidBigramInvertedIndex", Ngram(2, InvertedIndex), InvertedIndex);
 

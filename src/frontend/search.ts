@@ -1,8 +1,8 @@
-import type { SearchEnv, SearchIndex, SearchResult, UniIndex } from "@src/base";
-import type { UniSearchError } from "@src/base";
-import type { ASTNode } from "@src/parse";
-import { expr } from "@src/parse";
-import { defaultNormalizer, splitBySpace } from "@src/preprocess";
+import type { SearchEnv, SearchIndex, SearchResult, UniIndex } from "@src/frontend/base";
+import type { UniSearchError } from "@src/frontend/base";
+import type { ASTNode } from "@src/frontend/parse";
+import { expr } from "@src/frontend/parse";
+import { defaultNormalizer, splitBySpace } from "@src/util/preprocess";
 
 export function search<T>(index: UniIndex<SearchIndex<T>>, query: string): SearchResult[] | UniSearchError {
     const ast = expr([...normalizeQuery(query)]);

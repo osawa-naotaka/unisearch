@@ -1,11 +1,11 @@
 import type { WikipediaArticle, WikipediaKeyword } from "@ref/bench/benchmark_common";
 import { benchmark, getKeywords } from "@ref/bench/benchmark_common";
 import { calculateGzipedJsonSize } from "@ref/util";
-import { UniSearchError } from "@src/base";
-import { createIndex, indexToObject } from "@src/indexing";
-import { HyblidBigramInvertedIndex } from "@src/indextypes";
+import { UniSearchError } from "@src/frontend/base";
+import { createIndex, indexToObject } from "@src/frontend/indexing";
+import { HyblidBigramInvertedIndex } from "@src/frontend/indextypes";
 import { LinearIndex } from "@src/method/linearindex";
-import { search } from "@src/search";
+import { search } from "@src/frontend/search";
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
 import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";

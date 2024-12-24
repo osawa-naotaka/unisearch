@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { UniSearchError } from "@src/base";
-import { createIndex } from "@src/indexing";
+import { UniSearchError } from "@src/frontend/base";
+import { createIndex } from "@src/frontend/indexing";
 import { LinearIndex } from "@src/method/linearindex";
-import { search } from "@src/search";
+import { search } from "@src/frontend/search";
 
 describe("search test", () => {
     const contents = [

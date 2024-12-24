@@ -1,4 +1,4 @@
-import type { Path } from "@src/base";
+import type { Path } from "@src/frontend/base";
 
 function isPlainObject(value: unknown): value is Record<Path, unknown> {
     if (typeof value !== "object" || value === null) {

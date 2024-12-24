@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { getc, eos, is, char, cat, rep, space, str, digit, int, frac, float, escgetc } from '@src/parse';
-import { fuzzy, exact, token, not, term, paren, group, from, weight, adj, and, expr } from '@src/parse';
+import { getc, eos, is, char, cat, rep, space, str, digit, int, frac, float, escgetc } from '@src/frontend/parse';
+import { fuzzy, exact, token, not, term, paren, group, from, weight, adj, and, expr } from '@src/frontend/parse';
 
 describe("parser elements", () => {
     test("getc", () => 

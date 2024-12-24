@@ -1,9 +1,9 @@
-import { generateNgram, generateNgramToTail } from "@src/algorithm";
-import type { SearchEnv, SearchIndex, SearchResult } from "@src/base";
-import type { Path } from "@src/base";
-import type { IndexClass } from "@src/indexing";
-import { splitByGrapheme } from "@src/preprocess";
-import { createWithProp, intersectResults } from "@src/search";
+import { generateNgram, generateNgramToTail } from "@src/util/algorithm";
+import type { SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
+import type { Path } from "@src/frontend/base";
+import type { IndexClass } from "@src/frontend/indexing";
+import { splitByGrapheme } from "@src/util/preprocess";
+import { createWithProp, intersectResults } from "@src/frontend/search";
 
 export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass {
     const name = `N${num_gram}gram`;
