@@ -1,5 +1,5 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
-import { bitapSearch, createBitapKey, refine } from "@src/util/algorithm";
+import { bitapSearch, createBitapKey, bitapKeyBigint, bitapKeyNumber, refine } from "@src/util/algorithm";
 import { splitByGrapheme } from "@src/util/preprocess";
 
 type Term = string;
@@ -54,18 +54,30 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
                     ([term, plist]) => [term, plist, 0],
                 );
             } else {
-                const bitapkey = createBitapKey(splitByGrapheme(keyword));
+                const grapheme = splitByGrapheme(keyword);
                 const refined = refine(
-                    [splitByGrapheme(keyword)[0], []],
+                    [grapheme[0], []],
                     this.prefixComp,
                     this.index_entry.index[path] || [],
                 );
-                for (const [term, plist] of refined) {
-                    const r = bitapSearch(bitapkey, env.distance || 0, splitByGrapheme(term));
-                    if (r.length !== 0) {
-                        const min_dist = r.sort((a, b) => b[1] - a[1])[0][1];
-                        res.push([term, plist, min_dist]);
-                    }
+                if(grapheme.length < 50) {
+                    const bitapkey = createBitapKey(bitapKeyNumber(), grapheme);
+                    for (const [term, plist] of refined) {
+                        const r = bitapSearch(bitapkey, env.distance || 0, splitByGrapheme(term));
+                        if (r.length !== 0) {
+                            const min_dist = r.sort((a, b) => b[1] - a[1])[0][1];
+                            res.push([term, plist, min_dist]);
+                        }
+                    }    
+                } else {
+                    const bitapkey = createBitapKey(bitapKeyBigint(), grapheme);
+                    for (const [term, plist] of refined) {
+                        const r = bitapSearch(bitapkey, env.distance || 0, splitByGrapheme(term));
+                        if (r.length !== 0) {
+                            const min_dist = r.sort((a, b) => b[1] - a[1])[0][1];
+                            res.push([term, plist, min_dist]);
+                        }
+                    }    
                 }
             }
 

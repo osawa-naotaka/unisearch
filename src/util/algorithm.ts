@@ -53,47 +53,75 @@ export function refine<T>(key: T, comp: (a: T, b: T) => number, array: T[]): T[]
     return startIndex !== null && endIndex !== null ? array.slice(startIndex, endIndex + 1) : [];
 }
 
-export type BitapKey = {
-    mask: Map<string, number>;
+export type BitapKey<T> = {
+    mask: Map<string, T>;
     length: number;
+    and: (n1: T, n2: T) => T;
+    or: (n1: T, n2: T) => T;
+    to: (n: number) => T;
+    sl: (n: T, shift: number) => T;
+    sl1: (shift: number) => T;
 };
 
-export function createBitapKey(pattern: string[]): BitapKey {
-    if (pattern.length > 32) throw new Error("createBitapKey: key length must be less than 32.");
-    const key: BitapKey = {
+export function bitapKeyBigint(): BitapKey<bigint> {
+    return {
+        mask: new Map<string, bigint>(),
+        length: -1,
+        and: (n1, n2) => n1 & n2,
+        or: (n1, n2) => n1 | n2,
+        to: (n) => BigInt(n),
+        sl: (n, shift) => n << BigInt(shift),
+        sl1: (shift) => 1n << BigInt(shift)
+    }
+};
+
+export function bitapKeyNumber(): BitapKey<number> {
+    return {
         mask: new Map<string, number>(),
-        length: pattern.length,
-    };
+        length: -1,
+        and: (n1, n2) => n1 & n2,
+        or: (n1, n2) => n1 | n2,
+        to: (n) => n,
+        sl: (n, shift) => n << shift,
+        sl1: (shift) => 1 << shift
+    }
+};
+
+export function createBitapKey<T>(key: BitapKey<T>, pattern: string[]): BitapKey<T> {
+    if (pattern.length > 32) throw new Error("createBitapKey: key length must be less than 32.");
+    key.length = pattern.length;
 
     for (let i = 0; i < key.length; i++) {
         const char = pattern[i];
-        const bit = 1 << i;
+        const bit = key.sl1(i);
         const old = key.mask.get(char);
 
         if (!old) {
             key.mask.set(char, bit);
         } else {
-            key.mask.set(char, old | bit);
+            key.mask.set(char, key.or(old, bit));
         }
     }
 
     return key;
 }
 
-export function bitapSearch(key: BitapKey, maxErrors: number, text: string[]): [number, number][] {
-    const state = Array(maxErrors + 1).fill(0);
-    const matchbit = 1 << (key.length - 1);
+export function bitapSearch<T>(key: BitapKey<T>, maxErrors: number, text: string[]): [number, number][] {
+    const state: T[] = Array(maxErrors + 1).fill(key.to(0));
+    const matchbit = key.sl1(key.length - 1);
     const result: [number, number][] = [];
 
+    const zero = key.to(0);
+    const one = key.to(1);
     for (let i = 0; i < text.length; i++) {
-        const mask = key.mask.get(text[i]) || 0;
-        let replace = 0;
-        let insertion = 0;
-        let deletion = 0;
+        const mask = key.mask.get(text[i]) || zero;
+        let replace = zero;
+        let insertion = zero;
+        let deletion = zero;
 
         for (let distance = 0; distance < maxErrors + 1; distance++) {
-            const next_state_candidate = (state[distance] << 1) | 1;
-            const next_state = (next_state_candidate & mask) | replace | insertion | deletion;
+            const next_state_candidate = key.or(key.sl(state[distance], 1), one);
+            const next_state = key.or(key.or(key.and(next_state_candidate, mask), replace), key.or(insertion, deletion));
 
             replace = next_state_candidate;
             insertion = state[distance];
@@ -101,7 +129,7 @@ export function bitapSearch(key: BitapKey, maxErrors: number, text: string[]): [
 
             state[distance] = next_state;
 
-            if ((state[distance] & matchbit) !== 0) {
+            if (key.and(state[distance], matchbit) !== zero) {
                 result.push([i - key.length + 1, distance]);
             }
         }
@@ -109,13 +137,13 @@ export function bitapSearch(key: BitapKey, maxErrors: number, text: string[]): [
 
     // additional check for deletion
     for (let i = 0; i < maxErrors; i++) {
-        let replace = 0;
-        let insertion = 0;
-        let deletion = 0;
+        let replace = zero;
+        let insertion = zero;
+        let deletion = zero;
 
         for (let distance = 0; distance < maxErrors + 1; distance++) {
-            const next_state_candidate = (state[distance] << 1) | 1;
-            const next_state = replace | insertion | deletion;
+            const next_state_candidate = key.or(key.sl(state[distance], 1), one);
+            const next_state = key.or(key.or(replace, insertion), deletion);
 
             replace = next_state_candidate;
             insertion = state[distance];
@@ -123,7 +151,7 @@ export function bitapSearch(key: BitapKey, maxErrors: number, text: string[]): [
 
             state[distance] = next_state;
 
-            if ((state[distance] & matchbit) !== 0) {
+            if (key.and(state[distance], matchbit) !== zero) {
                 result.push([text.length - key.length, distance]);
             }
         }

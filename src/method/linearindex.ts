@@ -1,5 +1,5 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
-import { bitapSearch, createBitapKey } from "@src/util/algorithm";
+import { bitapSearch, createBitapKey, bitapKeyNumber, bitapKeyBigint } from "@src/util/algorithm";
 import type { BitapKey } from "@src/util/algorithm";
 import { splitByGrapheme } from "@src/util/preprocess";
 
@@ -53,10 +53,21 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
                 keyword,
             );
         }
+        const grapheme = splitByGrapheme(keyword);
+        if(grapheme.length < 50) {
+            return this.searchToken(
+                this.grapheme_index,
+                this.fuzzySearch(env.distance, createBitapKey(bitapKeyNumber(), splitByGrapheme(keyword))),
+                (pos, target) => target.slice(Math.max(pos - 20, 0), pos + keyword.length + 20).join(""),
+                env.search_targets,
+                env.weight || 1,
+                keyword,
+            );
+        }
 
         return this.searchToken(
             this.grapheme_index,
-            this.fuzzySearch(env.distance, createBitapKey(splitByGrapheme(keyword))),
+            this.fuzzySearch(env.distance, createBitapKey(bitapKeyBigint(), splitByGrapheme(keyword))),
             (pos, target) => target.slice(Math.max(pos - 20, 0), pos + keyword.length + 20).join(""),
             env.search_targets,
             env.weight || 1,
@@ -77,7 +88,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         };
 
     private fuzzySearch =
-        (maxerror: number, bitapkey: BitapKey) =>
+        <S>(maxerror: number, bitapkey: BitapKey<S>) =>
         (target: string[]): [number, number][] =>
             bitapSearch(bitapkey, maxerror, target);
 
