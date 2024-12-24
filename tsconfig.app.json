@@ -1,9 +1,9 @@
 {
     "compilerOptions": {
-        "target": "ES2023",
+        "target": "ES2022",
         "useDefineForClassFields": true,
         "module": "ESNext",
-        "lib": ["ES2023"],
+        "lib": ["ES2022"],
         "skipLibCheck": true,
 
         /* Bundler mode */
@@ -24,11 +24,9 @@
         /* Paths */
         "baseUrl": ".",
         "paths": {
-            "@src/*": ["src/*"],
-            "@app/*": ["app/*"],
-            "@test/*": ["test/*"]
+            "@src/*": ["src/*"]
         }
     },
     "include": ["src"],
-    "exclude": ["dist", "app", "test"]
+    "exclude": ["dist", "app", "test", "ref"]
 }

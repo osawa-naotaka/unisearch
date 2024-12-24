@@ -7,7 +7,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: './src/main.ts',
-      fileName: 'bundle',
+      fileName: 'unisearch',
       formats: ['es'],
     },
     outDir: './dist',

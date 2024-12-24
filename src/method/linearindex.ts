@@ -47,7 +47,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             return this.searchToken(
                 this.index_entry.index,
                 this.exactSearch(keyword),
-                (pos, target) => target.slice(Math.max(pos - 10, 0), pos + keyword.length + 10),
+                (pos, target) => target.slice(Math.max(pos - 20, 0), pos + keyword.length + 20),
                 env.search_targets,
                 env.weight || 1,
                 keyword,
@@ -57,7 +57,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         return this.searchToken(
             this.grapheme_index,
             this.fuzzySearch(env.distance, createBitapKey(splitByGrapheme(keyword))),
-            (pos, target) => target.slice(Math.max(pos - 10, 0), pos + keyword.length + 10).join(""),
+            (pos, target) => target.slice(Math.max(pos - 20, 0), pos + keyword.length + 20).join(""),
             env.search_targets,
             env.weight || 1,
             keyword,
