@@ -1,5 +1,5 @@
-import { pipe } from "@src/util/algorithm";
 import { UniSearchError } from "@src/frontend/base";
+import { pipe } from "@src/util/algorithm";
 
 export const normalizeJapanese = (input: string) =>
     input

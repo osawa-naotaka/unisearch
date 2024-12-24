@@ -1,5 +1,5 @@
-import { bitapSearch, createBitapKey, refine } from "@src/util/algorithm";
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
+import { bitapSearch, createBitapKey, refine } from "@src/util/algorithm";
 import { splitByGrapheme } from "@src/util/preprocess";
 
 type Term = string;

@@ -1,7 +1,7 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
 import type { IndexClass } from "@src/frontend/indexing";
-import { hybridSpritter, isNonSpaceSeparatedChar } from "@src/util/preprocess";
 import { intersectResults } from "@src/frontend/search";
+import { hybridSpritter, isNonSpaceSeparatedChar } from "@src/util/preprocess";
 
 export type HybridIndexEntry<T1, T2> = { ja: T1; en: T2 };
 
