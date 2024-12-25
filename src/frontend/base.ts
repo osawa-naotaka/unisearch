@@ -21,7 +21,7 @@ export type UniIndex<T> = {
 
 // query
 export type SearchEnv = {
-    field_names?: Record<FieldName, Path>;
+    field_names?: FieldNameMap;
     key_field?: Path;
     search_targets?: Path[];
     weight?: number;
