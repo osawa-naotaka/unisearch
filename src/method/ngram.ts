@@ -38,12 +38,34 @@ export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass 
             }
 
             public search(env: SearchEnv, keyword: string): SearchResult[] {
-                return intersectResults(
-                    generateNgram(num_gram, splitByGrapheme(keyword)).map((t) =>
-                        this.ngram_index.search(createWithProp(env, "distance", 0), t),
+                const grapheme = splitByGrapheme(keyword);
+                const search_env = createWithProp(env, "distance", grapheme.length < num_gram ? 1 : 0);
+                const max_match = Math.max(1, grapheme.length - num_gram + 1);
+                const threshold = grapheme.length < num_gram ? 1 : Math.max(1, max_match - (env.distance || 0) * num_gram);
+                return intersectResultsNgram(
+                    threshold,
+                    generateNgram(num_gram, grapheme).map((t) =>
+                        this.ngram_index.search(search_env, t),
                     ),
                 );
             }
         },
     }[name];
+}
+
+function intersectResultsNgram(threshold: number, results: SearchResult[][]): SearchResult[] {
+    const union = unionResults(results).filter((x) => x.length >= threshold);
+    return union.flatMap((x) => intersectResults(x.map((y) => [y])));
+}
+
+function unionResults(results: SearchResult[][]): SearchResult[][] {
+    const result = new Map<number, SearchResult[]>();
+    for(const r of results) {
+        for(const c of r) {
+            const cur = result.get(c.id) || [];
+            cur.push(c)
+            result.set(c.id, cur);
+        }
+    }
+    return Array.from(result.values());
 }
