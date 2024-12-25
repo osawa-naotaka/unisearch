@@ -1,5 +1,5 @@
 {
-    "name": "unisearch",
+    "name": "unisearch.js",
     "version": "1.0.0",
     "description": "Lightweight and reasonably fast full-text search engine for static sites",
     "main": "dist/unisearch.js",
