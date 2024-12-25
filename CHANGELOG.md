@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-## [1.0.1] -2024-12-26
+## [1.0.2] -2024-12-26
 ### Fixed
 - export type SearchIndex.
 
@@ -24,5 +24,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - search frontend, google-like syntax
 - sorting search result based on TF-IDF
 
-[Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.1...HEAD
-[1.0.1]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.0...v1.0.1
+[Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.2...HEAD
+[1.0.1]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.0...v1.0.2
