@@ -1,0 +1,12 @@
+/.vscode
+/app
+/bitap
+/node_modules
+/ref
+/test
+index.html
+shell.nix
+tsconfig.app.json
+tsconfig.json
+vite.config.ts
+biome.json

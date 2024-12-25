@@ -1,18 +1,32 @@
 {
-    "name": "unisearch",
-    "private": true,
-    "version": "0.0.0",
+    "name": "unisearch.js",
+    "version": "1.0.0",
+    "description": "Lightweight and reasonably fast full-text search engine for static sites",
+    "main": "dist/unisearch.js",
+    "types": "dist/unisearch.d.ts",
+    "author": {
+        "name": "osawa naotaka"
+    },
+    "license": "MIT",
+    "homepage": "https://github.com/osawa-naotaka/unisearch",
     "type": "module",
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build",
-        "preview": "vite preview",
         "check": "biome check ./src",
-        "check-write": "biome check --write ./src"
+        "check-write": "biome check --write ./src",
+        "test": "vitest",
+        "test-ui": "vitest --ui"
     },
     "devDependencies": {
         "@biomejs/biome": "1.9.4",
+        "@vitest/ui": "^2.1.8",
+        "terser": "^5.37.0",
         "typescript": "~5.6.2",
-        "vite": "^5.4.10"
+        "vite": "^5.4.10",
+        "vite-plugin-dts": "^4.3.0",
+        "vite-plugin-wasm": "^3.3.0",
+        "vite-tsconfig-paths": "^5.1.3",
+        "vitest": "^2.1.5"
     }
 }
