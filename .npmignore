@@ -4,6 +4,7 @@
 /node_modules
 /ref
 /test
+/src/vite-env.d.ts
 index.html
 shell.nix
 tsconfig.app.json
