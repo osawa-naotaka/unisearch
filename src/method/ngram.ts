@@ -41,12 +41,11 @@ export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass 
                 const grapheme = splitByGrapheme(keyword);
                 const search_env = createWithProp(env, "distance", grapheme.length < num_gram ? 1 : 0);
                 const max_match = Math.max(1, grapheme.length - num_gram + 1);
-                const threshold = grapheme.length < num_gram ? 1 : Math.max(1, max_match - (env.distance || 0) * num_gram);
+                const threshold =
+                    grapheme.length < num_gram ? 1 : Math.max(1, max_match - (env.distance || 0) * num_gram);
                 return intersectResultsNgram(
                     threshold,
-                    generateNgram(num_gram, grapheme).map((t) =>
-                        this.ngram_index.search(search_env, t),
-                    ),
+                    generateNgram(num_gram, grapheme).map((t) => this.ngram_index.search(search_env, t)),
                 );
             }
         },
@@ -60,10 +59,10 @@ function intersectResultsNgram(threshold: number, results: SearchResult[][]): Se
 
 function unionResults(results: SearchResult[][]): SearchResult[][] {
     const result = new Map<number, SearchResult[]>();
-    for(const r of results) {
-        for(const c of r) {
+    for (const r of results) {
+        for (const c of r) {
             const cur = result.get(c.id) || [];
-            cur.push(c)
+            cur.push(c);
             result.set(c.id, cur);
         }
     }

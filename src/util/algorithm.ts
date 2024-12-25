@@ -71,9 +71,9 @@ export function bitapKeyBigint(): BitapKey<bigint> {
         or: (n1, n2) => n1 | n2,
         to: (n) => BigInt(n),
         sl: (n, shift) => n << BigInt(shift),
-        sl1: (shift) => 1n << BigInt(shift)
-    }
-};
+        sl1: (shift) => 1n << BigInt(shift),
+    };
+}
 
 export function bitapKeyNumber(): BitapKey<number> {
     return {
@@ -83,9 +83,9 @@ export function bitapKeyNumber(): BitapKey<number> {
         or: (n1, n2) => n1 | n2,
         to: (n) => n,
         sl: (n, shift) => n << shift,
-        sl1: (shift) => 1 << shift
-    }
-};
+        sl1: (shift) => 1 << shift,
+    };
+}
 
 export function createBitapKey<T>(key: BitapKey<T>, pattern: string[]): BitapKey<T> {
     if (pattern.length > 32) throw new Error("createBitapKey: key length must be less than 32.");
@@ -121,7 +121,10 @@ export function bitapSearch<T>(key: BitapKey<T>, maxErrors: number, text: string
 
         for (let distance = 0; distance < maxErrors + 1; distance++) {
             const next_state_candidate = key.or(key.sl(state[distance], 1), one);
-            const next_state = key.or(key.or(key.and(next_state_candidate, mask), replace), key.or(insertion, deletion));
+            const next_state = key.or(
+                key.or(key.and(next_state_candidate, mask), replace),
+                key.or(insertion, deletion),
+            );
 
             replace = next_state_candidate;
             insertion = state[distance];

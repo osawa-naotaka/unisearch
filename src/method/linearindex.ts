@@ -1,5 +1,5 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
-import { bitapSearch, createBitapKey, bitapKeyNumber, bitapKeyBigint } from "@src/util/algorithm";
+import { bitapKeyBigint, bitapKeyNumber, bitapSearch, createBitapKey } from "@src/util/algorithm";
 import type { BitapKey } from "@src/util/algorithm";
 import { splitByGrapheme } from "@src/util/preprocess";
 
@@ -54,7 +54,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             );
         }
         const grapheme = splitByGrapheme(keyword);
-        if(grapheme.length < 50) {
+        if (grapheme.length < 50) {
             return this.searchToken(
                 this.grapheme_index,
                 this.fuzzySearch(env.distance, createBitapKey(bitapKeyNumber(), splitByGrapheme(keyword))),
@@ -106,7 +106,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         index.forEach((content, id) => {
             for (const path of search_targets || Object.keys(content)) {
                 const search_target = content[path];
-                if(search_target === undefined) continue;
+                if (search_target === undefined) continue;
                 const poses = search_fn(search_target);
                 if (poses.length !== 0) {
                     for (const [pos, dist] of poses) {

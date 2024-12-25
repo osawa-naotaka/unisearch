@@ -1,7 +1,11 @@
 {
     "name": "unisearch",
-    "private": true,
-    "version": "0.0.0",
+    "version": "1.0.0",
+    "description": "Lightweight and reasonably fast full-text search engine for static sites",
+    "main": "dist/unisearch.js",
+    "types": "dist/unisearch.d.ts",
+    "author": { "name": "osawa naotaka" },
+    "license": "MIT",
     "type": "module",
     "scripts": {
         "dev": "vite",

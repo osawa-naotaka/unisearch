@@ -1,5 +1,5 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
-import { bitapSearch, createBitapKey, bitapKeyBigint, bitapKeyNumber, refine } from "@src/util/algorithm";
+import { bitapKeyBigint, bitapKeyNumber, bitapSearch, createBitapKey, refine } from "@src/util/algorithm";
 import { splitByGrapheme } from "@src/util/preprocess";
 
 type Term = string;
@@ -55,12 +55,8 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
                 );
             } else {
                 const grapheme = splitByGrapheme(keyword);
-                const refined = refine(
-                    [grapheme[0], []],
-                    this.prefixComp,
-                    this.index_entry.index[path] || [],
-                );
-                if(grapheme.length < 50) {
+                const refined = refine([grapheme[0], []], this.prefixComp, this.index_entry.index[path] || []);
+                if (grapheme.length < 50) {
                     const bitapkey = createBitapKey(bitapKeyNumber(), grapheme);
                     for (const [term, plist] of refined) {
                         const r = bitapSearch(bitapkey, env.distance || 0, splitByGrapheme(term));
@@ -68,7 +64,7 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
                             const min_dist = r.sort((a, b) => b[1] - a[1])[0][1];
                             res.push([term, plist, min_dist]);
                         }
-                    }    
+                    }
                 } else {
                     const bitapkey = createBitapKey(bitapKeyBigint(), grapheme);
                     for (const [term, plist] of refined) {
@@ -77,7 +73,7 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
                             const min_dist = r.sort((a, b) => b[1] - a[1])[0][1];
                             res.push([term, plist, min_dist]);
                         }
-                    }    
+                    }
                 }
             }
 
