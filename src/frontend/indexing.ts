@@ -60,6 +60,12 @@ export function createIndex<T>(
             }
         }
 
+        // set default distance to 1
+        if (env.distance === undefined) {
+            env.distance = 1;
+        }
+
+        // fix index
         search_index.fixIndex();
 
         return {

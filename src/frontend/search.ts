@@ -7,7 +7,7 @@ import { defaultNormalizer, splitBySpace } from "@src/util/preprocess";
 export function search<T>(index: UniIndex<SearchIndex<T>>, query: string): SearchResult[] | UniSearchError {
     const ast = expr([...normalizeQuery(query)]);
     if (ast === null) return [];
-    const r = evalQuery(index.index_entry, createWithProp(index.env, "distance", 1))(ast.val);
+    const r = evalQuery(index.index_entry, index.env)(ast.val);
     return r.type === "excludes" ? [] : r.results.sort((a, b) => b.score - a.score);
 }
 

@@ -1,3 +1,5 @@
+[english README.md](https://github.com/osawa-naotaka/unisearch/blob/main/README.en.md)
+
 # unisearch.js: 軽量でそこそこ速い、静的サイトのための全文検索エンジン
 ## 概要
 unisearch.jsは静的サイト向けに作られた、完全クライアントサイドの全文検索エンジンです。任意のJavaScriptオブジェクト配列内にある文字列および文字列の配列を検索することができます。検索対象の記事をJavaScriptオブジェクト化することで、サーバーサイドの実装なしに全文検索機能を静的サイト上で実現することができます。
@@ -124,6 +126,12 @@ const index = createIndex(LinearIndex, array_of_articles, {distance: 2});
 
 インデックスした文章全てを検索対象とせず、一部のみを検索対象とすることができます。例えば、前の例でtitleフィールドだけ検索対象に含めるには、「from:title 検索文字列」と入力します。from:直後のフィールド指定は、デフォルトでフィールドへのパス文字列の最後を指します。例えば、「meta.slug」を指定するには、「from:slug 検索文字列」と入力します。
 
+フィールド指定文字列はインデックスを作る際にカスタマイズできます。例えば、meta.slugをfrom:linkという指定で検索できるようにするには、引数envのfield_namesに設定をします。
+
+```
+const index = createIndex(LinearIndex, array_of_articles, { field_names: { link: "meta.slug" } });
+```
+
 - スコアの重み変更
 
 例えば、「from:title weight:2.5 検索文字列」とすることで、titleフィールドで検索文字列を検索し、そのスコアを2.5倍します。weight:直後には正の整数または小数が指定できます。from:を指定しなくても動作し、その場合は指定されたキーワードに該当する文章のスコアが2.5倍されます。
@@ -140,6 +148,7 @@ export type SearchResult = {
     refs: Reference[];
 };
 ```
+
 idフィールドは、一致した文章の配列インデックスを返します。インデックス作成時の配列インデックスです。keyフィールドは、インデックス作成時に指定したフィールドが設定されます。scoreはTF-IDFに基づいた値が設定されます。検索ワード個々のTF-IDFの合算値になり、編集距離が増えるごとに1/xで減じられていきます。
 
 refsフィールドは、検索で一致した箇所の情報の配列が設定されます。
@@ -153,6 +162,7 @@ export type Reference = {
     distance: number;
 };
 ```
+
 tokenにはクエリ中の個々の検索文字列が設定されます。pathはどのフィールドから検索ワードが見つかったかをフィールドへのパスで示します。posは一致した箇所への、文章の先頭からの文字数です。完全一致検索の場合は、グラフェムを正しくカウントしないため、少し位置がずれます。wordaroundは、一致した箇所の前後の文字が指定されます。distanceは、あいまい検索にて一致した場合の編集距離が指定されます。
 
 ## 高速検索用インデックスの作成

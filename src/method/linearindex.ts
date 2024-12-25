@@ -106,6 +106,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         index.forEach((content, id) => {
             for (const path of search_targets || Object.keys(content)) {
                 const search_target = content[path];
+                if(search_target === undefined) continue;
                 const poses = search_fn(search_target);
                 if (poses.length !== 0) {
                     for (const [pos, dist] of poses) {
