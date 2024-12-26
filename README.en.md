@@ -5,12 +5,12 @@ unisearch.js is a complete client-side full-text search engine designed for stat
 unisearch.js is very easy to use. The code required for searching is shown below. Only a few lines of code are required.
 
 ```
-import { LinearIndex, createIndex, search, UniSearchError } from "unisearch";
+import { LinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
 
 const index = createIndex(LinearIndex, array_of_articles);
-if (!(index instanceof UniSearchError)) {
-        const result = search(index, ”search word”);
-}
+
+if(index instanceof UniSearchError) throw index;
+const result = search(index, "search word");
 ```
 
 unisearch.js provides a complete set of search functions. In addition to exact match search, it also provides a fuzzy search function. In addition, there are and, or, not, and field-specific searches, as well as the ability to specify scoring weights. Search results are sorted based on a scoring method called TF-IDF, along with strings around the match.
@@ -44,16 +44,16 @@ export type SearchEnv = {
 };
 ```
 
-index_class specifies the algorithm to be used for full-text search by class. Usually, the LinearIndex class is specified. contents specifies an array of JavaScript objects to be searched. The search is limited to the fields of this object that are either strings or arrays of strings. If there is an array field in between up to the string field, it is not included in the search even if the field is a string.
+index_class specifies the algorithm to be used for full-text search by class. Usually, the LinearIndex class is specified. contents specifies an array of JavaScript objects to be searched. The search is limited to the fields of this object that are either strings or arrays of strings. If there is an array field in between up to the string field, it is not included in the search even if the field is a string. env specifies default options for indexing and searching.
 
-The return value of the function is the index created. If there is a problem with the specified contents or env, UniSearchError is returned. An error is generated if the specified field is missing when indexed.
+The return value of the function is the index created. If LinearIndex is specified in index_class, T becomes LinearIndexEntry and the return value of createIndex is UniIndex<SearchIndex<LinearIndexEntry>> | UniSearchError. If there is a problem with the specified contents or env, UniSearchError is returned. An error is generated if the specified field is missing when indexed.
 
 The result of the search is obtained as an array of ids. Additional strings belonging to the search object can also be returned as search results. For example, you can set the SLUG of an article to make it easier to use the search results.
 
-To include an arbitrary string field in the search results, specify a key field in the env argument of the createIndex function, where the key field is the path from the root of the object to the key field as a string separated by a dot. The following is an example of specifying slug as key in the following object configuration.
+To include an arbitrary string field in the search results, specify a key_field field in the env argument of the createIndex function, where the key_field field is the path from the root of the object to the key field as a string separated by a dot. The following is an example of specifying slug as key field in the following object configuration.
 
 ```
-const index = createIndex(LinearIndex, array_of_articles, {key: 'meta.slug'});
+const index = createIndex(LinearIndex, array_of_articles, {key_field: 'slug'});
 ```
 
 The index contains all text fields of a given standard object as is. The index size is roughly equal to the total size of the text to be searched. http protocol will probably use gzip compression, but if the total text size still exceeds 10Mbytes, it may be necessary to use Local Storage to store the index. It is also necessary to separate the index as a json file and dynamically fetch it at search time.
@@ -63,7 +63,7 @@ Also, as mentioned above, since the index contains all sentences, be very carefu
 You can also limit the fields to be included in the index. The specification should be given as an array in the search_targets field of the env argument.
 
 ```
-const index = createIndex(LinearIndex, array_of_articles, {search_targets: ['title','description','meta.categories']});
+const index = createIndex(LinearIndex, array_of_articles, {search_targets: ['data.title','data.description','data.tags']});
 ```
 
 Indexes can also be created in advance to reduce the amount of processing required when loading pages. When using a static site generator (SSG), indexes can be created at deployment time and placed as json files so that the indexes can be loaded from the client side using fetch, reducing the size of bundles in html files and reducing loading time when no search is performed. 
@@ -71,14 +71,28 @@ Indexes can also be created in advance to reduce the amount of processing requir
 To convert an index into a JavaScript object, use the indexToObject function.
 
 ```
+export function indexToObject<T>(index: UniIndex<SearchIndex<T>>): UniIndex<T>
+```
+
+```
+const index = createIndex(LinearIndex, array_of_articles);
+
+if(index instanceof UniSearchError) throw index;
+
 const json = JSON.stringify(indexToObject(index));
 ```
 
 Also, to reconstruct an index from a JavaScript object, use the createIndexFromObject function.
 
 ```
+export function createIndexFromObject<T>(index: UniIndex<T>): UniIndex<SearchIndex<T>>
+```
+
+```
 const resp = await fetch(index_url);
-const index = createIndexFromObject(resp.json());
+const re_index = createIndexFromObject(resp.json());
+
+const result = search(re_index, "search word");
 ```
 
 Index generation takes some time: for about 1000 articles, or 20 MByte of full text, it takes about 100 msec.
@@ -104,7 +118,7 @@ const index = createIndex(LinearIndex, array_of_articles, {distance: 2});
 
 - Exact Match Search
 
-To perform an exact match search, enclose the search string in double quotation marks, such as “search string“. If a space is included within the double quotation marks, an exact match search is performed including the space. The inside of a double quotation mark accepts an escape sequence. To add a double quotation mark itself to the search string, type \”.
+To perform an exact match search, enclose the search string in double quotation marks, such as "search string". If a space is included within the double quotation marks, an exact match search is performed including the space. The inside of a double quotation mark accepts an escape sequence. To add a double quotation mark itself to the search string, type \".
 
 - and search
 
@@ -168,7 +182,7 @@ Full-text search based on the LinearIndex described above will provide sufficien
 However, if a faster search is needed, a different index format can be used to speed up the search.
 
 ```
-import { HyblidBigramInvertedIndex, createIndex, search, UniSearchError } from "unisearch";
+import { HyblidBigramInvertedIndex, createIndex, search, UniSearchError } from "unisearch.js";
 
 const index = createIndex(HyblidBigramInvertedIndex, array_of_articles);
 ```

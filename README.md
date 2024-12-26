@@ -7,12 +7,12 @@ unisearch.jsは静的サイト向けに作られた、完全クライアント�
 unisearch.jsは非常に簡単に使用することができます。検索のために必要なコードを以下に示します。コードはほんのわずかしか必要ありません。
 
 ```
-import { LinearIndex, createIndex, search, UniSearchError } from "unisearch";
+import { LinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
 
 const index = createIndex(LinearIndex, array_of_articles);
-if (!(index instanceof UniSearchError)) {
-        const result = search(index, ”search word”);
-}
+
+if(index instanceof UniSearchError) throw index;
+const result = search(index, "search word");
 ```
 
 unisearch.jsは検索に必要な一通りの機能を備えています。完全一致検索のほか、あいまい検索機能も備えます。さらに、and検索、or検索、not検索、フィールドを限定した検索、スコアリングのウェイト指定の機能があります。Google likeのクエリを使うことができ、直感的です。検索結果はTF-IDFというスコアリング方法を元にソートされ、一致箇所周辺の文字列とともに検索結果が得られます。
@@ -47,16 +47,16 @@ export type SearchEnv = {
 };
 ```
 
-index_classには全文検索で使用するアルゴリズムをクラスで指定します。通常はLinearIndexクラスを指定します。contentsは検索対象のJavaScriptオブジェクトの配列を指定します。検索対象は、このオブジェクトのうち、文字列のフィールドか、文字列の配列のフィールドに限られます。また、文字列のフィールドまでの間に配列のフィールドが挟まる場合は、そのフィールドが文字列であっても検索対象に含まれません。
+index_classには全文検索で使用するアルゴリズムをクラスで指定します。通常はLinearIndexクラスを指定します。contentsは検索対象のJavaScriptオブジェクトの配列を指定します。検索対象は、このオブジェクトのうち、文字列のフィールドか、文字列の配列のフィールドに限られます。また、文字列のフィールドまでの間に配列のフィールドが挟まる場合は、そのフィールドが文字列であっても検索対象に含まれません。envはインデックス作成及び検索時のデフォルトオプションを指定します。
 
-関数の戻り値は作成されたインデックスです。指定されたcontentsやenvに問題がある場合は、UniSearchErrorを返します。インデックスすると指定されたフィールドがない場合にエラーが発生します。
+関数の戻り値は作成されたインデックスです。index_classにLinearIndexが指定された場合、TはLinearIndexEntryとなり、createIndexの戻り値はUniIndex<SearchIndex<LinearIndexEntry>> | UniSearchErrorとなります。指定されたcontentsやenvに問題がある場合は、UniSearchErrorを返します。インデックスすると指定されたフィールドがない場合にエラーが発生します。
 
 検索を行った結果は、配列のインデックスとして得られます。追加で、その検索オブジェクトに属する文字列を検索結果として返すこともできます。例えば記事のslugなどを設定することで、検索結果の利用をより容易にできます。
 
-検索結果に任意の文字列フィールドを含めるには、createIndex関数のenv引数に、keyフィールドを指定します。keyフィールドには、オブジェクトのルートからkeyフィールドへ向かうパスをドットで区切った文字列として指定します。以下のようなオブジェクト構成でslugをkeyに指定する例を示します。
+検索結果に任意の文字列フィールドを含めるには、createIndex関数のenv引数に、key_fieldフィールドを指定します。key_fieldフィールドには、オブジェクトのルートからkeyフィールドへ向かうパスをドットで区切った文字列として指定します。以下のようなオブジェクト構成でslugをkeyに指定する例を示します。
 
 ```
-const index = createIndex(LinearIndex, array_of_articles, {key: 'meta.slug'});
+const index = createIndex(LinearIndex, array_of_articles, {key_field: 'slug'});
 ```
 
 インデックスには、標準で与えられたオブジェクトのテキストフィールド全てをそのまま含みます。そのため、インデックスサイズは検索対象の文章の総サイズにおおむね等しくなります。httpプロトコルではgzip圧縮がなされると思いますが、それでも10Mbyteを超えるような総文章量の場合は、Local Storageを利用してインデックスを保存するなどの工夫が必要となるでしょう。インデックスをjsonファイルとして分離し、検索時に動的にfetchするなどの工夫も必要となります。
@@ -66,7 +66,7 @@ const index = createIndex(LinearIndex, array_of_articles, {key: 'meta.slug'});
 インデックスに含めるフィールドを限定することもできます。指定はenv引数のsearch_targetsフィールドに配列として指定してください。
 
 ```
-const index = createIndex(LinearIndex, array_of_articles, {search_targets: ['title','description','meta.categories']});
+const index = createIndex(LinearIndex, array_of_articles, {search_targets: ['data.title','data.description','data.tags']});
 ```
 
 インデックスの作成を事前に作成して、ページ読み込み時の処理量を削減することもできます。静的サイトジェネレータ(SSG)を用いる場合、デプロイ時にインデックスを作成し、jsonファイルとして配置することで、クライアント側からfetchを利用したインデックスの読み込みが可能になります。htmlファイルへのバンドルサイズが削減でき、検索を実行しない場合の読み込み時間を短縮てきます。
@@ -74,14 +74,28 @@ const index = createIndex(LinearIndex, array_of_articles, {search_targets: ['tit
 インデックスをJavaScriptオブジェクトに変換するには、indexToObject関数を使います。
 
 ```
+export function indexToObject<T>(index: UniIndex<SearchIndex<T>>): UniIndex<T>
+```
+
+```
+const index = createIndex(LinearIndex, array_of_articles);
+
+if(index instanceof UniSearchError) throw index;
+
 const json = JSON.stringify(indexToObject(index));
 ```
 
 また、JavaScriptオブジェクトからindexを再構築するにはcreateIndexFromObject関数を使います。
 
 ```
+export function createIndexFromObject<T>(index: UniIndex<T>): UniIndex<SearchIndex<T>>
+```
+
+```
 const resp = await fetch(index_url);
-const index = createIndexFromObject(resp.json());
+const re_index = createIndexFromObject(resp.json());
+
+const result = search(re_index, "search word");
 ```
 
 インデックスの生成には多少時間がかかります。1000記事程度、全文で20MByte程度の場合、100msec程度かかります。
@@ -107,7 +121,7 @@ const index = createIndex(LinearIndex, array_of_articles, {distance: 2});
 
 - 完全一致検索
 
-完全一致検索を行うには、「”検索文字列”」のように、検索文字列をダブルクォーテーションで囲います。ダブルクォーテーションの中にスペースを含めた場合、そのスペース込みで完全一致検索を行います。ダブルクォーテーションの中はエスケープシーケンスに対応し、ダブルクォーテーション自体を検索文字列に加えるには「\”」と入力します。
+完全一致検索を行うには、「"検索文字列"」のように、検索文字列をダブルクォーテーションで囲います。ダブルクォーテーションの中にスペースを含めた場合、そのスペース込みで完全一致検索を行います。ダブルクォーテーションの中はエスケープシーケンスに対応し、ダブルクォーテーション自体を検索文字列に加えるには「\"」と入力します。
 
 - and検索
 
@@ -171,7 +185,7 @@ tokenにはクエリ中の個々の検索文字列が設定されます。path�
 しかし、もしもっと高速な検索を必要とする場合、違うインデックス形式を使うことにより、検索の高速化が達成できます。
 
 ```
-import { HyblidBigramInvertedIndex, createIndex, search, UniSearchError } from "unisearch";
+import { HyblidBigramInvertedIndex, createIndex, search, UniSearchError } from "unisearch.js";
 
 const index = createIndex(HyblidBigramInvertedIndex, array_of_articles);
 ```
