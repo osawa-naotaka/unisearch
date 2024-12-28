@@ -13,16 +13,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-## [1.0.2] -2024-12-26
+## [1.0.3] - 2024-12-28
+### Fixed
+- update README.
+
+## [1.0.2] - 2024-12-26
 ### Fixed
 - export type SearchIndex.
 
-## [1.0.0] -2024-12-25
+## [1.0.0] - 2024-12-25
 ### Added
 - generate search index, both Linear Index and Hybrid Bigram Inverted Index
 - search both exact and fuzzy
 - search frontend, google-like syntax
 - sorting search result based on TF-IDF
 
-[Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.2...HEAD
-[1.0.1]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.0...v1.0.2
+[Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.2...v1.0.3
+[1.0.2]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.0...v1.0.2
