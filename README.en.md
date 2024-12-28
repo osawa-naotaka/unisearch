@@ -50,10 +50,25 @@ The return value of the function is the index created. If LinearIndex is specifi
 
 The result of the search is obtained as an array of ids. Additional strings belonging to the search object can also be returned as search results. For example, you can set the SLUG of an article to make it easier to use the search results.
 
-To include an arbitrary string field in the search results, specify a key_field field in the env argument of the createIndex function, where the key_field field is the path from the root of the object to the key field as a string separated by a dot. The following is an example of specifying slug as key field in the following object configuration.
+To include an arbitrary string field in the search results, specify a key_field field in the env argument of the createIndex function, where the key_field field is the path from the root of the object to the key field as a string separated by a dot. The following is an example of specifying title as key field in the following object configuration.
 
 ```
-const index = createIndex(LinearIndex, array_of_articles, {key_field: 'slug'});
+export const array_of_articles = [
+    {
+      slug: "introduction-to-js",
+      content: "JavaScript is a versatile programming language widely used for web development. It enables interactive features on websites, such as dynamic updates, animations, and form validation. JavaScript is essential for creating modern web applications and supports various frameworks like React and Vue.js.",
+      data: {
+        title: "Introduction to JavaScript",
+        description: "Learn the basics of JavaScript, a powerful language for modern web applications.",
+        tags: ["javascript", "web", "programming"]
+      }
+    },
+    ...
+];
+```
+
+```
+const index = createIndex(LinearIndex, array_of_articles, {key_field: 'data.title'});
 ```
 
 The index contains all text fields of a given standard object as is. The index size is roughly equal to the total size of the text to be searched. http protocol will probably use gzip compression, but if the total text size still exceeds 10Mbytes, it may be necessary to use Local Storage to store the index. It is also necessary to separate the index as a json file and dynamically fetch it at search time.
@@ -122,11 +137,11 @@ To perform an exact match search, enclose the search string in double quotation 
 
 - and search
 
-Searches for sentences containing both strings by separating the search string with a space, as in “search-string-1 search-string-2”. Whitespace corresponds to all spaces in unicode, including full-width spaces, half-width spaces, tabs, and line feeds.
+Searches for sentences containing both strings by separating the search string with a space, as in "search-string-1 search-string-2". Whitespace corresponds to all spaces in unicode, including full-width spaces, half-width spaces, tabs, and line feeds.
 
 - not search
 
-By prefixing the search word with a minus sign, such as -search-string-1 search-string-2 or -”search string 1“ search string 2, you can search for sentences that do not contain that string. In this example, the search will find sentences that do not contain search-string-1, but contain search-string-2. not search is always used with and search; if not search is used by itself, the search word will be ignored.
+By prefixing the search word with a minus sign, such as -search-string-1 search-string-2 or -"search-string-1" search-string-2, you can search for sentences that do not contain that string. In this example, the search will find sentences that do not contain search-string-1, but contain search-string-2. not search is always used with and search; if not search is used by itself, the search word will be ignored.
 
 - or search
 
@@ -135,12 +150,12 @@ Searches for sentences containing either or both of search-string-1 and search-s
 
 - Search field limitation
 
-You can limit the search to only a portion of the indexed sentences instead of all of them. For example, to include only the title field in the previous example, enter from:title search-string. The field specification immediately after “from:” points to the end of the path string to the field by default. For example, to specify meta.slug, enter from:slug search-string.
+You can limit the search to only a portion of the indexed sentences instead of all of them. For example, to include only the slug field in the previous example, enter from:slug search-string. The field specification immediately after “from:” points to the end of the path string to the field by default. For example, to specify data.title, enter from:title search-string.
 
-The field specification string can be customized when creating the index. For example, to allow meta.slug to be searched with the specification from:link, set the argument env field_names.
+The field specification string can be customized when creating the index. For example, to allow slug to be searched with the specification from:link, set the argument env field_names.
 
 ```
-const index = createIndex(LinearIndex, array_of_articles, { field_names: { link: "meta.slug" } });
+const index = createIndex(LinearIndex, array_of_articles, { field_names: { link: "slug" } });
 ```
 
 - Changing the score weight
@@ -174,7 +189,7 @@ export type Reference = {
 };
 ```
 
-The token is set to the individual search string in the query. path is the path to the field from which the search term was found. pos is the number of characters from the beginning of the sentence to the point where the match was found. In the case of an exact match search, the grapheme is not counted correctly and is slightly misplaced. The wordaround is the characters before and after the match. distance is the edit distance for a fuzzy match.
+The token is set to the individual search string in the query. path is the path to the field from which the search term was found. pos is the number of characters from the beginning of the sentence to the point where the match was found. During fuzzy search, the pos position may shift a little depending on the state of insertion or deletion. The wordaround is the characters before and after the match. distance is the edit distance for a fuzzy match.
 
 ## Create index for fast search
 

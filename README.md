@@ -53,10 +53,25 @@ index_classには全文検索で使用するアルゴリズムをクラスで指
 
 検索を行った結果は、配列のインデックスとして得られます。追加で、その検索オブジェクトに属する文字列を検索結果として返すこともできます。例えば記事のslugなどを設定することで、検索結果の利用をより容易にできます。
 
-検索結果に任意の文字列フィールドを含めるには、createIndex関数のenv引数に、key_fieldフィールドを指定します。key_fieldフィールドには、オブジェクトのルートからkeyフィールドへ向かうパスをドットで区切った文字列として指定します。以下のようなオブジェクト構成でslugをkeyに指定する例を示します。
+検索結果に任意の文字列フィールドを含めるには、createIndex関数のenv引数に、key_fieldフィールドを指定します。key_fieldフィールドには、オブジェクトのルートからkeyフィールドへ向かうパスをドットで区切った文字列として指定します。以下のようなオブジェクト構成でtitleをkeyに指定する例を示します。
 
 ```
-const index = createIndex(LinearIndex, array_of_articles, {key_field: 'slug'});
+export const array_of_articles = [
+    {
+      slug: "introduction-to-js",
+      content: "JavaScript is a versatile programming language widely used for web development. It enables interactive features on websites, such as dynamic updates, animations, and form validation. JavaScript is essential for creating modern web applications and supports various frameworks like React and Vue.js.",
+      data: {
+        title: "Introduction to JavaScript",
+        description: "Learn the basics of JavaScript, a powerful language for modern web applications.",
+        tags: ["javascript", "web", "programming"]
+      }
+    },
+    ...
+];
+```
+
+```
+const index = createIndex(LinearIndex, array_of_articles, {key_field: 'data.title'});
 ```
 
 インデックスには、標準で与えられたオブジェクトのテキストフィールド全てをそのまま含みます。そのため、インデックスサイズは検索対象の文章の総サイズにおおむね等しくなります。httpプロトコルではgzip圧縮がなされると思いますが、それでも10Mbyteを超えるような総文章量の場合は、Local Storageを利用してインデックスを保存するなどの工夫が必要となるでしょう。インデックスをjsonファイルとして分離し、検索時に動的にfetchするなどの工夫も必要となります。
@@ -129,7 +144,7 @@ const index = createIndex(LinearIndex, array_of_articles, {distance: 2});
 
 - not検索
 
-検索ワードの前に「-検索文字列1 検索文字列2」「-”検索文字列1” 検索文字列2」のようにマイナスをつけることで、その文字列を含まない文章を検索することができます。この例では、検索文字列1を含まず、検索文字列2を含む文章が検索されます。not検索は常にand検索と一緒に使われます。not検索が単体で使われた場合には、その検索ワードは無視されます。
+検索ワードの前に「-検索文字列1 検索文字列2」「-"検索文字列1" 検索文字列2」のようにマイナスをつけることで、その文字列を含まない文章を検索することができます。この例では、検索文字列1を含まず、検索文字列2を含む文章が検索されます。not検索は常にand検索と一緒に使われます。not検索が単体で使われた場合には、その検索ワードは無視されます。
 
 - or検索
 
@@ -138,12 +153,12 @@ const index = createIndex(LinearIndex, array_of_articles, {distance: 2});
 
 - 検索フィールド限定
 
-インデックスした文章全てを検索対象とせず、一部のみを検索対象とすることができます。例えば、前の例でtitleフィールドだけ検索対象に含めるには、「from:title 検索文字列」と入力します。from:直後のフィールド指定は、デフォルトでフィールドへのパス文字列の最後を指します。例えば、「meta.slug」を指定するには、「from:slug 検索文字列」と入力します。
+インデックスした文章全てを検索対象とせず、一部のみを検索対象とすることができます。例えば、前の例でslugフィールドだけ検索対象に含めるには、「from:slug 検索文字列」と入力します。from:直後のフィールド指定は、デフォルトでフィールドへのパス文字列の最後を指します。例えば、「data.title」を指定するには、「from:title 検索文字列」と入力します。
 
-フィールド指定文字列はインデックスを作る際にカスタマイズできます。例えば、meta.slugをfrom:linkという指定で検索できるようにするには、引数envのfield_namesに設定をします。
+フィールド指定文字列はインデックスを作る際にカスタマイズできます。例えば、slugをfrom:linkという指定で検索できるようにするには、引数envのfield_namesに設定をします。
 
 ```
-const index = createIndex(LinearIndex, array_of_articles, { field_names: { link: "meta.slug" } });
+const index = createIndex(LinearIndex, array_of_articles, { field_names: { link: "slug" } });
 ```
 
 - スコアの重み変更
@@ -177,7 +192,7 @@ export type Reference = {
 };
 ```
 
-tokenにはクエリ中の個々の検索文字列が設定されます。pathはどのフィールドから検索ワードが見つかったかをフィールドへのパスで示します。posは一致した箇所への、文章の先頭からの文字数です。完全一致検索の場合は、グラフェムを正しくカウントしないため、少し位置がずれます。wordaroundは、一致した箇所の前後の文字が指定されます。distanceは、あいまい検索にて一致した場合の編集距離が指定されます。
+tokenにはクエリ中の個々の検索文字列が設定されます。pathはどのフィールドから検索ワードが見つかったかをフィールドへのパスで示します。posは一致した箇所への、文章の先頭からの文字数です。あいまい検索時は、挿入や削除などの状態により少しposの位置がずれます。wordaroundは、一致した箇所の前後の文字が指定されます。distanceは、あいまい検索にて一致した場合の編集距離が指定されます。
 
 ## 高速検索用インデックスの作成
 
