@@ -1,19 +1,29 @@
-@group(0) @binding(0) var<storage, read_write> data: array<u32>;
-@group(0) @binding(1) var<storage, read_write> keyword: array<u32>;
+@group(0) @binding(0) var<storage, read> data: array<u32>;
+@group(0) @binding(1) var<storage, read> keyword: array<u32>;
 @group(0) @binding(2) var<storage, read_write> result: array<u32>;
 @group(0) @binding(3) var<storage, read_write> ptr: atomic<u32>;
+@group(0) @binding(4) var<storage, read> start_pos: array<u32>;
 
-@compute @workgroup_size(1) fn cs(
+@compute @workgroup_size(100) fn cs(
     @builtin(global_invocation_id) id: vec3u
 ) {
+    if(id.x >= arrayLength(&start_pos)) {
+        return ;
+    }
     let keyword_len = arrayLength(&keyword);
-    let data_len = arrayLength(&data);
-    for(var pos = 0u; pos < keyword_len; pos++) {
-        let data_pos = id.x + pos;
-        if(data_pos >= data_len || data[id.x + pos] != keyword[pos]) {
-            return ;
+    let end_pos = start_pos[id.x + 1u];
+    for(var data_start_pos = start_pos[id.x]; data_start_pos < end_pos; data_start_pos++) {
+        var keyword_pos = 0u;
+        for(; keyword_pos < keyword_len; keyword_pos++) {
+            let data_pos = data_start_pos + keyword_pos;
+            if(data_pos >= end_pos || data[data_pos] != keyword[keyword_pos]) {
+                break ;
+            }
+        }
+        if(keyword_pos == keyword_len) {
+            let ptr_pos = atomicAdd(&ptr, 1u);
+            result[ptr_pos * 2] = id.x;
+            result[ptr_pos * 2 + 1] = data_start_pos - start_pos[id.x];
         }
     }
-    let pos = atomicAdd(&ptr, 1u);
-    result[pos] = id.x;
 }
