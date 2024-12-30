@@ -1,7 +1,7 @@
 @group(0) @binding(0) var<storage, read> data: array<u32>;
 @group(0) @binding(1) var<storage, read> keyword: array<u32>;
 @group(0) @binding(2) var<storage, read_write> result: array<u32>;
-@group(0) @binding(3) var<storage, read_write> ptr: atomic<u32>;
+@group(0) @binding(3) var<storage, read_write> pointer: atomic<u32>;
 @group(0) @binding(4) var<storage, read> start_pos: array<u32>;
 
 @compute @workgroup_size(100) fn cs(
@@ -21,7 +21,7 @@
             }
         }
         if(keyword_pos == keyword_len) {
-            let ptr_pos = atomicAdd(&ptr, 1u);
+            let ptr_pos = atomicAdd(&pointer, 1u);
             result[ptr_pos * 2] = id.x;
             result[ptr_pos * 2 + 1] = data_start_pos - start_pos[id.x];
         }

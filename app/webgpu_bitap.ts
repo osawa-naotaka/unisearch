@@ -1,7 +1,8 @@
 import { defaultNormalizer } from "@src/util/preprocess";
 import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
 import { LinearIndex, UniSearchError, createIndex, search } from "dist/unisearch";
-import cs from "./search.wgsl?raw";
+import cs from "./bitap.wgsl?raw";
+import { createBitapKey, bitapKeyNumber } from "@src/util/algorithm";
 
 const adapter = await navigator.gpu?.requestAdapter();
 const device = await adapter?.requestDevice();
@@ -10,12 +11,12 @@ if (!device) {
 }
 
 const module = device.createShaderModule({
-    label: "search test module",
+    label: "bitap search test module",
     code: cs,
 });
 
 const pipeline = device.createComputePipeline({
-    label: "search test pipeline",
+    label: "bitap search test pipeline",
     layout: "auto",
     compute: {
         module,
@@ -24,7 +25,7 @@ const pipeline = device.createComputePipeline({
 
 const article = wikipedia_ja_extracted_1000.slice(0, 1000);
 
-const kwd = defaultNormalizer("補助");
+const kwd = defaultNormalizer("アンパサンド");
 const keyword = new Uint32Array([...kwd].map((x) => x.charCodeAt(0)));
 
 const input = new Uint32Array(
@@ -42,38 +43,54 @@ for (const len of doc_lens) {
 
 const start_pos = new Uint32Array(doc_start_poses);
 
+const bkey = createBitapKey(bitapKeyNumber(), [...kwd]);
+const bitap_key_tmp = [];
+for(const [key, mask] of bkey.mask.entries()) {
+    bitap_key_tmp.push(key.charCodeAt(0));
+    bitap_key_tmp.push(mask);
+}
+const bitap_key = new Uint32Array(bitap_key_tmp);
+
+
 const num_result = 4096;
 
 // create a buffer on the GPU to hold our computation
 const dataBuffer = device.createBuffer({
-    label: "data buffer",
+    label: "bitap data buffer",
     size: input.byteLength,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
 });
 device.queue.writeBuffer(dataBuffer, 0, input);
 
 const keywordBuffer = device.createBuffer({
-    label: "keyword buffer",
+    label: "bitap keyword buffer",
     size: keyword.byteLength,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
 });
 device.queue.writeBuffer(keywordBuffer, 0, keyword);
 
 const startPosBuffer = device.createBuffer({
-    label: "start pos buffer",
+    label: "bitap start pos buffer",
     size: start_pos.byteLength,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
 });
 device.queue.writeBuffer(startPosBuffer, 0, start_pos);
 
+const bitapKeyBuffer = device.createBuffer({
+    label: "bitap key buffer",
+    size: bitap_key.byteLength,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+});
+device.queue.writeBuffer(bitapKeyBuffer, 0, bitap_key);
+
 const resultBuffer = device.createBuffer({
-    label: "result buffer",
+    label: "bitap result buffer",
     size: num_result * 4 * 2,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
 });
 
 const resultPtrBuffer = device.createBuffer({
-    label: "result pointer buffer",
+    label: "bitap result pointer buffer",
     size: 4,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
 });
@@ -81,13 +98,13 @@ device.queue.writeBuffer(resultPtrBuffer, 0, new Uint32Array([0]));
 
 // create a buffer on the GPU to get a copy of the results
 const resultCopyBuffer = device.createBuffer({
-    label: "result copy buffer",
+    label: "bitap result copy buffer",
     size: num_result * 4 * 2,
     usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
 });
 
 const resultPtrCopyBuffer = device.createBuffer({
-    label: "result pointer copy buffer",
+    label: "bitap result pointer copy buffer",
     size: 4,
     usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
 });
@@ -95,7 +112,7 @@ const resultPtrCopyBuffer = device.createBuffer({
 // Setup a bindGroup to tell the shader which
 // buffer to use for the computation
 const bindGroup = device.createBindGroup({
-    label: "bindGroup for buffers",
+    label: "bitap bindGroup for buffers",
     layout: pipeline.getBindGroupLayout(0),
     entries: [
         { binding: 0, resource: { buffer: dataBuffer } },
@@ -103,15 +120,16 @@ const bindGroup = device.createBindGroup({
         { binding: 2, resource: { buffer: resultBuffer } },
         { binding: 3, resource: { buffer: resultPtrBuffer } },
         { binding: 4, resource: { buffer: startPosBuffer } },
+        { binding: 5, resource: { buffer: bitapKeyBuffer } },
     ],
 });
 
 // Encode commands to do the computation
 const encoder = device.createCommandEncoder({
-    label: "search encoder",
+    label: "bitap search encoder",
 });
 const pass = encoder.beginComputePass({
-    label: "search compute pass",
+    label: "bitap search compute pass",
 });
 pass.setPipeline(pipeline);
 pass.setBindGroup(0, bindGroup);
