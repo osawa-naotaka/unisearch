@@ -113,7 +113,7 @@ async function run(device: GPUDevice) {
         console.log("no match.");
     } else {
         await resultCopyBuffer.mapAsync(GPUMapMode.READ);
-        const result = new Uint32Array(resultCopyBuffer.getMappedRange(0, Math.min(resultPtr[0] * 8, num_result * 8)));
+        const result = new Uint32Array(resultCopyBuffer.getMappedRange(0, Math.min(resultPtr[0] * 4, num_result * 4)));
         const end = performance.now();
     
         console.log("time", end - start, "ms");
