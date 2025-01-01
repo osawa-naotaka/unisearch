@@ -131,6 +131,7 @@ async function run(device: GPUDevice) {
     const encoder = device.createCommandEncoder({
         label: "bitap search encoder",
     });
+    encoder.pushDebugGroup("bitap debug");
     const pass = encoder.beginComputePass({
         label: "bitap search compute pass",
     });
@@ -142,6 +143,7 @@ async function run(device: GPUDevice) {
     // Encode a command to copy the results to a mappable buffer.
     encoder.copyBufferToBuffer(resultBuffer, 0, resultCopyBuffer, 0, resultBuffer.size);
     encoder.copyBufferToBuffer(resultPtrBuffer, 0, resultPtrCopyBuffer, 0, resultPtrBuffer.size);
+    encoder.popDebugGroup();
 
     // Finish encoding and submit the commands
     const commandBuffer = encoder.finish();
