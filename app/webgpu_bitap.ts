@@ -124,54 +124,64 @@ const bindGroup = device.createBindGroup({
     ],
 });
 
-// Encode commands to do the computation
-const encoder = device.createCommandEncoder({
-    label: "bitap search encoder",
-});
-const pass = encoder.beginComputePass({
-    label: "bitap search compute pass",
-});
-pass.setPipeline(pipeline);
-pass.setBindGroup(0, bindGroup);
-pass.dispatchWorkgroups(10);
-pass.end();
+async function run(device: GPUDevice) {
+    device.queue.writeBuffer(resultPtrBuffer, 0, new Uint32Array([0]));
 
-// Encode a command to copy the results to a mappable buffer.
-encoder.copyBufferToBuffer(resultBuffer, 0, resultCopyBuffer, 0, resultBuffer.size);
-encoder.copyBufferToBuffer(resultPtrBuffer, 0, resultPtrCopyBuffer, 0, resultPtrBuffer.size);
+    // Encode commands to do the computation
+    const encoder = device.createCommandEncoder({
+        label: "bitap search encoder",
+    });
+    const pass = encoder.beginComputePass({
+        label: "bitap search compute pass",
+    });
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bindGroup);
+    pass.dispatchWorkgroups(10);
+    pass.end();
 
-// Finish encoding and submit the commands
-const commandBuffer = encoder.finish();
+    // Encode a command to copy the results to a mappable buffer.
+    encoder.copyBufferToBuffer(resultBuffer, 0, resultCopyBuffer, 0, resultBuffer.size);
+    encoder.copyBufferToBuffer(resultPtrBuffer, 0, resultPtrCopyBuffer, 0, resultPtrBuffer.size);
 
-const sleep = (time: number) => new Promise((resolve) => setTimeout(resolve, time));
-await sleep(100);
+    // Finish encoding and submit the commands
+    const commandBuffer = encoder.finish();
 
-const start = performance.now();
-device.queue.submit([commandBuffer]);
+    const sleep = (time: number) => new Promise((resolve) => setTimeout(resolve, time));
+    await sleep(100);
 
-// Read the results
-await resultPtrCopyBuffer.mapAsync(GPUMapMode.READ);
-const resultPtr = new Uint32Array(resultPtrCopyBuffer.getMappedRange());
+    const start = performance.now();
+    device.queue.submit([commandBuffer]);
 
-await resultCopyBuffer.mapAsync(GPUMapMode.READ);
-const result = new Uint32Array(resultCopyBuffer.getMappedRange(0, resultPtr[0] * 8));
-const end = performance.now();
+    // // Read the results
+    await resultPtrCopyBuffer.mapAsync(GPUMapMode.READ);
+    const resultPtr = new Uint32Array(resultPtrCopyBuffer.getMappedRange());
 
-console.log("time", end - start, "ms");
-console.log("keyword", keyword);
-console.log("result", result);
-console.log("result ptr", resultPtr);
+    if(resultPtr[0] === 0) {
+        console.log("no match.");
+    } else {
+        await resultCopyBuffer.mapAsync(GPUMapMode.READ);
+        const result = new Uint32Array(resultCopyBuffer.getMappedRange(0, Math.min(resultPtr[0] * 8, num_result * 8)));
+        const end = performance.now();
+    
+        console.log("time", end - start, "ms");
+        console.log("keyword", keyword);
+        console.log("result", result);
+        console.log("result ptr", resultPtr);
 
-resultBuffer.unmap();
-resultPtrBuffer.unmap();
+        resultCopyBuffer.unmap();
+    }
+
+    resultPtrCopyBuffer.unmap();
+}
+
+for(let i = 0; i < 1024; i++) {
+    await run(device);
+}
 
 const idx = createIndex(LinearIndex, article, { distance: 0, search_targets: ["text"] });
-if (idx instanceof UniSearchError) {
-    throw idx;
-} else {
-    const st = performance.now();
-    const res = search(idx, kwd);
-    const ed = performance.now();
-    console.log(res);
-    console.log("time", ed - st);
-}
+if (idx instanceof UniSearchError) throw idx;
+const st = performance.now();
+const res = search(idx, kwd);
+const ed = performance.now();
+console.log(res);
+console.log("time", ed - st);
