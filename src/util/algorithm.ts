@@ -128,13 +128,12 @@ export function bitapSearch<T>(key: BitapKey<T>, maxErrors: number, text: string
 
             replace = next_state_candidate;
             insertion = state[distance];
-            deletion = next_state;
+            deletion = key.or(key.sl(next_state, 1), one);
 
             state[distance] = next_state;
 
             if (key.and(state[distance], matchbit) !== zero) {
                 result.push([i - key.length + 1, distance]);
-                state.fill(zero);
                 break;
             }
         }
@@ -152,13 +151,12 @@ export function bitapSearch<T>(key: BitapKey<T>, maxErrors: number, text: string
 
             replace = next_state_candidate;
             insertion = state[distance];
-            deletion = next_state;
+            deletion = key.or(key.sl(next_state, 1), one);
 
             state[distance] = next_state;
 
             if (key.and(state[distance], matchbit) !== zero) {
                 result.push([text.length - key.length, distance]);
-                state.fill(zero);
                 break;
             }
         }

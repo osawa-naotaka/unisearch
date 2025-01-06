@@ -87,7 +87,7 @@ test("binary search for refine: end", () =>
     ).toStrictEqual(3));
 
 const key = createBitapKey("HT");
-test("bitap search 1", () => expect(bitapSearch(key, 0, "hogeHThage")).toStrictEqual(4));
-test("bitap search 2", () => expect(bitapSearch(key, 0, "hogeHTTPShage")).toStrictEqual(4));
-test("bitap search 3", () => expect(bitapSearch(key, 0, "HTTPS")).toStrictEqual(0));
-test("bitap search 4", () => expect(bitapSearch(key, 0, "hogeHT")).toStrictEqual(4));
+test("bitap search 1", () => expect(bitapSearch(key, 0, "hogeHThage")).toStrictEqual([4]));
+test("bitap search 2", () => expect(bitapSearch(key, 0, "hogeHTTPShage")).toStrictEqual([4]));
+test("bitap search 3", () => expect(bitapSearch(key, 0, "HTTPS")).toStrictEqual([0]));
+test("bitap search 4", () => expect(bitapSearch(key, 0, "hogeHT")).toStrictEqual([4]));

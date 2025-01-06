@@ -196,7 +196,8 @@ export function createBitapKey(pattern: string): BitapKey {
     return key;
 }
 
-export function bitapSearch(key: BitapKey, maxErrors: number, text: string, pos = 0): number | null {
+export function bitapSearch(key: BitapKey, maxErrors: number, text: string, pos = 0): number[] {
+    const result: number[] = [];
     const state = Array(maxErrors + 1).fill(0);
     const matchbit = 1 << (key.length - 1);
 
@@ -212,15 +213,15 @@ export function bitapSearch(key: BitapKey, maxErrors: number, text: string, pos 
 
             replace = next_state_candidate;
             insertion = state[distance];
-            deletion = next_state;
+            deletion = (next_state << 1) | 1;
 
             state[distance] = next_state;
 
             if ((state[distance] & matchbit) !== 0) {
-                return i - key.length + 1;
+                result.push(i - key.length + 1);
             }
         }
     }
 
-    return null;
+    return result;
 }
