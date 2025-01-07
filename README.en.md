@@ -197,12 +197,12 @@ Full-text search based on the LinearIndex described above will provide sufficien
 However, if a faster search is needed, a different index format can be used to speed up the search.
 
 ```
-import { HyblidBigramInvertedIndex, createIndex, search, UniSearchError } from "unisearch.js";
+import { HybridBigramInvertedIndex, createIndex, search, UniSearchError } from "unisearch.js";
 
-const index = createIndex(HyblidBigramInvertedIndex, array_of_articles);
+const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
 ```
 
-Using HyblidBigramInvertedIndex improves the search speed by a factor of approximately 10. The usage of the search is exactly the same as with LinearIndex.
+Using HybridBigramInvertedIndex improves the search speed by a factor of approximately 10. The usage of the search is exactly the same as with LinearIndex.
 
 However, in exchange for the improved search speed, there are a number of drawbacks
 
@@ -212,7 +212,7 @@ However, in exchange for the improved search speed, there are a number of drawba
 4. Some of the information in the search results will be missing: pos and wordaround will not exist.
 5. Scoring based on TF-IDF is incomplete. Only simple TFs are calculated now.
 
-Overall, HyblidBigramInvertedIndex is not really worth using. Consider using it only if you really need a fast search.
+Overall, HybridBigramInvertedIndex is not really worth using. Consider using it only if you really need a fast search.
 
 ## Introduction of search algorithm
 
@@ -222,16 +222,16 @@ When using LinearIndex, the exact match search algorithm is very simple. Or rath
 
 The fuzzy search uses the bitap algorithm, which is 50-100 times slower than indexOf. I tried to realize bitap in Rust-WASM, but the speed was not much different from that of JavaScript, so I did not adopt it. The characters to be searched are segmented into grapheme units using Intl.Segmenter(). Therefore, edit distances can be calculated correctly even for characters consisting of multiple code points, such as Kanji variants, pictographs, national flags, and so on. However, the memory usage is doubled because the index of each grapheme unit is generated separately from the index of an ordinary string.
 
-### HyblidBigramInvertedIndex
+### HybridBigramInvertedIndex
 
-HyblidBigramInvertedIndex classifies characters into two categories, one for languages such as Japanese, where words are difficult to separate, and the other for languages such as English, where words can be separated by spaces, and generates different indexes for each. For English, an ordinary word-by-word inverted index was created, while for Japanese and other languages, an inverted index was created by fragmenting sentences using Bigram without separating words.
+HybridBigramInvertedIndex classifies characters into two categories, one for languages such as Japanese, where words are difficult to separate, and the other for languages such as English, where words can be separated by spaces, and generates different indexes for each. For English, an ordinary word-by-word inverted index was created, while for Japanese and other languages, an inverted index was created by fragmenting sentences using Bigram without separating words.
 Although increasing the number of ngrams (e.g., Trigram) can reduce search noise, it increases the size of the index, so Bigram was used to consider a balance.
 
 ### Preprocessing
 
 Preprocessing is simple: Unicode normalization (NFKC), lowercasing of alphabetic and other characters, and some normalization of Japanese. Stopwords and stemming are not used for inverted indexes, such as English. Since we aimed to be language-neutral, we did not include too many special processes, but aimed to achieve a range of search capabilities.
 
-In addition to the above, HyblidBigramInvertedIndex removes symbols and signs and uses them as delimiters, divides by whitespace, and divides by character type (classifying languages that cannot be tokenized, such as Japanese, and those that can). Therefore, symbols by themselves cannot be searched, and URLs are also tokenized. It would be nice if there was a mechanism that could be shared across all languages, but it seems to be incomplete. Intl.Segmenter() can be used for Japanese and Chinese, so we are looking forward to the future.
+In addition to the above, HybridBigramInvertedIndex removes symbols and signs and uses them as delimiters, divides by whitespace, and divides by character type (classifying languages that cannot be tokenized, such as Japanese, and those that can). Therefore, symbols by themselves cannot be searched, and URLs are also tokenized. It would be nice if there was a mechanism that could be shared across all languages, but it seems to be incomplete. Intl.Segmenter() can be used for Japanese and Chinese, so we are looking forward to the future.
 
 ### Other algorithms to consider
 

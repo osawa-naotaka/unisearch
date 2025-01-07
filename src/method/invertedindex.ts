@@ -61,7 +61,8 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
                     for (const [term, plist] of refined) {
                         const r = bitapSearch(bitapkey, env.distance || 0, splitByGrapheme(term));
                         if (r.length !== 0) {
-                            const min_dist = r.sort((a, b) => b[1] - a[1])[0][1];
+                            r.sort((a, b) => a[1] - b[1]);
+                            const min_dist = r[0][1];
                             res.push([term, plist, min_dist]);
                         }
                     }
@@ -70,7 +71,8 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
                     for (const [term, plist] of refined) {
                         const r = bitapSearch(bitapkey, env.distance || 0, splitByGrapheme(term));
                         if (r.length !== 0) {
-                            const min_dist = r.sort((a, b) => b[1] - a[1])[0][1];
+                            r.sort((a, b) => a[1] - b[1]);
+                            const min_dist = r[0][1];
                             res.push([term, plist, min_dist]);
                         }
                     }

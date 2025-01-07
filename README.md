@@ -200,12 +200,12 @@ tokenにはクエリ中の個々の検索文字列が設定されます。path�
 しかし、もしもっと高速な検索を必要とする場合、違うインデックス形式を使うことにより、検索の高速化が達成できます。
 
 ```
-import { HyblidBigramInvertedIndex, createIndex, search, UniSearchError } from "unisearch.js";
+import { HybridBigramInvertedIndex, createIndex, search, UniSearchError } from "unisearch.js";
 
-const index = createIndex(HyblidBigramInvertedIndex, array_of_articles);
+const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
 ```
 
-HyblidBigramInvertedIndexを使うことにより、おおよそ10倍の検索速度向上がみられます。検索の使い方はLinearIndex時と全く同一です。
+HybridBigramInvertedIndexを使うことにより、おおよそ10倍の検索速度向上がみられます。検索の使い方はLinearIndex時と全く同一です。
 
 ただし、検索の速度向上のかわり、多数の欠点も存在します。
 
@@ -215,7 +215,7 @@ HyblidBigramInvertedIndexを使うことにより、おおよそ10倍の検索�
 4. 検索結果の情報の一部が欠けます。posとwordaroundが存在しなくなります。
 5. TF-IDFに基づくスコアリングが未完成です。今は単純なTFのみ計算しています。
 
-総合的に見て、HyblidBigramInvertedIndexを使う価値はあまりありません。どうしても高速な検索が必要な場合のみ利用を検討してください。
+総合的に見て、HybridBigramInvertedIndexを使う価値はあまりありません。どうしても高速な検索が必要な場合のみ利用を検討してください。
 
 ## 検索アルゴリズムの紹介
 
@@ -225,16 +225,16 @@ LinearIndexを使う場合、完全一致検索アルゴリズムは非常に単
 
 あいまい検索は、教科書通りのbitapアルゴリズムを用いています。indexOfに比べ50-100倍程度遅い速度です。Rust-WASMでbitapを実現してみましたが、JavaScriptで実現した場合に比べても大差ない速度のため、採用を見送りました。検索対象の文字はIntl.Segmenter()を使ってグラフェム単位に分割しています。そのため、漢字の異字体や絵文字、国旗などなど、複数のコードポイントからなる文字についても、正しく編集距離を計算できます。ただし、グラフェム単位のインデックスを普通の文字列のインデックスと別に生成するため、メモリ使用量が倍になっています。
 
-### HyblidBigramInvertedIndex
+### HybridBigramInvertedIndex
 
-HyblidBigramInvertedIndexは、日本語のような、単語の分かち書きが難しい言語と、英語のような、空白で単語が区切れる言語、それぞれに文字を分類して、違うインデックスを生成することで検索を実現しています。英語は普通の単語単位の転置インデックスを作り、日本語などは分かち書きせずBigramで文章を断片化して転置インデックスを生成しました。
+HybridBigramInvertedIndexは、日本語のような、単語の分かち書きが難しい言語と、英語のような、空白で単語が区切れる言語、それぞれに文字を分類して、違うインデックスを生成することで検索を実現しています。英語は普通の単語単位の転置インデックスを作り、日本語などは分かち書きせずBigramで文章を断片化して転置インデックスを生成しました。
 Trigramなど、Ngramを増やすことで検索ノイズは軽減できるのですが、その代わりインデックスサイズが大きくなってしまうため、バランスをみてBigramを採用しました。
 
 ### 前処理
 
 前処理は単純です。Unicodeの正規化(NFKC)や英文字などの小文字化、日本語の一部の正規化をしている程度です。転置インデックスの英語などにおいてもストップワードやステミングは採用していません。言語中立を目指したため、あまり特殊な処理は入れずに検索できる範囲の能力を目指しました。
 
-HyblidBigramInvertedIndexでは、上記に加え、約物・記号の削除とそれらをデリミタとした分割、空白による分割、文字種（日本語のようにトークナイズできない言語とできる言語を分類）による分割を行っています。そのため、記号単体では検索できず、URLもトークナイズされます。全言語に共通で分かち書きできる機構があれば良いのですが、未だ未完の状態のようです。一応、Intl.Segmenter()は日本語と中国語の分かち書きができるらしいので、今後に期待します。
+HybridBigramInvertedIndexでは、上記に加え、約物・記号の削除とそれらをデリミタとした分割、空白による分割、文字種（日本語のようにトークナイズできない言語とできる言語を分類）による分割を行っています。そのため、記号単体では検索できず、URLもトークナイズされます。全言語に共通で分かち書きできる機構があれば良いのですが、未だ未完の状態のようです。一応、Intl.Segmenter()は日本語と中国語の分かち書きができるらしいので、今後に期待します。
 
 ### その他の検討アルゴリズム
 

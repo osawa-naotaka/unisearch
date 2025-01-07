@@ -16,15 +16,6 @@ function* indicesOf(keyword: string, target: string): Generator<number> {
     }
 }
 
-function* fuzzyIndicesOf(keyword: string, target: string): Generator<number> {
-    const key = createBitapKey(keyword);
-    let pos = bitapSearch(key, 1, target);
-    while (pos !== null) {
-        yield pos;
-        pos = bitapSearch(key, 1, target, pos + keyword.length + 1);
-    }
-}
-
 export function searchLinear(query: string, index: LinearIndex): Reference[] {
     const query_normalized = normalizeText(query);
     return index.flatMap((doc, id) => {
@@ -45,7 +36,8 @@ export function searchLinear(query: string, index: LinearIndex): Reference[] {
 export function searchFuzzyLinear(query: string, index: LinearIndex): Reference[] {
     const query_normalized = normalizeText(query);
     return index.flatMap((doc, id) => {
-        const results = [...fuzzyIndicesOf(query_normalized, doc)];
+        const key = createBitapKey(query_normalized);
+        const results = bitapSearch(key, 1, doc);
         return results.length > 0
             ? {
                   id: id,

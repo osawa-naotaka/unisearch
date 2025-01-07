@@ -89,8 +89,36 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
 
     private fuzzySearch =
         <S>(maxerror: number, bitapkey: BitapKey<S>) =>
-        (target: string[]): [number, number][] =>
-            bitapSearch(bitapkey, maxerror, target);
+        (target: string[]): [number, number][] => {
+            const raw_result = bitapSearch(bitapkey, maxerror, target);
+            if(raw_result.length === 0) return [];
+
+            const result: [number, number][] = [];
+            let latest_item = raw_result[0];
+            let latest_pos = latest_item[0];
+
+            for(const [pos, distance] of raw_result.slice(1)) {
+                if(latest_pos + 1 === pos || latest_pos === pos) {
+                    latest_pos = pos;
+                    if(distance < latest_item[1]) {
+                        latest_item = [pos, distance];
+                    } else if (distance == latest_item[1]) {
+                        if(distance === 0) {
+                            result.push(latest_item);
+                            latest_item = [pos, distance];    
+                        }
+                    }
+                } else {
+                    result.push(latest_item);
+                    latest_item = [pos, distance];
+                    latest_pos = pos;
+                }
+            }
+
+            result.push(latest_item);
+
+            return result;
+        }
 
     private searchToken<T extends string | string[]>(
         index: Record<Path, T>[],
