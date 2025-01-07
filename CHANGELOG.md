@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.4] - 2025-01-07
+### Fixed
+- fuzzy search bug is fixed.
+  - The bitap algorithm did not correctly calculate the single-character deletion status.
+  - Once a match was made, the search state was cleared entirely, resulting in fewer matches.
+  - In HybridBigramInvertedIndex, the edit distance was not calculated correctly. 
+- Typo in README is fixed.
+- Typo of search class is fixed. Not HyblidBigramInvertedIndex, but HybridBigramInvertedIndex.
+
 ## [1.0.3] - 2024-12-28
 ### Fixed
 - update README.
@@ -28,6 +37,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - search frontend, google-like syntax
 - sorting search result based on TF-IDF
 
-[Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.0...v1.0.2

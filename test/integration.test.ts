@@ -1,6 +1,6 @@
 import { test, expect, describe } from "vitest";
 import { array_of_articles } from "@test/array_of_articles.js";
-import { LinearIndex, createIndex, search, UniSearchError, HyblidBigramInvertedIndex } from "../dist/unisearch.js";
+import { LinearIndex, createIndex, search, UniSearchError, HybridBigramInvertedIndex } from "../dist/unisearch.js";
 import { UniIndex, SearchIndex, LinearIndexEntry } from "../dist/unisearch.js";
 import { createIndexFromObject, indexToObject } from "../dist/unisearch.js";
 
@@ -415,7 +415,7 @@ describe("not search", () => {
             {
                 id: 6,
                 key: undefined,
-                score: 0.07499711596179154,
+                score: 0.06416459750140764,
                 refs: [
                     {
                         token: "概要",
@@ -527,7 +527,7 @@ describe("from: weight: search", () => {
 });
 
 describe("Hybrid bigram inverted index creation and search", () => {
-    const index = createIndex(HyblidBigramInvertedIndex, array_of_articles);
+    const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
     if(index instanceof UniSearchError) throw index;
 
     const result1 = search(index, "maintainability");
