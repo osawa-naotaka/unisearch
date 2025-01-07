@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   - Once a match was made, the search state was cleared entirely, resulting in fewer matches.
   - In HybridBigramInvertedIndex, the edit distance was not calculated correctly. 
 - Typo in README is fixed.
+- Typo of search class is fixed. Not HyblidBigramInvertedIndex, but HybridBigramInvertedIndex.
 
 ## [1.0.3] - 2024-12-28
 ### Fixed

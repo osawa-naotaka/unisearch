@@ -3,7 +3,7 @@ import { benchmark, getKeywords } from "@ref/bench/benchmark_common";
 import { calculateGzipedJsonSize } from "@ref/util";
 import { UniSearchError } from "@src/frontend/base";
 import { createIndex, indexToObject } from "@src/frontend/indexing";
-import { HyblidBigramInvertedIndex } from "@src/frontend/indextypes";
+import { HybridBigramInvertedIndex } from "@src/frontend/indextypes";
 import { search } from "@src/frontend/search";
 import { LinearIndex } from "@src/method/linearindex";
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
@@ -44,7 +44,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     console.log(fuzzy_result.results);
 
     const hybrid_index_result = benchmark(
-        (arg) => createIndex(HyblidBigramInvertedIndex, arg, { key_field: "title" }),
+        (arg) => createIndex(HybridBigramInvertedIndex, arg, { key_field: "title" }),
         [wikipedia_articles],
     );
     console.log(`hybrid indexing time: ${hybrid_index_result.time} ms`);
