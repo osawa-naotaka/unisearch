@@ -35,7 +35,12 @@ for(const [key, mask] of bkey.mask.entries()) {
 }
 const bitap_key = new Uint32Array(bitap_key_tmp);
 
-const num_result = 4096;
+for(let i = bitap_key_tmp.length; i < 64; i++) {
+    bitap_key_tmp.push(0);
+}
+const bitap_dict = new Uint32Array(bitap_key_tmp);
+
+const num_result = 4096 * 1024;
 
 const gpu_buffers = {
     data: device.createBuffer({
@@ -81,7 +86,7 @@ const gpu_buffers = {
     }),
 
     keyword: device.createBuffer({
-        label: "keyword uniform",
+        label: "keyword",
         size: keyword.byteLength,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     }),
@@ -97,6 +102,24 @@ const gpu_buffers = {
         size: 4 * 4,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     }),
+
+    bitap_dict: device.createBuffer({
+        label: "bitap dict",
+        size: 4 * 2 * 32,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    }),
+
+    keyword_len: device.createBuffer({
+        label: "keyword len",
+        size: 4,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    }),
+
+    bitap_dict_len: device.createBuffer({
+        label: "bitap dict len",
+        size: 4,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    }),
 };
 
 const start = performance.now();
@@ -107,8 +130,12 @@ device.queue.writeBuffer(gpu_buffers.loop_cnt, 0, new Uint32Array([1]));
 device.queue.writeBuffer(gpu_buffers.keyword, 0, keyword);
 device.queue.writeBuffer(gpu_buffers.bitap_key, 0, bitap_key);
 device.queue.writeBuffer(gpu_buffers.end_mask, 0, new Uint32Array(new Array(4).fill(1 << (keyword.length - 1))));
+device.queue.writeBuffer(gpu_buffers.bitap_dict, 0, new Uint32Array(bitap_dict));
+device.queue.writeBuffer(gpu_buffers.keyword_len, 0, new Uint32Array([keyword.length]));
+device.queue.writeBuffer(gpu_buffers.bitap_dict_len, 0, new Uint32Array([Math.ceil(keyword.length / 2)]));
 const end = performance.now();
 
+console.log(bitap_key)
 console.log(`GPU buffer transfer time: ${end - start} ms.`);
 
 while(true) {

@@ -23,11 +23,12 @@ export async function run_bitap_dist3(device: GPUDevice, buffers: Record<string,
         layout: pipeline.getBindGroupLayout(0),
         entries: [
             { binding: 0, resource: { buffer: buffers.data } },
-            { binding: 1, resource: { buffer: buffers.keyword } },
             { binding: 2, resource: { buffer: buffers.result } },
             { binding: 3, resource: { buffer: buffers.result_ptr } },
-            { binding: 5, resource: { buffer: buffers.bitap_key } },
             { binding: 8, resource: { buffer: buffers.end_mask } },
+            { binding: 9, resource: { buffer: buffers.bitap_dict } },
+            { binding: 10, resource: { buffer: buffers.keyword_len } },
+            { binding: 11, resource: { buffer: buffers.bitap_dict_len } },
         ],
     });
 
@@ -65,7 +66,7 @@ export async function run_bitap_dist3(device: GPUDevice, buffers: Record<string,
         const end = performance.now();
     
         await buffers.result_copy.mapAsync(GPUMapMode.READ);
-        if(resultPtr[0] < 4096) {
+        if(resultPtr[0] < 4096 * 1024) {
             const result = new Uint32Array(buffers.result_copy.getMappedRange(0, resultPtr[0] * 4 * 2));
             console.log(toRef(result).sort((a, b) => a.pos - b.pos));
         } else {
