@@ -415,7 +415,7 @@ describe("not search", () => {
             {
                 id: 6,
                 key: undefined,
-                score: 0.07499711596179154,
+                score: 0.06416459750140764,
                 refs: [
                     {
                         token: "概要",
