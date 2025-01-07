@@ -90,7 +90,7 @@ async function run(device: GPUDevice) {
     });
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
-    pass.dispatchWorkgroups(input.byteLength / 16 / 256);
+    pass.dispatchWorkgroups(input.length / 4 / 256);
     pass.end();
 
     // Encode a command to copy the results to a mappable buffer.

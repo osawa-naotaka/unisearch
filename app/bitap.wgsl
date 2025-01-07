@@ -5,7 +5,7 @@
 @group(0) @binding(4) var<storage, read> start_pos: array<u32>;
 @group(0) @binding(5) var<storage, read> bitap_key: array<u32>;
 
-@compute @workgroup_size(100) fn cs(
+@compute @workgroup_size(256) fn cs(
     @builtin(global_invocation_id) id: vec3u
 ) {
     if(id.x >= arrayLength(&start_pos)) {

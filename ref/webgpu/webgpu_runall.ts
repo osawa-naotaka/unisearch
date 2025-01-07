@@ -111,7 +111,7 @@ const end = performance.now();
 
 console.log(`GPU buffer transfer time: ${end - start} ms.`);
 
-// while(true) {
+while(true) {
     await run_1char(device, gpu_buffers, "1char");
     await run_1char_4w(device, gpu_buffers, "1char 4w");
     await run_1char_4w_uniform(device, gpu_buffers, "uniform 1char 4w");
@@ -121,4 +121,4 @@ console.log(`GPU buffer transfer time: ${end - start} ms.`);
     await run_bitap_dist1_amp(device, gpu_buffers, "1 amp bitap");
     await run_bitap_dist3_amp(device, gpu_buffers, "3 amp bitap");
     await run_bitap_dist3(device, gpu_buffers, "3 bitap");
-// }
+}

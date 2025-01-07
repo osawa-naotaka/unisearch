@@ -117,7 +117,7 @@ async function run(device: GPUDevice) {
     });
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
-    pass.dispatchWorkgroups(10);
+    pass.dispatchWorkgroups(doc_start_poses.length - 1);
     pass.end();
 
     // Encode a command to copy the results to a mappable buffer.

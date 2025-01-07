@@ -9,6 +9,8 @@ const device = await adapter?.requestDevice();
 if (!device) {
     throw new Error("need a browser that supports WebGPU");
 }
+console.log(adapter);
+console.log(device);
 
 const module = device.createShaderModule({
     label: "bitap search test module",
@@ -137,7 +139,7 @@ async function run(device: GPUDevice) {
     });
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
-    pass.dispatchWorkgroups(10);
+    pass.dispatchWorkgroups(input.length / 256);
     pass.end();
 
     // Encode a command to copy the results to a mappable buffer.
