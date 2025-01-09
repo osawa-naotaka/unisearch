@@ -116,5 +116,14 @@ export function splitByGrapheme(str: string): string[] {
     return r;
 }
 
+export function excerptOneCodepointPerGraphem(str: string): string {
+    let r = "";
+    const segmenter = new Intl.Segmenter("und", { granularity: "grapheme" });
+    for (const { segment } of segmenter.segment(str)) {
+        r += segment[0];
+    }
+    return r;
+}
+
 export const defaultNormalizer = pipe(normalizeJapanese, normalizeUnicode, toLowerCase);
 export const hybridSpritter = pipe(splitByDelimiter, splitByNonSpaceSeparatedChar);
