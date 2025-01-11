@@ -49,14 +49,14 @@ export function Hybrid<T1, T2>(name: string, ja: IndexClass, en: IndexClass): In
                 this.en.fixIndex();
             }
 
-            public search(env: SearchEnv, keyword: string): SearchResult[] {
+            public async search(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
                 const tokens = hybridSpritter([keyword]);
                 const results = [];
                 for (const t of tokens) {
                     if (isNonSpaceSeparatedChar(t)) {
-                        results.push(this.ja.search(env, keyword));
+                        results.push(await this.ja.search(env, keyword));
                     } else {
-                        results.push(this.en.search(env, keyword));
+                        results.push(await this.en.search(env, keyword));
                     }
                 }
                 return intersectResults(results);

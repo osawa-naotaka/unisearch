@@ -1,5 +1,6 @@
 import type { WikipediaArticle, WikipediaKeyword } from "@ref/bench/benchmark_common";
 import { benchmark, getKeywords } from "@ref/bench/benchmark_common";
+import type { BenchmarkResult } from "@ref/bench/benchmark_common";
 import { calculateGzipedJsonSize } from "@ref/util";
 import { UniSearchError } from "@src/frontend/base";
 import { createIndex, indexToObject } from "@src/frontend/indexing";
@@ -9,6 +10,16 @@ import { LinearIndex } from "@src/method/linearindex";
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
 import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
+
+async function benchmarkAsync<T, R>(fn: (args: T, idx: number) => Promise<R>, args: T[]): Promise<BenchmarkResult<R>> {
+    const start = performance.now();
+    const results = await Promise.all(args.map((arg, idx) => fn(arg, idx)));
+    const end = performance.now();
+    return {
+        time: end - start,
+        results: results,
+    };
+}
 
 async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[], n: number) {
     console.log("initializing benchmark...");
@@ -31,7 +42,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     console.log(index);
     console.log(`gziped index size: ${await calculateGzipedJsonSize(indexToObject(index))}`);
 
-    const exact_result = benchmark(
+    const exact_result = await benchmarkAsync(
         (x) => search(index, x),
         keywords.map((x) => `"${x}"`),
     );
@@ -39,7 +50,10 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     console.log(exact_result.results);
 
     console.log("fuzzy search is too slow. exec search only first 100 keywords.");
-    const fuzzy_result = benchmark((x) => search(index, x), keywords.slice(0, 100));
+    const fuzzy_result = await benchmarkAsync(
+        (x) => search(index, x),
+        keywords.slice(0, 100),
+    );
     console.log(`fuzzy search time per one keyword: ${fuzzy_result.time / 100} ms`);
     console.log(fuzzy_result.results);
 
@@ -56,7 +70,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     console.log(hybrid_index);
     console.log(`gziped index size: ${await calculateGzipedJsonSize(indexToObject(hybrid_index))}`);
 
-    const hybrid_result = benchmark(
+    const hybrid_result = await benchmarkAsync(
         (x) => search(hybrid_index, x),
         keywords.map((x) => `"${x}"`),
     );

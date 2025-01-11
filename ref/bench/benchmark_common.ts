@@ -8,7 +8,7 @@ type Result = {
     refs: Reference[];
 };
 
-type BenchmarkResult<R> = {
+export type BenchmarkResult<R> = {
     time: number;
     results: R[];
 };

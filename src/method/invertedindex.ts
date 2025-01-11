@@ -45,7 +45,7 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
         }
     }
 
-    public search(env: SearchEnv, keyword: string): SearchResult[] {
+    public async search(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
         const results = new Map<Id, SearchResult>();
         for (const path of env.search_targets || Object.keys(this.index_entry.index)) {
             let res: [string, PostingList, number][] = [];

@@ -42,7 +42,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
 
     public fixIndex(): void {}
 
-    public search(env: SearchEnv, keyword: string): SearchResult[] {
+    public async search(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
         if (env.distance === undefined || env.distance === 0) {
             return this.searchToken(
                 this.index_entry.index,

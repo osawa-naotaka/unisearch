@@ -58,7 +58,7 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
         }
     }
 
-    public search(env: SearchEnv, keyword: string): SearchResult[] {
+    public search(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
         let poses: [number, number][] = [];
         if(env.distance === undefined || env.distance === 0) {
             poses = this.allIndexOf(keyword, this.index_entry.content);
@@ -113,7 +113,7 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
             });
             result.set(cref.id, r);
         }
-        return Array.from(result.values());        
+        return Promise.resolve(Array.from(result.values()));
     }
 
     private allIndexOf(keyword: string, content: string): [number, number][] {
