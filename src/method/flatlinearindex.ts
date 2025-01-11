@@ -1,37 +1,53 @@
-import { Path, SearchEnv, SearchIndex, SearchResult, UniSearchError } from "@src/frontend/base";
-import { splitByGrapheme, excerptOneCodepointPerGraphem } from "@src/util/preprocess";
-import { binarySearch, BinarySearchType, bitapKeyNumber, bitapKeyBigint, createBitapKey, bitapSearch } from "@src/util/algorithm";
+import { type Path, type SearchEnv, type SearchIndex, type SearchResult, UniSearchError } from "@src/frontend/base";
+import bitap_dist1 from "@src/method/wgsl/bitap_dist1.wgsl?raw";
+import bitap_dist2 from "@src/method/wgsl/bitap_dist2.wgsl?raw";
+import bitap_dist3 from "@src/method/wgsl/bitap_dist3.wgsl?raw";
+import {
+    BinarySearchType,
+    binarySearch,
+    bitapKeyBigint,
+    bitapKeyNumber,
+    bitapSearch,
+    createBitapKey,
+} from "@src/util/algorithm";
+import { excerptOneCodepointPerGraphem, splitByGrapheme } from "@src/util/preprocess";
 
 export type ContentRange = {
     id: number;
     path: string;
     start: number;
     end: number;
-}
+};
 
 type ContentRef = {
     id: number;
     path: string;
     pos: number;
-}
+};
 
 type BitapKeyUint32 = {
     mask: Map<number, number>;
     length: number;
 };
 
-
 export type FlatLinearIndexEntry = { key: string[]; content: string; toc: ContentRange[] };
 
 export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
     public index_entry: FlatLinearIndexEntry;
+    private readonly num_result: number = 4096 * 1024;
     private gpu_content: Uint32Array;
+
+    private device: GPUDevice | undefined = undefined;
+    private gpu_buffers: GPUBuffer[] = [];
+    private gpu_module_dist1: GPUShaderModule | undefined = undefined;
+    private gpu_module_dist2: GPUShaderModule | undefined = undefined;
+    private gpu_module_dist3: GPUShaderModule | undefined = undefined;
 
     public constructor(index?: FlatLinearIndexEntry) {
         this.index_entry = index || { key: [], content: "", toc: [] };
-        if(index) {
+        if (index) {
             this.gpu_content = new Uint32Array(index.content.length);
-            for(let i = 0; i < index.content.length; i++) {
+            for (let i = 0; i < index.content.length; i++) {
                 this.gpu_content[i] = index.content.charCodeAt(i);
             }
         } else {
@@ -44,7 +60,7 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
         const start = this.index_entry.content.length;
         const end = start + graphemes.length - 1;
         this.index_entry.content += graphemes;
-        this.index_entry.toc.push({id: id, path: path, start: start, end: end});
+        this.index_entry.toc.push({ id: id, path: path, start: start, end: end });
     }
 
     public addKey(id: number, key: string): void {
@@ -53,22 +69,107 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
 
     public fixIndex(): void {
         this.gpu_content = new Uint32Array(this.index_entry.content.length);
-        for(let i = 0; i < this.index_entry.content.length; i++) {
+        for (let i = 0; i < this.index_entry.content.length; i++) {
             this.gpu_content[i] = this.index_entry.content.charCodeAt(i);
         }
     }
 
-    public search(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
+    public async search(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
         let poses: [number, number][] = [];
-        if(env.distance === undefined || env.distance === 0) {
+        if (env.distance === undefined || env.distance === 0) {
             poses = this.allIndexOf(keyword, this.index_entry.content);
         } else {
             const grapheme = splitByGrapheme(keyword);
             let raw_result: [number, number][];
-            if(grapheme.length <= 32) {
-                const key = this.createBitapKeyUint32(grapheme);
-                raw_result = this.bitapSearch(key, env.distance, this.gpu_content);
-            } else if(grapheme.length < 50) {
+            if (this.device === undefined) {
+                await this.initGPU();
+            }
+            if (grapheme.length <= 32 && this.device !== undefined) {
+                const bitap_key = this.createBitapKeyUint32(grapheme);
+                const bitap_key_tmp = [];
+                for (const [key, mask] of bitap_key.mask.entries()) {
+                    bitap_key_tmp.push(key);
+                    bitap_key_tmp.push(mask);
+                }
+                for (let i = bitap_key_tmp.length; i < 64; i++) {
+                    bitap_key_tmp.push(0);
+                }
+                const bitap_dict = new Uint32Array(bitap_key_tmp);
+                this.device.queue.writeBuffer(this.gpu_buffers[4], 0, bitap_dict);
+
+                this.device.queue.writeBuffer(this.gpu_buffers[2], 0, new Uint32Array([0]));
+                this.device.queue.writeBuffer(
+                    this.gpu_buffers[3],
+                    0,
+                    new Uint32Array(new Array(4).fill(1 << (grapheme.length - 1))),
+                );
+                this.device.queue.writeBuffer(this.gpu_buffers[5], 0, new Uint32Array([grapheme.length]));
+                this.device.queue.writeBuffer(
+                    this.gpu_buffers[6],
+                    0,
+                    new Uint32Array([Math.ceil(grapheme.length / 2)]),
+                );
+
+                if (this.gpu_module_dist1 === undefined) throw new Error("gpu_module_dist1 is undefined");
+                const pipeline = this.device.createComputePipeline({
+                    label: "bitap search pipeline",
+                    layout: "auto",
+                    compute: {
+                        module: this.gpu_module_dist1,
+                    },
+                });
+
+                const bindGroup = this.device.createBindGroup({
+                    label: "bitap bindGroup for buffers",
+                    layout: pipeline.getBindGroupLayout(0),
+                    entries: [
+                        { binding: 0, resource: { buffer: this.gpu_buffers[0] } },
+                        { binding: 1, resource: { buffer: this.gpu_buffers[1] } },
+                        { binding: 2, resource: { buffer: this.gpu_buffers[2] } },
+                        { binding: 3, resource: { buffer: this.gpu_buffers[3] } },
+                        { binding: 4, resource: { buffer: this.gpu_buffers[4] } },
+                        { binding: 5, resource: { buffer: this.gpu_buffers[5] } },
+                        { binding: 6, resource: { buffer: this.gpu_buffers[6] } },
+                    ],
+                });
+
+                const encoder = this.device.createCommandEncoder({
+                    label: "bitap search encoder",
+                });
+                encoder.pushDebugGroup("bitap");
+                const pass = encoder.beginComputePass({
+                    label: "bitap search compute pass",
+                });
+                pass.setPipeline(pipeline);
+                pass.setBindGroup(0, bindGroup);
+                pass.dispatchWorkgroups(this.gpu_content.length / 256); // 256 workgroup_size
+                pass.end();
+
+                encoder.copyBufferToBuffer(this.gpu_buffers[1], 0, this.gpu_buffers[7], 0, this.gpu_buffers[1].size);
+                encoder.copyBufferToBuffer(this.gpu_buffers[2], 0, this.gpu_buffers[8], 0, this.gpu_buffers[2].size);
+                encoder.popDebugGroup();
+
+                const commandBuffer = encoder.finish();
+
+                this.device.queue.submit([commandBuffer]);
+
+                await this.gpu_buffers[8].mapAsync(GPUMapMode.READ);
+                const pointer = new Uint32Array(this.gpu_buffers[8].getMappedRange());
+                if (pointer[0] === 0) {
+                    this.gpu_buffers[8].unmap();
+                    return [];
+                }
+                await this.gpu_buffers[7].mapAsync(GPUMapMode.READ);
+                const count = Math.min(pointer[0], this.num_result);
+                const gpu_result = new Uint32Array(this.gpu_buffers[7].getMappedRange(0, count * 4 * 2));
+                raw_result = [];
+                for (let i = 0; i < gpu_result.length; i += 2) {
+                    raw_result.push([gpu_result[i], gpu_result[i + 1]]);
+                }
+                raw_result = raw_result.sort((a, b) => a[0] - b[0]);
+                this.gpu_buffers[7].unmap();
+                this.gpu_buffers[8].unmap();
+            } else if (grapheme.length < 50) {
                 const key = createBitapKey(bitapKeyNumber(), grapheme);
                 raw_result = bitapSearch(key, env.distance, this.gpu_content);
             } else {
@@ -79,16 +180,11 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
             let latest_item = raw_result[0];
             let latest_pos = latest_item[0];
 
-            for(const [pos, distance] of raw_result.slice(1)) {
-                if(latest_pos + 1 === pos || latest_pos === pos) {
+            for (const [pos, distance] of raw_result.slice(1)) {
+                if (latest_pos + 1 === pos || latest_pos === pos) {
                     latest_pos = pos;
-                    if(distance < latest_item[1]) {
+                    if (distance < latest_item[1]) {
                         latest_item = [pos, distance];
-                    } else if (distance == latest_item[1]) {
-                        if(distance === 0) {
-                            poses.push(latest_item);
-                            latest_item = [pos, distance];    
-                        }
                     }
                 } else {
                     poses.push(latest_item);
@@ -101,45 +197,121 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
         }
 
         const result = new Map<number, SearchResult>();
-        for(const pos of poses) {
+        for (const pos of poses) {
             const cref = this.getReference(pos[0]);
-            const r = result.get(cref.id) || {id: cref.id, key: this.index_entry.key[cref.id], score: 0, refs: []};
+            const r = result.get(cref.id) || { id: cref.id, key: this.index_entry.key[cref.id], score: 0, refs: [] };
             r.refs.push({
                 token: keyword,
                 path: cref.path,
                 pos: cref.pos,
                 wordaround: this.index_entry.content.slice(Math.max(pos[0] - 20, 0), pos[0] + keyword.length + 20),
-                distance: pos[1]
+                distance: pos[1],
             });
             result.set(cref.id, r);
         }
-        return Promise.resolve(Array.from(result.values()));
+        return Array.from(result.values());
+    }
+
+    private async initGPU(): Promise<void> {
+        const adapter = await navigator.gpu?.requestAdapter();
+        this.device = await adapter?.requestDevice();
+        if (this.device === undefined) return;
+
+        this.gpu_buffers[0] = this.device.createBuffer({
+            label: "gpu_content buffer",
+            size: this.gpu_content.byteLength,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+        });
+        this.device.queue.writeBuffer(this.gpu_buffers[0], 0, this.gpu_content);
+
+        this.gpu_buffers[1] = this.device.createBuffer({
+            label: "gpu_result buffer",
+            size: this.num_result * 4 * 2,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+        });
+
+        this.gpu_buffers[2] = this.device.createBuffer({
+            label: "gpu_pointer buffer",
+            size: 4,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+        });
+
+        this.gpu_buffers[3] = this.device.createBuffer({
+            label: "gpu_end_mask uniform",
+            size: 4 * 4,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        });
+
+        this.gpu_buffers[4] = this.device.createBuffer({
+            label: "gpu_bitap_dict uniform",
+            size: 4 * 2 * 32,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        });
+
+        this.gpu_buffers[5] = this.device.createBuffer({
+            label: "gpu_keyword_len uniform",
+            size: 4,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        });
+
+        this.gpu_buffers[6] = this.device.createBuffer({
+            label: "gpu_bitap_dict_len uniform",
+            size: 4,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        });
+
+        this.gpu_buffers[7] = this.device.createBuffer({
+            label: "gpu_result_copy buffer",
+            size: this.num_result * 4 * 2,
+            usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+        });
+
+        this.gpu_buffers[8] = this.device.createBuffer({
+            label: "gpu_pointer_copy buffer",
+            size: 4,
+            usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+        });
+
+        this.gpu_module_dist1 = this.device.createShaderModule({
+            label: "gpu_dist1_module",
+            code: bitap_dist1,
+        });
+
+        this.gpu_module_dist2 = this.device.createShaderModule({
+            label: "gpu_dist2_module",
+            code: bitap_dist2,
+        });
+
+        this.gpu_module_dist3 = this.device.createShaderModule({
+            label: "gpu_dist3_module",
+            code: bitap_dist3,
+        });
     }
 
     private allIndexOf(keyword: string, content: string): [number, number][] {
         const result: [number, number][] = [];
         let pos = content.indexOf(keyword);
-        while(pos !== -1) {
+        while (pos !== -1) {
             result.push([pos, 0]);
             pos = content.indexOf(keyword, pos + keyword.length);
         }
         return result;
     }
-    
+
     private getReference(pos: number): ContentRef {
         const index = binarySearch(
-            {id: 0, path: "", start: pos, end: pos},
-            (a, b) => a.start < b.start ? -1 : a.end > b.end ? 1 : 0,
+            { id: 0, path: "", start: pos, end: pos },
+            (a, b) => (a.start < b.start ? -1 : a.end > b.end ? 1 : 0),
             this.index_entry.toc,
-            BinarySearchType.Exact
+            BinarySearchType.Exact,
         );
-        if(index === null) throw new UniSearchError("unisearch.js: getReference internal error.");
+        if (index === null) throw new UniSearchError("unisearch.js: getReference internal error.");
         const toc = this.index_entry.toc[index];
         return {
             id: toc.id,
             path: toc.path,
-            pos: pos - toc.start
-        }
+            pos: pos - toc.start,
+        };
     }
 
     private createBitapKeyUint32(pattern: string[]): BitapKeyUint32 {
@@ -148,43 +320,43 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
             mask: new Map<number, number>(),
             length: pattern.length,
         };
-    
+
         for (let i = 0; i < key.length; i++) {
             const char = pattern[i].charCodeAt(0);
             const bit = 1 << i;
             const old = key.mask.get(char);
-    
+
             if (!old) {
                 key.mask.set(char, bit);
             } else {
                 key.mask.set(char, old | bit);
             }
         }
-    
+
         return key;
     }
-    
+
     private bitapSearch(key: BitapKeyUint32, maxErrors: number, text: Uint32Array): [number, number][] {
         const state: number[] = Array(maxErrors + 1).fill(0);
         const matchbit = 1 << (key.length - 1);
         const result: [number, number][] = [];
-    
+
         for (let i = 0; i < text.length; i++) {
             const mask = key.mask.get(text[i]) || 0;
             let replace = 0;
             let insertion = 0;
             let deletion = 0;
-    
+
             for (let distance = 0; distance < maxErrors + 1; distance++) {
                 const next_state_candidate = (state[distance] << 1) | 1;
-                const next_state = next_state_candidate & mask | replace | insertion | deletion;
-    
+                const next_state = (next_state_candidate & mask) | replace | insertion | deletion;
+
                 replace = next_state_candidate;
                 insertion = state[distance];
                 deletion = (next_state << 1) | 1;
-    
+
                 state[distance] = next_state;
-    
+
                 if ((state[distance] & matchbit) !== 0) {
                     result.push([i - key.length + 1, distance]);
                     break;
@@ -194,4 +366,3 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
         return result;
     }
 }
-

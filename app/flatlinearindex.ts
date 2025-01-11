@@ -25,7 +25,10 @@ export async function execBenchmark(
 
     console.log("start search benchmark.");
     const search_start = performance.now();
-    const search_results = await Promise.all(keywords.map((x) => search(index, x)));
+    const search_results = [];
+    for(const keyword of keywords) {
+        search_results.push(await search(index, keyword));
+    }
     const search_end = performance.now();
 
     console.log(`search time: ${(search_end - search_start) / keywords.length} ms/query`);

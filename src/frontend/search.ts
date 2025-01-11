@@ -4,7 +4,10 @@ import type { ASTNode } from "@src/frontend/parse";
 import { expr } from "@src/frontend/parse";
 import { defaultNormalizer, splitBySpace } from "@src/util/preprocess";
 
-export async function search<T>(index: UniIndex<SearchIndex<T>>, query: string): Promise<SearchResult[] | UniSearchError> {
+export async function search<T>(
+    index: UniIndex<SearchIndex<T>>,
+    query: string,
+): Promise<SearchResult[] | UniSearchError> {
     const ast = expr([...normalizeQuery(query)]);
     if (ast === null) return [];
     const r = await evalQuery(index.index_entry, index.env)(ast.val);
