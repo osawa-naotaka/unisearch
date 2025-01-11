@@ -30,7 +30,7 @@ const keyword = new Uint32Array([...kwd].map((x) => x.charCodeAt(0)));
 const bkey = createBitapKey(bitapKeyNumber(), [...kwd]);
 const bitap_key_tmp = [];
 for(const [key, mask] of bkey.mask.entries()) {
-    bitap_key_tmp.push(key.charCodeAt(0));
+    bitap_key_tmp.push(key);
     bitap_key_tmp.push(mask);
 }
 const bitap_key = new Uint32Array(bitap_key_tmp);

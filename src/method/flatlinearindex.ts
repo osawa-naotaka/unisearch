@@ -15,17 +15,28 @@ type ContentRef = {
     pos: number;
 }
 
+type BitapKeyUint32 = {
+    mask: Map<number, number>;
+    length: number;
+};
+
+
 export type FlatLinearIndexEntry = { key: string[]; content: string; toc: ContentRange[] };
 
 export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
     public index_entry: FlatLinearIndexEntry;
-    private graphem_content: string[];
     private gpu_content: Uint32Array;
 
     public constructor(index?: FlatLinearIndexEntry) {
         this.index_entry = index || { key: [], content: "", toc: [] };
-        this.graphem_content = index ? [...index.content] : [];
-        this.gpu_content = index ? new Uint32Array(this.graphem_content.map((x) => x.charCodeAt(0))) : new Uint32Array();
+        if(index) {
+            this.gpu_content = new Uint32Array(index.content.length);
+            for(let i = 0; i < index.content.length; i++) {
+                this.gpu_content[i] = index.content.charCodeAt(i);
+            }
+        } else {
+            this.gpu_content = new Uint32Array();
+        }
     }
 
     public setToIndex(id: number, path: Path, str: string): void {
@@ -41,8 +52,10 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
     }
 
     public fixIndex(): void {
-        this.graphem_content = [...this.index_entry.content];
-        this.gpu_content = new Uint32Array(this.graphem_content.map((x) => x.charCodeAt(0)));
+        this.gpu_content = new Uint32Array(this.index_entry.content.length);
+        for(let i = 0; i < this.index_entry.content.length; i++) {
+            this.gpu_content[i] = this.index_entry.content.charCodeAt(i);
+        }
     }
 
     public search(env: SearchEnv, keyword: string): SearchResult[] {
@@ -52,12 +65,15 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
         } else {
             const grapheme = splitByGrapheme(keyword);
             let raw_result: [number, number][];
-            if(grapheme.length < 50) {
+            if(grapheme.length <= 32) {
+                const key = this.createBitapKeyUint32(grapheme);
+                raw_result = this.bitapSearch(key, env.distance, this.gpu_content);
+            } else if(grapheme.length < 50) {
                 const key = createBitapKey(bitapKeyNumber(), grapheme);
-                raw_result = bitapSearch(key, env.distance, this.graphem_content);
+                raw_result = bitapSearch(key, env.distance, this.gpu_content);
             } else {
                 const key = createBitapKey(bitapKeyBigint(), grapheme);
-                raw_result = bitapSearch(key, env.distance, this.graphem_content);
+                raw_result = bitapSearch(key, env.distance, this.gpu_content);
             }
 
             let latest_item = raw_result[0];
@@ -124,6 +140,58 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
             path: toc.path,
             pos: pos - toc.start
         }
+    }
+
+    private createBitapKeyUint32(pattern: string[]): BitapKeyUint32 {
+        if (pattern.length > 32) throw new Error("createBitapKey: key length must be less than 32.");
+        const key: BitapKeyUint32 = {
+            mask: new Map<number, number>(),
+            length: pattern.length,
+        };
+    
+        for (let i = 0; i < key.length; i++) {
+            const char = pattern[i].charCodeAt(0);
+            const bit = 1 << i;
+            const old = key.mask.get(char);
+    
+            if (!old) {
+                key.mask.set(char, bit);
+            } else {
+                key.mask.set(char, old | bit);
+            }
+        }
+    
+        return key;
+    }
+    
+    private bitapSearch(key: BitapKeyUint32, maxErrors: number, text: Uint32Array): [number, number][] {
+        const state: number[] = Array(maxErrors + 1).fill(0);
+        const matchbit = 1 << (key.length - 1);
+        const result: [number, number][] = [];
+    
+        for (let i = 0; i < text.length; i++) {
+            const mask = key.mask.get(text[i]) || 0;
+            let replace = 0;
+            let insertion = 0;
+            let deletion = 0;
+    
+            for (let distance = 0; distance < maxErrors + 1; distance++) {
+                const next_state_candidate = (state[distance] << 1) | 1;
+                const next_state = next_state_candidate & mask | replace | insertion | deletion;
+    
+                replace = next_state_candidate;
+                insertion = state[distance];
+                deletion = (next_state << 1) | 1;
+    
+                state[distance] = next_state;
+    
+                if ((state[distance] & matchbit) !== 0) {
+                    result.push([i - key.length + 1, distance]);
+                    break;
+                }
+            }
+        }
+        return result;
     }
 }
 

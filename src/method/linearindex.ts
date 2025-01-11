@@ -7,7 +7,7 @@ export type LinearIndexEntry = { key: string[]; index: Record<Path, string>[] };
 
 export class LinearIndex implements SearchIndex<LinearIndexEntry> {
     public readonly index_entry: LinearIndexEntry;
-    private grapheme_index: Record<Path, string[]>[] = [];
+    private grapheme_index: Record<Path, Uint32Array>[] = [];
 
     constructor(index?: LinearIndexEntry) {
         this.index_entry = index || { key: [], index: [] };
@@ -18,7 +18,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
                     this.grapheme_index[idx] = {};
                 }
                 for (const k of Object.keys(rec)) {
-                    this.grapheme_index[idx][k] = splitByGrapheme(rec[k]);
+                    this.grapheme_index[idx][k] = new Uint32Array(splitByGrapheme(rec[k]).map((x) => x.charCodeAt(0)));
                 }
             });
         }
@@ -33,7 +33,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         if (this.grapheme_index[id] === undefined) {
             this.grapheme_index[id] = {};
         }
-        this.grapheme_index[id][path] = splitByGrapheme(str);
+        this.grapheme_index[id][path] = new Uint32Array(splitByGrapheme(str).map((x) => x.charCodeAt(0)));
     }
 
     public addKey(id: number, key: string): void {
@@ -89,7 +89,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
 
     private fuzzySearch =
         <S>(maxerror: number, bitapkey: BitapKey<S>) =>
-        (target: string[]): [number, number][] => {
+        (target: Uint32Array): [number, number][] => {
             const raw_result = bitapSearch(bitapkey, maxerror, target);
             if(raw_result.length === 0) return [];
 
@@ -120,7 +120,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             return result;
         }
 
-    private searchToken<T extends string | string[]>(
+    private searchToken<T extends string | Uint32Array>(
         index: Record<Path, T>[],
         search_fn: (target: T) => [number, number][],
         wordaround_fn: (pos: number, target: T) => string,

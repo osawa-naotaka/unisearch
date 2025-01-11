@@ -54,7 +54,7 @@ export function refine<T>(key: T, comp: (a: T, b: T) => number, array: T[]): T[]
 }
 
 export type BitapKey<T> = {
-    mask: Map<string, T>;
+    mask: Map<number, T>;
     length: number;
     and: (n1: T, n2: T) => T;
     or: (n1: T, n2: T) => T;
@@ -65,7 +65,7 @@ export type BitapKey<T> = {
 
 export function bitapKeyBigint(): BitapKey<bigint> {
     return {
-        mask: new Map<string, bigint>(),
+        mask: new Map<number, bigint>(),
         length: -1,
         and: (n1, n2) => n1 & n2,
         or: (n1, n2) => n1 | n2,
@@ -77,7 +77,7 @@ export function bitapKeyBigint(): BitapKey<bigint> {
 
 export function bitapKeyNumber(): BitapKey<number> {
     return {
-        mask: new Map<string, number>(),
+        mask: new Map<number, number>(),
         length: -1,
         and: (n1, n2) => n1 & n2,
         or: (n1, n2) => n1 | n2,
@@ -92,7 +92,7 @@ export function createBitapKey<T>(key: BitapKey<T>, pattern: string[]): BitapKey
     key.length = pattern.length;
 
     for (let i = 0; i < key.length; i++) {
-        const char = pattern[i];
+        const char = pattern[i].charCodeAt(0);
         const bit = key.sl1(i);
         const old = key.mask.get(char);
 
@@ -106,7 +106,7 @@ export function createBitapKey<T>(key: BitapKey<T>, pattern: string[]): BitapKey
     return key;
 }
 
-export function bitapSearch<T>(key: BitapKey<T>, maxErrors: number, text: string[]): [number, number][] {
+export function bitapSearch<T>(key: BitapKey<T>, maxErrors: number, text: Uint32Array): [number, number][] {
     const state: T[] = Array(maxErrors + 1).fill(key.to(0));
     const matchbit = key.sl1(key.length - 1);
     const result: [number, number][] = [];

@@ -59,7 +59,7 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
                 if (grapheme.length < 50) {
                     const bitapkey = createBitapKey(bitapKeyNumber(), grapheme);
                     for (const [term, plist] of refined) {
-                        const r = bitapSearch(bitapkey, env.distance || 0, splitByGrapheme(term));
+                        const r = bitapSearch(bitapkey, env.distance || 0, new Uint32Array(splitByGrapheme(term).map(c => c.charCodeAt(0))));
                         if (r.length !== 0) {
                             r.sort((a, b) => a[1] - b[1]);
                             const min_dist = r[0][1];
@@ -69,7 +69,7 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
                 } else {
                     const bitapkey = createBitapKey(bitapKeyBigint(), grapheme);
                     for (const [term, plist] of refined) {
-                        const r = bitapSearch(bitapkey, env.distance || 0, splitByGrapheme(term));
+                        const r = bitapSearch(bitapkey, env.distance || 0, new Uint32Array(splitByGrapheme(term).map(c => c.charCodeAt(0))));
                         if (r.length !== 0) {
                             r.sort((a, b) => a[1] - b[1]);
                             const min_dist = r[0][1];
