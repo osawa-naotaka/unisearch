@@ -50,10 +50,7 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     console.log(exact_result.results);
 
     console.log("fuzzy search is too slow. exec search only first 100 keywords.");
-    const fuzzy_result = await benchmarkAsync(
-        (x) => search(index, x),
-        keywords.slice(0, 100),
-    );
+    const fuzzy_result = await benchmarkAsync((x) => search(index, x), keywords.slice(0, 100));
     console.log(`fuzzy search time per one keyword: ${fuzzy_result.time / 100} ms`);
     console.log(fuzzy_result.results);
 

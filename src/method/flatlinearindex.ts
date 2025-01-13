@@ -47,7 +47,7 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
         this.index_entry = index || { key: [], gpu_content: new Uint32Array(), toc: [] };
         this.content = "";
         if (index) {
-            for(const cp of index.gpu_content) {
+            for (const cp of index.gpu_content) {
                 this.content += String.fromCharCode(cp);
             }
         }

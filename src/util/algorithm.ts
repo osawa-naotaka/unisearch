@@ -106,7 +106,11 @@ export function createBitapKey<T, S>(key: BitapKey<T, S>, pattern: S[]): BitapKe
     return key;
 }
 
-export function bitapSearch<T, S extends string | number>(key: BitapKey<T, S>, maxErrors: number, text: S extends string ? string[] : Uint32Array): [number, number][] {
+export function bitapSearch<T, S extends string | number>(
+    key: BitapKey<T, S>,
+    maxErrors: number,
+    text: S extends string ? string[] : Uint32Array,
+): [number, number][] {
     const state: T[] = Array(maxErrors + 1).fill(key.to(0));
     const matchbit = key.sl1(key.length - 1);
     const result: [number, number][] = [];
@@ -114,7 +118,7 @@ export function bitapSearch<T, S extends string | number>(key: BitapKey<T, S>, m
     const zero = key.to(0);
     const one = key.to(1);
     for (let i = 0; i < text.length; i++) {
-        const mask = key.mask.get(text[i] as S) || zero;    // using as. fix it.
+        const mask = key.mask.get(text[i] as S) || zero; // using as. fix it.
         let replace = zero;
         let insertion = zero;
         let deletion = zero;

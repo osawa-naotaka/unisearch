@@ -2,6 +2,8 @@ export { createIndex, indexToObject, createIndexFromObject } from "@src/frontend
 export { search } from "@src/frontend/search";
 export { LinearIndex } from "@src/method/linearindex";
 export { HybridBigramInvertedIndex } from "@src/frontend/indextypes";
+export { FlatLinearIndex } from "@src/method/flatlinearindex";
+export { LinearIndexString } from "@src/method/linearindexString";
 export { UniSearchError } from "@src/frontend/base";
 export type {
     UniIndex,
@@ -16,3 +18,4 @@ export type {
 export type { LinearIndexEntry } from "@src/method/linearindex";
 export type { HybridIndexEntry } from "@src/method/hybrid";
 export type { InvertedIndexEntry } from "@src/method/invertedindex";
+export type { FlatLinearIndexEntry } from "@src/method/flatlinearindex";
