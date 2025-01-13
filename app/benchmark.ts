@@ -2,6 +2,8 @@ import { type WikipediaArticle, getAllKeywords } from "@ref/bench/benchmark_comm
 import { type IndexClass, createIndexFromObject, indexToObject } from "@src/frontend/indexing";
 import {
     FlatLinearIndex,
+    FlatLinearIndexString,
+    FlatLinearIndexStringDelegated,
     HybridBigramInvertedIndex,
     LinearIndex,
     LinearIndexString,
@@ -11,12 +13,13 @@ import {
 } from "@src/main";
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
-
+import { calculateGzipedJsonSize } from "@ref/util";
 type BenchmarkResult = {
     indexing_time: number;
     reindexing_time: number;
     exact_search_time: number;
     fuzzy_search_time: number;
+    index_size: number;
 };
 
 export async function execBenchmark(
@@ -30,6 +33,7 @@ export async function execBenchmark(
         reindexing_time: 0,
         exact_search_time: 0,
         fuzzy_search_time: 0,
+        index_size: 0,
     };
 
     const num_trials = 5;
@@ -51,6 +55,10 @@ export async function execBenchmark(
         const reindexing_time = reindex_end - reindex_start;
         console.log(`reindexing time: ${reindexing_time} ms`);
         benchmark_results.reindexing_time += reindexing_time;
+
+        const gzipped_index_size = await calculateGzipedJsonSize(index_entry);
+        console.log(`gzipped index entry size: ${gzipped_index_size} bytes`);
+        benchmark_results.index_size += gzipped_index_size;
 
         const exact_search_start = performance.now();
         const exact_search_results = [];
@@ -79,6 +87,7 @@ export async function execBenchmark(
     benchmark_results.reindexing_time /= num_trials;
     benchmark_results.exact_search_time /= num_trials;
     benchmark_results.fuzzy_search_time /= num_trials;
+    benchmark_results.index_size /= num_trials;
 
     return benchmark_results;
 }
@@ -87,6 +96,8 @@ const keywords = getAllKeywords(wikipedia_ja_keyword).slice(0, 50);
 const benchmark_results_linear = await execBenchmark(LinearIndex, {}, wikipedia_ja_extracted, keywords);
 const benchmark_results_linear_string = await execBenchmark(LinearIndexString, {}, wikipedia_ja_extracted, keywords);
 const benchmark_results_flat = await execBenchmark(FlatLinearIndex, {}, wikipedia_ja_extracted, keywords);
+const benchmark_results_flat_string = await execBenchmark(FlatLinearIndexString, {}, wikipedia_ja_extracted, keywords);
+const benchmark_results_flat_string_delegated = await execBenchmark(FlatLinearIndexStringDelegated, {}, wikipedia_ja_extracted, keywords);
 const benchmark_results_hybrid = await execBenchmark(HybridBigramInvertedIndex, {}, wikipedia_ja_extracted, keywords);
 
 console.log("benchmark results: LinearIndex");
@@ -95,5 +106,9 @@ console.log("benchmark results: LinearIndexString");
 console.log(benchmark_results_linear_string);
 console.log("benchmark results: FlatLinearIndex");
 console.log(benchmark_results_flat);
+console.log("benchmark results: FlatLinearIndexString");
+console.log(benchmark_results_flat_string);
+console.log("benchmark results: FlatLinearIndexStringDelegated");
+console.log(benchmark_results_flat_string_delegated);
 console.log("benchmark results: HybridBigramInvertedIndex");
 console.log(benchmark_results_hybrid);
