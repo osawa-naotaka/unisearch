@@ -77,13 +77,13 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
         if (env.distance === undefined || env.distance === 0) {
             poses = this.allIndexOf(keyword, this.content);
         } else {
-            const grapheme = splitByGrapheme(keyword);
+            const grapheme = splitByGrapheme(keyword).map((x) => x.charCodeAt(0));
             let raw_result: [number, number][];
             if (this.device === undefined) {
                 await this.initGPU();
             }
             if (grapheme.length <= 32 && this.device !== undefined) {
-                const bitap_key = this.createBitapKeyUint32(grapheme);
+                const bitap_key = createBitapKey<number, number>(bitapKeyNumber(), grapheme);
                 const bitap_key_tmp = [];
                 for (const [key, mask] of bitap_key.mask.entries()) {
                     bitap_key_tmp.push(key);
@@ -168,10 +168,10 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
                 this.gpu_buffers[7].unmap();
                 this.gpu_buffers[8].unmap();
             } else if (grapheme.length < 50) {
-                const key = createBitapKey(bitapKeyNumber(), grapheme);
+                const key = createBitapKey<number, number>(bitapKeyNumber(), grapheme);
                 raw_result = bitapSearch(key, env.distance, this.index_entry.gpu_content);
             } else {
-                const key = createBitapKey(bitapKeyBigint(), grapheme);
+                const key = createBitapKey<bigint, number>(bitapKeyBigint(), grapheme);
                 raw_result = bitapSearch(key, env.distance, this.index_entry.gpu_content);
             }
 

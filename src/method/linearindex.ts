@@ -53,11 +53,11 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
                 keyword,
             );
         }
-        const grapheme = splitByGrapheme(keyword);
+        const grapheme = splitByGrapheme(keyword).map((x) => x.charCodeAt(0));
         if (grapheme.length < 50) {
             return this.searchToken(
                 this.grapheme_index,
-                this.fuzzySearch(env.distance, createBitapKey(bitapKeyNumber(), splitByGrapheme(keyword))),
+                this.fuzzySearch(env.distance, createBitapKey<number, number>(bitapKeyNumber(), grapheme)),
                 (pos, target) => target.slice(Math.max(pos - 20, 0), pos + keyword.length + 20).join(""),
                 env.search_targets,
                 env.weight || 1,
@@ -67,7 +67,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
 
         return this.searchToken(
             this.grapheme_index,
-            this.fuzzySearch(env.distance, createBitapKey(bitapKeyBigint(), splitByGrapheme(keyword))),
+            this.fuzzySearch(env.distance, createBitapKey<bigint, number>(bitapKeyBigint(), grapheme)),
             (pos, target) => target.slice(Math.max(pos - 20, 0), pos + keyword.length + 20).join(""),
             env.search_targets,
             env.weight || 1,
@@ -88,8 +88,8 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         };
 
     private fuzzySearch =
-        <S>(maxerror: number, bitapkey: BitapKey<S>) =>
-        (target: Uint32Array): [number, number][] => {
+        <T, S extends string | number>(maxerror: number, bitapkey: BitapKey<T, S>) =>
+        (target: S extends string ? string[] : Uint32Array): [number, number][] => {
             const raw_result = bitapSearch(bitapkey, maxerror, target);
             if (raw_result.length === 0) return [];
 

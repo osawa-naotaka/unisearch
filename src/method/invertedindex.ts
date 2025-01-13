@@ -57,12 +57,12 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
                 const grapheme = splitByGrapheme(keyword);
                 const refined = refine([grapheme[0], []], this.prefixComp, this.index_entry.index[path] || []);
                 if (grapheme.length < 50) {
-                    const bitapkey = createBitapKey(bitapKeyNumber(), grapheme);
+                    const bitapkey = createBitapKey<number, string>(bitapKeyNumber(), grapheme);
                     for (const [term, plist] of refined) {
                         const r = bitapSearch(
                             bitapkey,
                             env.distance || 0,
-                            new Uint32Array(splitByGrapheme(term).map((c) => c.charCodeAt(0))),
+                            splitByGrapheme(term),
                         );
                         if (r.length !== 0) {
                             r.sort((a, b) => a[1] - b[1]);
@@ -71,12 +71,12 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
                         }
                     }
                 } else {
-                    const bitapkey = createBitapKey(bitapKeyBigint(), grapheme);
+                    const bitapkey = createBitapKey<bigint, string>(bitapKeyBigint(), grapheme);
                     for (const [term, plist] of refined) {
                         const r = bitapSearch(
                             bitapkey,
                             env.distance || 0,
-                            new Uint32Array(splitByGrapheme(term).map((c) => c.charCodeAt(0))),
+                            splitByGrapheme(term),
                         );
                         if (r.length !== 0) {
                             r.sort((a, b) => a[1] - b[1]);
