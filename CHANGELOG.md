@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Security: in case of vulnerabilities.
 
 ## [Unreleased]
+### Fixed
+- in fuzzy search, distance is reduced to min(distance, keyword_length - 1).
+- in HybridBigramInvertedIndex, fix bug that alphabet-and-kanji-combined keyword is not searched correctly.
 
 ## [1.0.4] - 2025-01-07
 ### Fixed
