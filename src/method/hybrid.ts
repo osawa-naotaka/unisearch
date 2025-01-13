@@ -54,9 +54,9 @@ export function Hybrid<T1, T2>(name: string, ja: IndexClass, en: IndexClass): In
                 const results = [];
                 for (const t of tokens) {
                     if (isNonSpaceSeparatedChar(t)) {
-                        results.push(this.ja.search(env, keyword));
+                        results.push(this.ja.search(env, t));
                     } else {
-                        results.push(this.en.search(env, keyword));
+                        results.push(this.en.search(env, t));
                     }
                 }
                 return intersectResults(results);
