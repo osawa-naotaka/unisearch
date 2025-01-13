@@ -1,4 +1,5 @@
 import type { IndexClass } from "@src/frontend/indexing";
+import { FlatLinearIndex } from "@src/method/flatlinearindex";
 import { Hybrid } from "@src/method/hybrid";
 import { InvertedIndex } from "@src/method/invertedindex";
 import { LinearIndex } from "@src/method/linearindex";
@@ -9,4 +10,5 @@ export const HybridBigramInvertedIndex = Hybrid("HybridBigramInvertedIndex", Ngr
 export const IndexTypes: { [key: string]: IndexClass } = {
     LinearIndex,
     HybridBigramInvertedIndex,
+    FlatLinearIndex
 };
