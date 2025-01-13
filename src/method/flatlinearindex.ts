@@ -30,12 +30,12 @@ type BitapKeyUint32 = {
     length: number;
 };
 
-export type FlatLinearIndexEntry = { key: string[]; content: string; toc: ContentRange[] };
+export type FlatLinearIndexEntry = { key: string[]; gpu_content: Uint32Array; toc: ContentRange[] };
 
 export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
     public index_entry: FlatLinearIndexEntry;
     private readonly num_result: number = 4096 * 1024;
-    private gpu_content: Uint32Array;
+    private content: string;
 
     private device: GPUDevice | undefined = undefined;
     private gpu_buffers: GPUBuffer[] = [];
@@ -44,22 +44,20 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
     private gpu_module_dist3: GPUShaderModule | undefined = undefined;
 
     public constructor(index?: FlatLinearIndexEntry) {
-        this.index_entry = index || { key: [], content: "", toc: [] };
+        this.index_entry = index || { key: [], gpu_content: new Uint32Array(), toc: [] };
+        this.content = "";
         if (index) {
-            this.gpu_content = new Uint32Array(index.content.length);
-            for (let i = 0; i < index.content.length; i++) {
-                this.gpu_content[i] = index.content.charCodeAt(i);
+            for(const cp of index.gpu_content) {
+                this.content += String.fromCharCode(cp);
             }
-        } else {
-            this.gpu_content = new Uint32Array();
         }
     }
 
     public setToIndex(id: number, path: Path, str: string): void {
         const graphemes = excerptOneCodepointPerGraphem(str);
-        const start = this.index_entry.content.length;
+        const start = this.content.length;
         const end = start + graphemes.length - 1;
-        this.index_entry.content += graphemes;
+        this.content += graphemes;
         this.index_entry.toc.push({ id: id, path: path, start: start, end: end });
     }
 
@@ -68,16 +66,16 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
     }
 
     public fixIndex(): void {
-        this.gpu_content = new Uint32Array(this.index_entry.content.length);
-        for (let i = 0; i < this.index_entry.content.length; i++) {
-            this.gpu_content[i] = this.index_entry.content.charCodeAt(i);
+        this.index_entry.gpu_content = new Uint32Array(this.content.length);
+        for (let i = 0; i < this.content.length; i++) {
+            this.index_entry.gpu_content[i] = this.content.charCodeAt(i);
         }
     }
 
     public async search(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
         let poses: [number, number][] = [];
         if (env.distance === undefined || env.distance === 0) {
-            poses = this.allIndexOf(keyword, this.index_entry.content);
+            poses = this.allIndexOf(keyword, this.content);
         } else {
             const grapheme = splitByGrapheme(keyword);
             let raw_result: [number, number][];
@@ -142,7 +140,7 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
                 });
                 pass.setPipeline(pipeline);
                 pass.setBindGroup(0, bindGroup);
-                pass.dispatchWorkgroups(this.gpu_content.length / 256); // 256 workgroup_size
+                pass.dispatchWorkgroups(this.index_entry.gpu_content.length / 256); // 256 workgroup_size
                 pass.end();
 
                 encoder.copyBufferToBuffer(this.gpu_buffers[1], 0, this.gpu_buffers[7], 0, this.gpu_buffers[1].size);
@@ -171,10 +169,10 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
                 this.gpu_buffers[8].unmap();
             } else if (grapheme.length < 50) {
                 const key = createBitapKey(bitapKeyNumber(), grapheme);
-                raw_result = bitapSearch(key, env.distance, this.gpu_content);
+                raw_result = bitapSearch(key, env.distance, this.index_entry.gpu_content);
             } else {
                 const key = createBitapKey(bitapKeyBigint(), grapheme);
-                raw_result = bitapSearch(key, env.distance, this.gpu_content);
+                raw_result = bitapSearch(key, env.distance, this.index_entry.gpu_content);
             }
 
             let latest_item = raw_result[0];
@@ -204,7 +202,7 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
                 token: keyword,
                 path: cref.path,
                 pos: cref.pos,
-                wordaround: this.index_entry.content.slice(Math.max(pos[0] - 20, 0), pos[0] + keyword.length + 20),
+                wordaround: this.content.slice(Math.max(pos[0] - 20, 0), pos[0] + keyword.length + 20),
                 distance: pos[1],
             });
             result.set(cref.id, r);
@@ -219,10 +217,10 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
 
         this.gpu_buffers[0] = this.device.createBuffer({
             label: "gpu_content buffer",
-            size: this.gpu_content.byteLength,
+            size: this.index_entry.gpu_content.byteLength,
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
         });
-        this.device.queue.writeBuffer(this.gpu_buffers[0], 0, this.gpu_content);
+        this.device.queue.writeBuffer(this.gpu_buffers[0], 0, this.index_entry.gpu_content);
 
         this.gpu_buffers[1] = this.device.createBuffer({
             label: "gpu_result buffer",
