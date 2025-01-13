@@ -2,7 +2,7 @@ import type { WikipediaArticle, WikipediaKeyword } from "@ref/bench/benchmark_co
 import { benchmark, getKeywords } from "@ref/bench/benchmark_common";
 import { calculateGzipedJsonSize } from "@ref/util";
 import { UniSearchError } from "@src/frontend/base";
-import { createIndex, indexToObject } from "@src/frontend/indexing";
+import { createIndex, createIndexFromObject, indexToObject } from "@src/frontend/indexing";
 import { HybridBigramInvertedIndex } from "@src/frontend/indextypes";
 import { search } from "@src/frontend/search";
 import { LinearIndex } from "@src/method/linearindex";
@@ -29,7 +29,14 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     }
 
     console.log(index);
-    console.log(`gziped index size: ${await calculateGzipedJsonSize(indexToObject(index))}`);
+    const index_object = indexToObject(index);
+    console.log(`gziped index size: ${await calculateGzipedJsonSize(index_object)}`);
+
+    const reindex_result = benchmark(
+        (x) => createIndexFromObject(x),
+        [index_object],
+    );
+    console.log(`reindexing time: ${reindex_result.time} ms`);
 
     const exact_result = benchmark(
         (x) => search(index, x),
@@ -53,8 +60,16 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     if (hybrid_index instanceof UniSearchError) {
         throw hybrid_index;
     }
+
     console.log(hybrid_index);
-    console.log(`gziped index size: ${await calculateGzipedJsonSize(indexToObject(hybrid_index))}`);
+    const hybrid_index_object = indexToObject(hybrid_index);
+    console.log(`gziped index size: ${await calculateGzipedJsonSize(hybrid_index_object)}`);
+
+    const hybrid_reindex_result = benchmark(
+        (x) => createIndexFromObject(x),
+        [hybrid_index_object],
+    );
+    console.log(`reindexing time: ${hybrid_reindex_result.time} ms`);
 
     const hybrid_result = benchmark(
         (x) => search(hybrid_index, x),
