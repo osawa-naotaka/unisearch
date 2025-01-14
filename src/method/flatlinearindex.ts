@@ -23,9 +23,10 @@ type ContentRef = {
     id: number;
     path: string;
     pos: number;
+    size: number;
 };
 
-export type FlatLinearIndexEntry = { key: string[]; gpu_content: Uint32Array; toc: ContentRange[] };
+export type FlatLinearIndexEntry = { key: string[]; gpu_content: Uint32Array; toc: ContentRange[]; num_id: number };
 
 export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
     public index_entry: FlatLinearIndexEntry;
@@ -39,7 +40,7 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
     private gpu_module_dist3: GPUShaderModule | undefined = undefined;
 
     public constructor(index?: FlatLinearIndexEntry) {
-        this.index_entry = index || { key: [], gpu_content: new Uint32Array(), toc: [] };
+        this.index_entry = index || { key: [], gpu_content: new Uint32Array(), toc: [], num_id: 0 };
         this.content = "";
         if (index) {
             for (const cp of index.gpu_content) {
@@ -54,6 +55,7 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
         const end = start + graphemes.length - 1;
         this.content += graphemes;
         this.index_entry.toc.push({ id: id, path: path, start: start, end: end });
+        this.index_entry.num_id = Math.max(this.index_entry.num_id, id + 1);
     }
 
     public addKey(id: number, key: string): void {
@@ -190,6 +192,7 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
         }
 
         const result = new Map<number, SearchResult>();
+        const content_size = new Map<number, Map<string, number>>();
         for (const pos of poses) {
             const cref = this.getReference(pos[0]);
             const r = result.get(cref.id) || { id: cref.id, key: this.index_entry.key[cref.id], score: 0, refs: [] };
@@ -201,7 +204,20 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
                 distance: pos[1],
             });
             result.set(cref.id, r);
+
+            const id_size = content_size.get(cref.id) || new Map<string, number>();
+            id_size.set(cref.path, cref.size);
+            content_size.set(cref.id, id_size);
         }
+
+        const idf = Math.log(this.index_entry.num_id / (result.size + 1)) + 1;
+        for (const [_, r] of result) {
+            const tf = r.refs
+                .map((v) => v.token.length / (content_size.get(r.id)?.get(v.path) || Infinity) / (v.distance + 1))
+                .reduce((x, y) => x + y);
+            r.score = tf * idf * (env.weight || 1);
+        }
+
         return Array.from(result.values());
     }
 
@@ -305,6 +321,7 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
             id: toc.id,
             path: toc.path,
             pos: pos - toc.start,
+            size: toc.end - toc.start + 1,
         };
     }
 }
