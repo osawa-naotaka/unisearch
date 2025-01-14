@@ -87,9 +87,6 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
                     bitap_key_tmp.push(key);
                     bitap_key_tmp.push(mask);
                 }
-                for (let i = bitap_key_tmp.length; i < 64; i++) {
-                    bitap_key_tmp.push(0);
-                }
                 const bitap_dict = new Uint32Array(bitap_key_tmp);
                 this.device.queue.writeBuffer(this.gpu_buffers[4], 0, bitap_dict);
 
@@ -100,11 +97,6 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
                     new Uint32Array(new Array(4).fill(1 << (grapheme.length - 1))),
                 );
                 this.device.queue.writeBuffer(this.gpu_buffers[5], 0, new Uint32Array([grapheme.length]));
-                this.device.queue.writeBuffer(
-                    this.gpu_buffers[6],
-                    0,
-                    new Uint32Array([Math.ceil(grapheme.length / 2)]),
-                );
 
                 if (this.gpu_module_dist1 === undefined) throw new Error("gpu_module_dist1 is undefined");
                 const pipeline = this.device.createComputePipeline({
@@ -125,7 +117,6 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
                         { binding: 3, resource: { buffer: this.gpu_buffers[3] } },
                         { binding: 4, resource: { buffer: this.gpu_buffers[4] } },
                         { binding: 5, resource: { buffer: this.gpu_buffers[5] } },
-                        { binding: 6, resource: { buffer: this.gpu_buffers[6] } },
                     ],
                 });
 
@@ -258,9 +249,9 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
         });
 
         this.gpu_buffers[4] = this.device.createBuffer({
-            label: "gpu_bitap_dict uniform",
+            label: "gpu_bitap_dict buffer",
             size: 4 * 2 * 32,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
         });
 
         this.gpu_buffers[5] = this.device.createBuffer({
