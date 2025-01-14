@@ -1,10 +1,10 @@
 import type { SearchEnv, SearchResult } from "@src/frontend/base";
-import { bitapKeyNumber, createBitapKey } from "@src/util/algorithm";
-import { splitByGrapheme } from "@src/util/preprocess";
-import { FlatLinearIndexString } from "./flatlinearindexstring";
 import bitap_dist1 from "@src/method/wgsl/bitap_dist1.wgsl?raw";
 import bitap_dist2 from "@src/method/wgsl/bitap_dist2.wgsl?raw";
 import bitap_dist3 from "@src/method/wgsl/bitap_dist3.wgsl?raw";
+import { bitapKeyNumber, createBitapKey } from "@src/util/algorithm";
+import { splitByGrapheme } from "@src/util/preprocess";
+import { FlatLinearIndexString } from "@src/method/flatlinearindexstring";
 
 type GPUBuffers = {
     content: GPUBuffer;
@@ -65,7 +65,7 @@ export class GPULinearIndex extends FlatLinearIndexString {
             layout: "auto",
             compute: {
                 module: gpu_module,
-                entryPoint: "cs"
+                entryPoint: "cs",
             },
         });
     }
@@ -84,7 +84,7 @@ export class GPULinearIndex extends FlatLinearIndexString {
             keyword_len: this.gpuUniform(this.device, 4),
             result_copy: this.gpuCopy(this.device, this.num_result * 4 * 2),
             pointer_copy: this.gpuCopy(this.device, 4),
-        }
+        };
 
         this.device.queue.writeBuffer(this.gpu_buffers.content, 0, this.gpu_content);
 
@@ -107,19 +107,27 @@ export class GPULinearIndex extends FlatLinearIndexString {
 
     public override async search(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
         const grapheme = splitByGrapheme(keyword).map((x) => x.charCodeAt(0));
-        const is_gpu_searchable = grapheme.length <= 32 && env.distance !== undefined && env.distance > 0 && env.distance < 4;
+        const is_gpu_searchable =
+            grapheme.length <= 32 && env.distance !== undefined && env.distance > 0 && env.distance < 4;
 
         if (is_gpu_searchable) {
             if (this.device === undefined) {
                 await this.initGPU();
             }
-            return this.device && this.gpu_buffers ? this.gpuSearch(this.device, this.gpu_buffers, env, grapheme) : super.search(env, keyword);
+            return this.device && this.gpu_buffers
+                ? this.gpuSearch(this.device, this.gpu_buffers, env, grapheme)
+                : super.search(env, keyword);
         }
 
         return super.search(env, keyword);
     }
 
-    private async gpuSearch(device: GPUDevice, gpu_buffers: GPUBuffers, env: SearchEnv, grapheme: number[]): Promise<SearchResult[]> {
+    private async gpuSearch(
+        device: GPUDevice,
+        gpu_buffers: GPUBuffers,
+        env: SearchEnv,
+        grapheme: number[],
+    ): Promise<SearchResult[]> {
         const bitap_key = createBitapKey<number, number>(bitapKeyNumber(), grapheme);
         const bitap_dict_tmp = [];
         for (const [key, mask] of bitap_key.mask.entries()) {
@@ -139,13 +147,9 @@ export class GPULinearIndex extends FlatLinearIndexString {
 
         const pipeline = this.gpu_pipeline[env.distance || 1];
 
-        const encoder = device.createCommandEncoder({
-            label: "bitap search encoder",
-        });
+        const encoder = device.createCommandEncoder();
         encoder.pushDebugGroup("bitap");
-        const pass = encoder.beginComputePass({
-            label: "bitap search compute pass",
-        });
+        const pass = encoder.beginComputePass();
         pass.setPipeline(pipeline);
         pass.setBindGroup(0, this.gpu_bind_group);
         pass.dispatchWorkgroups(Math.ceil(this.index_entry.content_length / 256)); // 256 workgroup_size

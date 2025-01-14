@@ -1,4 +1,5 @@
-import { type Path, type SearchEnv, type SearchIndex, type SearchResult, UniSearchError } from "@src/frontend/base";
+import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
+import { UniSearchError } from "@src/frontend/base";
 import bitap_dist1 from "@src/method/wgsl/bitap_dist1.wgsl?raw";
 import bitap_dist2 from "@src/method/wgsl/bitap_dist2.wgsl?raw";
 import bitap_dist3 from "@src/method/wgsl/bitap_dist3.wgsl?raw";
@@ -213,7 +214,12 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
         const idf = Math.log(this.index_entry.num_id / (result.size + 1)) + 1;
         for (const [_, r] of result) {
             const tf = r.refs
-                .map((v) => v.token.length / (content_size.get(r.id)?.get(v.path) || Infinity) / (v.distance + 1))
+                .map(
+                    (v) =>
+                        v.token.length /
+                        (content_size.get(r.id)?.get(v.path) || Number.POSITIVE_INFINITY) /
+                        (v.distance + 1),
+                )
                 .reduce((x, y) => x + y);
             r.score = tf * idf * (env.weight || 1);
         }

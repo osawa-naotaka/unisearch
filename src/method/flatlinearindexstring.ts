@@ -24,12 +24,12 @@ type ContentRef = {
     size: number;
 };
 
-export type FlatLinearIndexStringEntry = { 
-    key: string[]; 
-    content: string; 
-    content_length: number; 
-    num_id: number; 
-    toc: ContentRange[] 
+export type FlatLinearIndexStringEntry = {
+    key: string[];
+    content: string;
+    content_length: number;
+    num_id: number;
+    toc: ContentRange[];
 };
 
 export class FlatLinearIndexString implements SearchIndex<FlatLinearIndexStringEntry> {
@@ -37,18 +37,18 @@ export class FlatLinearIndexString implements SearchIndex<FlatLinearIndexStringE
     public gpu_content: Uint32Array;
 
     public constructor(index?: FlatLinearIndexStringEntry) {
-        this.index_entry = index || { 
-            key: [], 
-            content: "", 
-            content_length: 0, 
-            num_id: 0, 
-            toc: [] 
+        this.index_entry = index || {
+            key: [],
+            content: "",
+            content_length: 0,
+            num_id: 0,
+            toc: [],
         };
-        if(index) {
+        if (index) {
             this.gpu_content = new Uint32Array(this.index_entry.content_length);
             for (let i = 0; i < this.index_entry.content_length; i++) {
                 this.gpu_content[i] = this.index_entry.content.charCodeAt(i);
-            }    
+            }
         } else {
             this.gpu_content = new Uint32Array();
         }
@@ -80,7 +80,7 @@ export class FlatLinearIndexString implements SearchIndex<FlatLinearIndexStringE
         if (env.distance === undefined || env.distance === 0) {
             poses = this.allIndexOf(keyword, this.index_entry.content);
         } else {
-            const grapheme = splitByGrapheme(keyword).map(x => x.charCodeAt(0));
+            const grapheme = splitByGrapheme(keyword).map((x) => x.charCodeAt(0));
             if (grapheme.length < 50) {
                 const key = createBitapKey<number, number>(bitapKeyNumber(), grapheme);
                 const raw_result = bitapSearch(key, env.distance, this.gpu_content);
@@ -97,7 +97,7 @@ export class FlatLinearIndexString implements SearchIndex<FlatLinearIndexStringE
 
     protected mergeResults(raw_result: [number, number][]): [number, number][] {
         if (raw_result.length === 0) return [];
-        
+
         const poses: [number, number][] = [];
         let latest_item = raw_result[0];
         let latest_pos = latest_item[0];
@@ -115,34 +115,31 @@ export class FlatLinearIndexString implements SearchIndex<FlatLinearIndexStringE
             }
         }
         poses.push(latest_item);
-        
+
         return poses;
     }
 
     protected createSearchResult(poses: [number, number][], keyword: string, weight?: number): SearchResult[] {
         const result = new Map<number, SearchResult>();
         const content_size = new Map<number, Map<string, number>>();
-        
+
         for (const pos of poses) {
             const cref = this.getReference(pos[0]);
-            const r = result.get(cref.id) || { 
-                id: cref.id, 
-                key: this.index_entry.key[cref.id], 
-                score: 0, 
-                refs: [] 
+            const r = result.get(cref.id) || {
+                id: cref.id,
+                key: this.index_entry.key[cref.id],
+                score: 0,
+                refs: [],
             };
-            
+
             r.refs.push({
                 token: keyword,
                 path: cref.path,
                 pos: cref.pos,
-                wordaround: this.index_entry.content.slice(
-                    Math.max(pos[0] - 20, 0), 
-                    pos[0] + keyword.length + 20
-                ),
-                distance: pos[1]
+                wordaround: this.index_entry.content.slice(Math.max(pos[0] - 20, 0), pos[0] + keyword.length + 20),
+                distance: pos[1],
             });
-            
+
             result.set(cref.id, r);
 
             const id_size = content_size.get(cref.id) || new Map<string, number>();
@@ -153,7 +150,12 @@ export class FlatLinearIndexString implements SearchIndex<FlatLinearIndexStringE
         const idf = Math.log(this.index_entry.num_id / (result.size + 1)) + 1;
         for (const [_, r] of result) {
             const tf = r.refs
-                .map((v) => v.token.length / (content_size.get(r.id)?.get(v.path) || Infinity) / (v.distance + 1))
+                .map(
+                    (v) =>
+                        v.token.length /
+                        (content_size.get(r.id)?.get(v.path) || Number.POSITIVE_INFINITY) /
+                        (v.distance + 1),
+                )
                 .reduce((x, y) => x + y);
             r.score = tf * idf * (weight || 1);
         }
@@ -177,7 +179,7 @@ export class FlatLinearIndexString implements SearchIndex<FlatLinearIndexStringE
             { id: 0, path: "", start: pos, end: pos },
             (a, b) => (a.start < b.start ? -1 : a.end > b.end ? 1 : 0),
             this.index_entry.toc,
-            BinarySearchType.Exact
+            BinarySearchType.Exact,
         );
         if (index === null) throw new UniSearchError("unisearch.js: getReference internal error.");
         const toc = this.index_entry.toc[index];
