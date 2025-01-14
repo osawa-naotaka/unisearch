@@ -1,10 +1,10 @@
 import type { SearchEnv, SearchResult } from "@src/frontend/base";
+import { FlatLinearIndexString } from "@src/method/flatlinearindexstring";
 import bitap_dist1 from "@src/method/wgsl/bitap_dist1.wgsl?raw";
 import bitap_dist2 from "@src/method/wgsl/bitap_dist2.wgsl?raw";
 import bitap_dist3 from "@src/method/wgsl/bitap_dist3.wgsl?raw";
 import { bitapKeyNumber, createBitapKey } from "@src/util/algorithm";
 import { splitByGrapheme } from "@src/util/preprocess";
-import { FlatLinearIndexString } from "@src/method/flatlinearindexstring";
 
 type GPUBuffers = {
     content: GPUBuffer;
