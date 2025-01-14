@@ -1,4 +1,5 @@
-import { type Path, type SearchEnv, type SearchIndex, type SearchResult, UniSearchError } from "@src/frontend/base";
+import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
+import { UniSearchError } from "@src/frontend/base";
 import {
     BinarySearchType,
     binarySearch,
@@ -34,7 +35,6 @@ export type FlatLinearIndexStringEntry = {
 export class FlatLinearIndexString implements SearchIndex<FlatLinearIndexStringEntry> {
     public index_entry: FlatLinearIndexStringEntry;
     public gpu_content: Uint32Array;
-    protected readonly num_result: number = 4096 * 1024;
 
     public constructor(index?: FlatLinearIndexStringEntry) {
         this.index_entry = index || { 

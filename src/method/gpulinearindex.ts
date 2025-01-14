@@ -1,4 +1,4 @@
-import { type SearchEnv, type SearchResult } from "@src/frontend/base";
+import type { SearchEnv, SearchResult } from "@src/frontend/base";
 import { bitapKeyNumber, createBitapKey } from "@src/util/algorithm";
 import { splitByGrapheme } from "@src/util/preprocess";
 import { FlatLinearIndexString } from "./flatlinearindexstring";
@@ -6,160 +6,140 @@ import bitap_dist1 from "@src/method/wgsl/bitap_dist1.wgsl?raw";
 import bitap_dist2 from "@src/method/wgsl/bitap_dist2.wgsl?raw";
 import bitap_dist3 from "@src/method/wgsl/bitap_dist3.wgsl?raw";
 
+type GPUBuffers = {
+    content: GPUBuffer;
+    result: GPUBuffer;
+    pointer: GPUBuffer;
+    end_mask: GPUBuffer;
+    bitap_dict: GPUBuffer;
+    keyword_len: GPUBuffer;
+    result_copy: GPUBuffer;
+    pointer_copy: GPUBuffer;
+};
+
 export class GPULinearIndex extends FlatLinearIndexString {
     private device: GPUDevice | undefined = undefined;
-    private gpu_buffers: GPUBuffer[] = [];
-    private gpu_module_dist1: GPUShaderModule | undefined = undefined;
-    private gpu_module_dist2: GPUShaderModule | undefined = undefined;
-    private gpu_module_dist3: GPUShaderModule | undefined = undefined;
+    private gpu_buffers: GPUBuffers | undefined = undefined;
+    private gpu_pipeline: GPUComputePipeline[] = [];
+    private gpu_bind_group: GPUBindGroup | undefined = undefined;
+    private readonly num_result: number = 4096 * 128;
+
+    private gpuStorageRead(device: GPUDevice, size: number): GPUBuffer {
+        return device.createBuffer({
+            size: size,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+        });
+    }
+
+    private gpuStorageWrite(device: GPUDevice, size: number): GPUBuffer {
+        return device.createBuffer({
+            size: size,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+        });
+    }
+
+    private gpuStorageReadWrite(device: GPUDevice, size: number): GPUBuffer {
+        return device.createBuffer({
+            size: size,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+        });
+    }
+
+    private gpuUniform(device: GPUDevice, size: number): GPUBuffer {
+        return device.createBuffer({
+            size: size,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        });
+    }
+
+    private gpuCopy(device: GPUDevice, size: number): GPUBuffer {
+        return device.createBuffer({
+            size: size,
+            usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+        });
+    }
+
+    private gpuPipeline(device: GPUDevice, code: string): GPUComputePipeline {
+        const gpu_module = device.createShaderModule({ code: code });
+        return device.createComputePipeline({
+            layout: "auto",
+            compute: {
+                module: gpu_module,
+                entryPoint: "cs"
+            },
+        });
+    }
 
     private async initGPU(): Promise<void> {
         const adapter = await navigator.gpu?.requestAdapter();
         this.device = await adapter?.requestDevice();
         if (this.device === undefined) return;
 
-        this.gpu_buffers[0] = this.device.createBuffer({
-            label: "gpu_content buffer",
-            size: this.gpu_content.byteLength,
-            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-        });
-        this.device.queue.writeBuffer(this.gpu_buffers[0], 0, this.gpu_content);
+        this.gpu_buffers = {
+            content: this.gpuStorageRead(this.device, this.index_entry.content_length * 4),
+            result: this.gpuStorageWrite(this.device, this.num_result * 4 * 2),
+            pointer: this.gpuStorageReadWrite(this.device, 4),
+            end_mask: this.gpuUniform(this.device, 4 * 4),
+            bitap_dict: this.gpuStorageRead(this.device, 4 * 2 * 32),
+            keyword_len: this.gpuUniform(this.device, 4),
+            result_copy: this.gpuCopy(this.device, this.num_result * 4 * 2),
+            pointer_copy: this.gpuCopy(this.device, 4),
+        }
 
-        this.gpu_buffers[1] = this.device.createBuffer({
-            label: "gpu_result buffer",
-            size: this.num_result * 4 * 2,
-            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-        });
+        this.device.queue.writeBuffer(this.gpu_buffers.content, 0, this.gpu_content);
 
-        this.gpu_buffers[2] = this.device.createBuffer({
-            label: "gpu_pointer buffer",
-            size: 4,
-            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-        });
+        this.gpu_pipeline[1] = this.gpuPipeline(this.device, bitap_dist1);
+        this.gpu_pipeline[2] = this.gpuPipeline(this.device, bitap_dist2);
+        this.gpu_pipeline[3] = this.gpuPipeline(this.device, bitap_dist3);
 
-        this.gpu_buffers[3] = this.device.createBuffer({
-            label: "gpu_end_mask uniform",
-            size: 4 * 4,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-        });
-
-        this.gpu_buffers[4] = this.device.createBuffer({
-            label: "gpu_bitap_dict uniform",
-            size: 4 * 2 * 32,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-        });
-
-        this.gpu_buffers[5] = this.device.createBuffer({
-            label: "gpu_keyword_len uniform",
-            size: 4,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-        });
-
-        this.gpu_buffers[6] = this.device.createBuffer({
-            label: "gpu_bitap_dict_len uniform",
-            size: 4,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-        });
-
-        this.gpu_buffers[7] = this.device.createBuffer({
-            label: "gpu_result_copy buffer",
-            size: this.num_result * 4 * 2,
-            usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-        });
-
-        this.gpu_buffers[8] = this.device.createBuffer({
-            label: "gpu_pointer_copy buffer",
-            size: 4,
-            usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-        });
-
-        this.gpu_module_dist1 = this.device.createShaderModule({
-            label: "gpu_dist1_module",
-            code: bitap_dist1,
-        });
-
-        this.gpu_module_dist2 = this.device.createShaderModule({
-            label: "gpu_dist2_module",
-            code: bitap_dist2,
-        });
-
-        this.gpu_module_dist3 = this.device.createShaderModule({
-            label: "gpu_dist3_module",
-            code: bitap_dist3,
+        this.gpu_bind_group = this.device.createBindGroup({
+            layout: this.gpu_pipeline[1].getBindGroupLayout(0),
+            entries: [
+                { binding: 0, resource: { buffer: this.gpu_buffers.content } },
+                { binding: 1, resource: { buffer: this.gpu_buffers.result } },
+                { binding: 2, resource: { buffer: this.gpu_buffers.pointer } },
+                { binding: 3, resource: { buffer: this.gpu_buffers.end_mask } },
+                { binding: 4, resource: { buffer: this.gpu_buffers.bitap_dict } },
+                { binding: 5, resource: { buffer: this.gpu_buffers.keyword_len } },
+            ],
         });
     }
 
     public override async search(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
-        if (env.distance === undefined || env.distance === 0 || !this.isGPUSearchable(keyword)) {
-            return super.search(env, keyword);
+        const grapheme = splitByGrapheme(keyword).map((x) => x.charCodeAt(0));
+        const is_gpu_searchable = grapheme.length <= 32 && env.distance !== undefined && env.distance > 0 && env.distance < 4;
+
+        if (is_gpu_searchable) {
+            if (this.device === undefined) {
+                await this.initGPU();
+            }
+            return this.device && this.gpu_buffers ? this.gpuSearch(this.device, this.gpu_buffers, env, grapheme) : super.search(env, keyword);
         }
-        return this.gpuSearch(env, keyword);
+
+        return super.search(env, keyword);
     }
 
-    private isGPUSearchable(keyword: string): boolean {
-        const grapheme = splitByGrapheme(keyword);
-        return grapheme.length <= 32;
-    }
-
-    private async gpuSearch(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
-        if (this.device === undefined) {
-            await this.initGPU();
-        }
-        if (this.device === undefined) {
-            return super.search(env, keyword);
-        }
-
-        const grapheme = splitByGrapheme(keyword).map(x => x.charCodeAt(0));
+    private async gpuSearch(device: GPUDevice, gpu_buffers: GPUBuffers, env: SearchEnv, grapheme: number[]): Promise<SearchResult[]> {
         const bitap_key = createBitapKey<number, number>(bitapKeyNumber(), grapheme);
-        const bitap_key_tmp = [];
+        const bitap_dict_tmp = [];
         for (const [key, mask] of bitap_key.mask.entries()) {
-            bitap_key_tmp.push(key);
-            bitap_key_tmp.push(mask);
+            bitap_dict_tmp.push(key);
+            bitap_dict_tmp.push(mask);
         }
-        for (let i = bitap_key_tmp.length; i < 64; i++) {
-            bitap_key_tmp.push(0);
-        }
-        const bitap_dict = new Uint32Array(bitap_key_tmp);
-        this.device.queue.writeBuffer(this.gpu_buffers[4], 0, bitap_dict);
+        const bitap_dict = new Uint32Array(bitap_dict_tmp);
+        device.queue.writeBuffer(gpu_buffers.bitap_dict, 0, bitap_dict);
 
-        this.device.queue.writeBuffer(this.gpu_buffers[2], 0, new Uint32Array([0]));
-        this.device.queue.writeBuffer(
-            this.gpu_buffers[3],
+        device.queue.writeBuffer(gpu_buffers.pointer, 0, new Uint32Array([0]));
+        device.queue.writeBuffer(
+            gpu_buffers.end_mask,
             0,
             new Uint32Array(new Array(4).fill(1 << (grapheme.length - 1))),
         );
-        this.device.queue.writeBuffer(this.gpu_buffers[5], 0, new Uint32Array([grapheme.length]));
-        this.device.queue.writeBuffer(
-            this.gpu_buffers[6],
-            0,
-            new Uint32Array([Math.ceil(grapheme.length / 2)]),
-        );
+        device.queue.writeBuffer(gpu_buffers.keyword_len, 0, new Uint32Array([grapheme.length]));
 
-        if (this.gpu_module_dist1 === undefined) throw new Error("gpu_module_dist1 is undefined");
-        const pipeline = this.device.createComputePipeline({
-            label: "bitap search pipeline",
-            layout: "auto",
-            compute: {
-                module: this.gpu_module_dist1,
-                entryPoint: "cs"
-            },
-        });
+        const pipeline = this.gpu_pipeline[env.distance || 1];
 
-        const bindGroup = this.device.createBindGroup({
-            label: "bitap bindGroup for buffers",
-            layout: pipeline.getBindGroupLayout(0),
-            entries: [
-                { binding: 0, resource: { buffer: this.gpu_buffers[0] } },
-                { binding: 1, resource: { buffer: this.gpu_buffers[1] } },
-                { binding: 2, resource: { buffer: this.gpu_buffers[2] } },
-                { binding: 3, resource: { buffer: this.gpu_buffers[3] } },
-                { binding: 4, resource: { buffer: this.gpu_buffers[4] } },
-                { binding: 5, resource: { buffer: this.gpu_buffers[5] } },
-                { binding: 6, resource: { buffer: this.gpu_buffers[6] } },
-            ],
-        });
-
-        const encoder = this.device.createCommandEncoder({
+        const encoder = device.createCommandEncoder({
             label: "bitap search encoder",
         });
         encoder.pushDebugGroup("bitap");
@@ -167,35 +147,35 @@ export class GPULinearIndex extends FlatLinearIndexString {
             label: "bitap search compute pass",
         });
         pass.setPipeline(pipeline);
-        pass.setBindGroup(0, bindGroup);
+        pass.setBindGroup(0, this.gpu_bind_group);
         pass.dispatchWorkgroups(Math.ceil(this.index_entry.content_length / 256)); // 256 workgroup_size
         pass.end();
 
-        encoder.copyBufferToBuffer(this.gpu_buffers[1], 0, this.gpu_buffers[7], 0, this.gpu_buffers[1].size);
-        encoder.copyBufferToBuffer(this.gpu_buffers[2], 0, this.gpu_buffers[8], 0, this.gpu_buffers[2].size);
+        encoder.copyBufferToBuffer(gpu_buffers.result, 0, gpu_buffers.result_copy, 0, gpu_buffers.result.size);
+        encoder.copyBufferToBuffer(gpu_buffers.pointer, 0, gpu_buffers.pointer_copy, 0, gpu_buffers.pointer.size);
         encoder.popDebugGroup();
 
         const commandBuffer = encoder.finish();
-        this.device.queue.submit([commandBuffer]);
+        device.queue.submit([commandBuffer]);
 
-        await this.gpu_buffers[8].mapAsync(GPUMapMode.READ);
-        const pointer = new Uint32Array(this.gpu_buffers[8].getMappedRange());
+        await gpu_buffers.pointer_copy.mapAsync(GPUMapMode.READ);
+        const pointer = new Uint32Array(gpu_buffers.pointer_copy.getMappedRange());
         if (pointer[0] === 0) {
-            this.gpu_buffers[8].unmap();
+            gpu_buffers.pointer_copy.unmap();
             return [];
         }
 
-        await this.gpu_buffers[7].mapAsync(GPUMapMode.READ);
+        await gpu_buffers.result_copy.mapAsync(GPUMapMode.READ);
         const count = Math.min(pointer[0], this.num_result);
-        const gpu_result = new Uint32Array(this.gpu_buffers[7].getMappedRange(0, count * 4 * 2));
+        const gpu_result = new Uint32Array(gpu_buffers.result_copy.getMappedRange(0, count * 4 * 2));
         const raw_result: [number, number][] = [];
         for (let i = 0; i < gpu_result.length; i += 2) {
             raw_result.push([gpu_result[i], gpu_result[i + 1]]);
         }
-        this.gpu_buffers[7].unmap();
-        this.gpu_buffers[8].unmap();
+        gpu_buffers.result_copy.unmap();
+        gpu_buffers.pointer_copy.unmap();
 
         const poses = this.mergeResults(raw_result.sort((a, b) => a[0] - b[0]));
-        return this.createSearchResult(poses, keyword, env.weight);
+        return this.createSearchResult(poses, grapheme.map((x) => String.fromCharCode(x)).join(""), env.weight);
     }
 }
