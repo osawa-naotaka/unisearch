@@ -1,7 +1,6 @@
 import type { IndexClass } from "@src/frontend/indexing";
 import { FlatLinearIndex } from "@src/method/flatlinearindex";
 import { FlatLinearIndexString } from "@src/method/flatlinearindexstring";
-import { FlatLinearIndexStringDelegated } from "@src/method/flatlinearindexstringdelegated";
 import { GPULinearIndex } from "@src/method/gpulinearindex";
 import { Hybrid } from "@src/method/hybrid";
 import { InvertedIndex } from "@src/method/invertedindex";
@@ -16,7 +15,6 @@ export const IndexTypes: { [key: string]: IndexClass } = {
     HybridBigramInvertedIndex,
     FlatLinearIndex,
     FlatLinearIndexString,
-    FlatLinearIndexStringDelegated,
     LinearIndexString,
     GPULinearIndex,
 };

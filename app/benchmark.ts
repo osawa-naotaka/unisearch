@@ -3,7 +3,6 @@ import { type IndexClass, createIndexFromObject, indexToObject } from "@src/fron
 import {
     FlatLinearIndex,
     FlatLinearIndexString,
-    FlatLinearIndexStringDelegated,
     HybridBigramInvertedIndex,
     LinearIndex,
     LinearIndexString,
@@ -99,7 +98,6 @@ const benchmark_results_linear = await execBenchmark(LinearIndex, {}, articles, 
 const benchmark_results_linear_string = await execBenchmark(LinearIndexString, {}, articles, keywords);
 const benchmark_results_flat = await execBenchmark(FlatLinearIndex, {}, articles, keywords);
 const benchmark_results_flat_string = await execBenchmark(FlatLinearIndexString, {}, articles, keywords);
-const benchmark_results_flat_string_delegated = await execBenchmark(FlatLinearIndexStringDelegated, {}, articles, keywords);
 const benchmark_results_gpu = await execBenchmark(GPULinearIndex, {}, articles, keywords);
 const benchmark_results_hybrid = await execBenchmark(HybridBigramInvertedIndex, {}, articles, keywords);
 
@@ -111,8 +109,6 @@ console.log("benchmark results: FlatLinearIndex");
 console.log(benchmark_results_flat);
 console.log("benchmark results: FlatLinearIndexString");
 console.log(benchmark_results_flat_string);
-console.log("benchmark results: FlatLinearIndexStringDelegated");
-console.log(benchmark_results_flat_string_delegated);
 console.log("benchmark results: GPULinearIndex");
 console.log(benchmark_results_gpu);
 console.log("benchmark results: HybridBigramInvertedIndex");
