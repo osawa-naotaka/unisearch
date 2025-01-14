@@ -283,10 +283,11 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
 
     private allIndexOf(keyword: string, content: string): [number, number][] {
         const result: [number, number][] = [];
-        let pos = content.indexOf(keyword);
+        const grapheme = excerptOneCodepointPerGraphem(keyword);
+        let pos = content.indexOf(grapheme);
         while (pos !== -1) {
             result.push([pos, 0]);
-            pos = content.indexOf(keyword, pos + keyword.length);
+            pos = content.indexOf(grapheme, pos + grapheme.length);
         }
         return result;
     }

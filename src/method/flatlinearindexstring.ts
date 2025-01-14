@@ -23,9 +23,10 @@ type ContentRef = {
     id: number;
     path: string;
     pos: number;
+    size: number;
 };
 
-export type FlatLinearIndexEntry = { key: string[]; content: string; content_length: number; toc: ContentRange[] };
+export type FlatLinearIndexEntry = { key: string[]; content: string; content_length: number; num_id: number; toc: ContentRange[] };
 
 export class FlatLinearIndexString implements SearchIndex<FlatLinearIndexEntry> {
     public index_entry: FlatLinearIndexEntry;
@@ -39,7 +40,7 @@ export class FlatLinearIndexString implements SearchIndex<FlatLinearIndexEntry> 
     private gpu_module_dist3: GPUShaderModule | undefined = undefined;
 
     public constructor(index?: FlatLinearIndexEntry) {
-        this.index_entry = index || { key: [], content: "", content_length: 0, toc: [] };
+        this.index_entry = index || { key: [], content: "", content_length: 0, num_id: 0, toc: [] };
         this.gpu_content = new Uint32Array();
         if (index) {
             this.gpu_content = new Uint32Array(index.content_length);
@@ -56,6 +57,7 @@ export class FlatLinearIndexString implements SearchIndex<FlatLinearIndexEntry> 
         this.index_entry.content += graphemes;
         this.index_entry.toc.push({ id: id, path: path, start: start, end: end });
         this.index_entry.content_length += graphemes.length;
+        this.index_entry.num_id = Math.max(this.index_entry.num_id, id + 1);
     }
 
     public addKey(id: number, key: string): void {
@@ -192,6 +194,7 @@ export class FlatLinearIndexString implements SearchIndex<FlatLinearIndexEntry> 
         }
 
         const result = new Map<number, SearchResult>();
+        const content_size = new Map<number, Map<string, number>>();
         for (const pos of poses) {
             const cref = this.getReference(pos[0]);
             const r = result.get(cref.id) || { id: cref.id, key: this.index_entry.key[cref.id], score: 0, refs: [] };
@@ -203,7 +206,20 @@ export class FlatLinearIndexString implements SearchIndex<FlatLinearIndexEntry> 
                 distance: pos[1],
             });
             result.set(cref.id, r);
+
+            const id_size = content_size.get(cref.id) || new Map<string, number>();
+            id_size.set(cref.path, cref.size);
+            content_size.set(cref.id, id_size);
         }
+
+        const idf = Math.log(this.index_entry.num_id / (result.size + 1)) + 1;
+        for (const [_, r] of result) {
+            const tf = r.refs
+                .map((v) => v.token.length / (content_size.get(r.id)?.get(v.path) || Infinity) / (v.distance + 1))
+                .reduce((x, y) => x + y);
+            r.score = tf * idf * (env.weight || 1);
+        }
+
         return Array.from(result.values());
     }
 
@@ -285,10 +301,11 @@ export class FlatLinearIndexString implements SearchIndex<FlatLinearIndexEntry> 
 
     private allIndexOf(keyword: string, content: string): [number, number][] {
         const result: [number, number][] = [];
-        let pos = content.indexOf(keyword);
+        const grapheme = excerptOneCodepointPerGraphem(keyword);
+        let pos = content.indexOf(grapheme);
         while (pos !== -1) {
             result.push([pos, 0]);
-            pos = content.indexOf(keyword, pos + keyword.length);
+            pos = content.indexOf(grapheme, pos + grapheme.length);
         }
         return result;
     }
@@ -306,6 +323,7 @@ export class FlatLinearIndexString implements SearchIndex<FlatLinearIndexEntry> 
             id: toc.id,
             path: toc.path,
             pos: pos - toc.start,
+            size: toc.end - toc.start + 1,
         };
     }
 }

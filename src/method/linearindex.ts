@@ -58,7 +58,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             return this.searchToken(
                 this.grapheme_index,
                 this.fuzzySearch(env.distance, createBitapKey<number, number>(bitapKeyNumber(), grapheme)),
-                (pos, target) => target.slice(Math.max(pos - 20, 0), pos + keyword.length + 20).join(""),
+                (pos, target) => target.slice(Math.max(pos - 20, 0), pos + keyword.length + 20),
                 env.search_targets,
                 env.weight || 1,
                 keyword,
@@ -68,7 +68,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         return this.searchToken(
             this.grapheme_index,
             this.fuzzySearch(env.distance, createBitapKey<bigint, number>(bitapKeyBigint(), grapheme)),
-            (pos, target) => target.slice(Math.max(pos - 20, 0), pos + keyword.length + 20).join(""),
+            (pos, target) => target.slice(Math.max(pos - 20, 0), pos + keyword.length + 20),
             env.search_targets,
             env.weight || 1,
             keyword,
@@ -123,7 +123,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
     private searchToken<T extends string | Uint32Array>(
         index: Record<Path, T>[],
         search_fn: (target: T) => [number, number][],
-        wordaround_fn: (pos: number, target: T) => string,
+        wordaround_fn: (pos: number, target: string) => string,
         search_targets: Path[] | undefined,
         weight: number,
         token: string,
@@ -134,6 +134,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         index.forEach((content, id) => {
             for (const path of search_targets || Object.keys(content)) {
                 const search_target = content[path];
+                const wordaround = this.index_entry.index[id][path];
                 if (search_target === undefined) continue;
                 const poses = search_fn(search_target);
                 if (poses.length !== 0) {
@@ -148,7 +149,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
                             token: token,
                             path: path,
                             pos: pos,
-                            wordaround: wordaround_fn(pos, search_target),
+                            wordaround: wordaround_fn(pos, wordaround),
                             distance: dist,
                         });
                         result.set(id, cur);
