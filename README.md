@@ -103,17 +103,21 @@ const json = JSON.stringify(indexToObject(index));
 また、JavaScriptオブジェクトからindexを再構築するにはcreateIndexFromObject関数を使います。
 
 ```
-export function createIndexFromObject<T>(index: UniIndex<T>): UniIndex<SearchIndex<T>>
+export function createIndexFromObject<T>(index: UniIndex<T>): UniIndex<SearchIndex<T>> | UniSearchError;
 ```
 
 ```
 const resp = await fetch(index_url);
 const re_index = createIndexFromObject(resp.json());
 
+if(re_index instanceof UniSearchError) throw re_index;
+
 const result = await search(re_index, "search word");
 ```
 
-インデックスの生成には多少時間がかかります。1000記事程度、全文で20MByte程度の場合、100msec程度かかります。
+インデックスのヴァージョンが一致しない場合、エラーが発生します。その場合はunisearch.jsのヴァージョンを合わせてインデックスを再生成してください。
+
+インデックスの生成には多少時間がかかります。1000記事程度、全文で20MByte程度の場合、100-1000msec程度かかります。
 
 ### インデックスを用いた検索
 インデックスを作成したあとは、同じインデックスを使って何度も検索を実行できます。
@@ -220,7 +224,7 @@ HybridBigramInvertedIndexを使うことにより、おおよそ10-100倍の検�
 
 ただし、検索の速度向上のかわり、多数の欠点も存在します。
 
-1. インデックス生成に時間がかかります。1000記事で数十秒ほどです。そのため、SSGなどで前もってインデックスを作ることが必須になります。
+1. インデックス生成に時間がかかります。1000記事で数百秒ほどです。そのため、SSGなどで前もってインデックスを作ることが必須になります。
 2. 検索ノイズが増えます。false positive(一致するはずのない文章が検索結果に出てきてしまう)が増加します。
 3. 日本語などを対象にしたあいまい検索はかなりノイズが増えます。意図した編集距離より遠い文字列にもマッチしてしまいます。
 4. 検索結果の情報の一部が欠けます。posとwordaroundが存在しなくなります。

@@ -100,17 +100,21 @@ const json = JSON.stringify(indexToObject(index));
 Also, to reconstruct an index from a JavaScript object, use the createIndexFromObject function.
 
 ```
-export function createIndexFromObject<T>(index: UniIndex<T>): UniIndex<SearchIndex<T>>
+export function createIndexFromObject<T>(index: UniIndex<T>): UniIndex<SearchIndex<T>> | UniSearchError;
 ```
 
 ```
 const resp = await fetch(index_url);
 const re_index = createIndexFromObject(resp.json());
 
+if(re_index instanceof UniSearchError) throw re_index;
+
 const result = await search(re_index, "search word");
 ```
 
-Index generation takes some time: for about 1000 articles, or 20 MByte of full text, it takes about 100 msec.
+If the versions of the indexes do not match, an error will occur. In this case, please re-generate the index by matching the version of unisearch.js.
+
+Index generation takes some time: for about 1000 articles, or 20 MByte of full text, it takes about 100-1000 msec.
 
 ### Searching using an index
 Once an index has been created, searches can be performed many times using the same index.
@@ -217,7 +221,7 @@ Using HybridBigramInvertedIndex improves the search speed by a factor of approxi
 
 However, in exchange for the improved search speed, there are a number of drawbacks
 
-1. Indexing takes a long time, about several tens of seconds for 1000 articles. Therefore, it is essential to create the index in advance with SSG, etc. 
+1. Indexing takes a long time, about several hundreds of seconds for 1000 articles. Therefore, it is essential to create the index in advance with SSG, etc. 
 2. Search noise increases, and false positives (sentences that should not match appear in the search results) increase.
 3. fuzzy searches for CJK(Chinese, Japanese, Korean)-like languages will increase the noise considerably. It also matches strings that are farther away from the intended edit distance. 
 4. Some of the information in the search results will be missing: pos and wordaround will not exist.

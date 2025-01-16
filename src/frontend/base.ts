@@ -1,5 +1,5 @@
 // version
-export const Version = "1.0";
+export const Version = "1.1";
 
 // types
 
