@@ -90,7 +90,7 @@ export async function execBenchmark(
     return benchmark_results;
 }
 
-const keywords = getAllKeywords(wikipedia_ja_keyword).slice(0, 30);
+const keywords = getAllKeywords(wikipedia_ja_keyword).slice(0, 100);
 const articles = wikipedia_ja_extracted_1000.slice(0, 1000);
 const benchmark_results_linear = await execBenchmark(LinearIndex, {}, articles, keywords);
 const benchmark_results_linear_string = await execBenchmark(LinearIndexString, {}, articles, keywords);

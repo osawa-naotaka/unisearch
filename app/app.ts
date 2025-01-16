@@ -1,5 +1,5 @@
 import type { WikipediaArticle, WikipediaKeyword } from "@ref/bench/benchmark_common";
-import { benchmark, getKeywords } from "@ref/bench/benchmark_common";
+import { benchmark, getAllKeywords } from "@ref/bench/benchmark_common";
 import type { BenchmarkResult } from "@ref/bench/benchmark_common";
 import { calculateGzipedJsonSize } from "@ref/util";
 import { UniSearchError } from "@src/frontend/base";
@@ -27,7 +27,7 @@ async function benchmarkAsync<T, R>(fn: (args: T, idx: number) => Promise<R>, ar
 
 async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[], n: number) {
     console.log("initializing benchmark...");
-    const keywords = getKeywords(n, wikipedia_keyword);
+    const keywords = getAllKeywords(wikipedia_keyword).slice(0, n);
 
     console.log("benchmarking linear index...");
     const index_result = benchmark(
@@ -51,9 +51,8 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     console.log(`exact search time per one keyword: ${exact_result.time / keywords.length} ms`);
     console.log(exact_result.results);
 
-    console.log("fuzzy search is too slow. exec search only first 100 keywords.");
-    const fuzzy_result = await benchmarkAsync((x) => search(index, x), keywords.slice(0, 100));
-    console.log(`fuzzy search time per one keyword: ${fuzzy_result.time / 100} ms`);
+    const fuzzy_result = await benchmarkAsync((x) => search(index, x), keywords);
+    console.log(`fuzzy search time per one keyword: ${fuzzy_result.time / keywords.length} ms`);
     console.log(fuzzy_result.results);
 
 
@@ -80,9 +79,8 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     console.log(`exact search time per one keyword: ${gpu_exact_result.time / keywords.length} ms`);
     console.log(gpu_exact_result.results);
 
-    console.log("fuzzy search is too slow. exec search only first 100 keywords.");
-    const gpu_fuzzy_result = await benchmarkAsync((x) => search(gpu_index, x), keywords.slice(0, 100));
-    console.log(`fuzzy search time per one keyword: ${gpu_fuzzy_result.time / 100} ms`);
+    const gpu_fuzzy_result = await benchmarkAsync((x) => search(gpu_index, x), keywords);
+    console.log(`fuzzy search time per one keyword: ${gpu_fuzzy_result.time / keywords.length} ms`);
     console.log(gpu_fuzzy_result.results);
 
 
@@ -109,5 +107,5 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     console.log(hybrid_result.results);
 }
 
-await runAll(wikipedia_ja_extracted, wikipedia_ja_keyword, 20);
-await runAll(wikipedia_ja_extracted_1000, wikipedia_ja_keyword, 20);
+await runAll(wikipedia_ja_extracted, wikipedia_ja_keyword, 100);
+await runAll(wikipedia_ja_extracted_1000, wikipedia_ja_keyword, 100);
