@@ -91,8 +91,22 @@ describe("search test", async () => {
     );
 
     test("from: search 1", async () =>
-        expect(await search(index, 'from:text タイトル2'))
+        expect(await search(index, 'from:title タイトル2'))
         .toStrictEqual([
+            {
+                id: 1,
+                key: "タイトル２",
+                score: 1.4054651081081644,
+                refs: [
+                    {
+                        token: "タイトル2",
+                        path: "title",
+                        pos: 0,
+                        wordaround: "タイトル2",
+                        distance: 0,
+                    }
+                ]
+            }
         ])
     );
 
