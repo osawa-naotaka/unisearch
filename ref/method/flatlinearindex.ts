@@ -1,8 +1,6 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
 import { UniSearchError } from "@src/frontend/base";
 import bitap_dist1 from "@ref/method/wgsl/bitap_dist1.wgsl?raw";
-import bitap_dist2 from "@ref/method/wgsl/bitap_dist2.wgsl?raw";
-import bitap_dist3 from "@ref/method/wgsl/bitap_dist3.wgsl?raw";
 import {
     BinarySearchType,
     binarySearch,
@@ -37,8 +35,6 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
     private device: GPUDevice | undefined = undefined;
     private gpu_buffers: GPUBuffer[] = [];
     private gpu_module_dist1: GPUShaderModule | undefined = undefined;
-    private gpu_module_dist2: GPUShaderModule | undefined = undefined;
-    private gpu_module_dist3: GPUShaderModule | undefined = undefined;
 
     public constructor(index?: FlatLinearIndexEntry) {
         this.index_entry = index || { key: [], gpu_content: new Uint32Array(), toc: [], num_id: 0 };
@@ -283,15 +279,6 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
             code: bitap_dist1,
         });
 
-        this.gpu_module_dist2 = this.device.createShaderModule({
-            label: "gpu_dist2_module",
-            code: bitap_dist2,
-        });
-
-        this.gpu_module_dist3 = this.device.createShaderModule({
-            label: "gpu_dist3_module",
-            code: bitap_dist3,
-        });
     }
 
     private allIndexOf(keyword: string, content: string): [number, number][] {

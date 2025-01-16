@@ -17,13 +17,6 @@ type ContentRange = {
     end: number;
 };
 
-type ContentRef = {
-    id: number;
-    path: string;
-    pos: number;
-    size: number;
-};
-
 export type LinearIndexEntry = {
     key: string[];
     content: string;
@@ -92,7 +85,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             }
         }
 
-        return this.createSearchResult(poses, keyword, env.weight);
+        return this.createSearchResult(poses, keyword, env);
     }
 
     protected mergeResults(raw_result: [number, number][]): [number, number][] {
@@ -119,12 +112,18 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         return poses;
     }
 
-    protected createSearchResult(poses: [number, number][], keyword: string, weight?: number): SearchResult[] {
+    protected createSearchResult(poses: [number, number][], keyword: string, env: SearchEnv): SearchResult[] {
         const result = new Map<number, SearchResult>();
         const content_size = new Map<number, Map<string, number>>();
 
         for (const pos of poses) {
             const cref = this.getReference(pos[0]);
+            if(env.search_targets) {
+                const path = binarySearch(cref.path, (a, b) => a.localeCompare(b), env.search_targets, BinarySearchType.Exact);
+                if(path === null) continue;
+            }
+            const find_pos = pos[0] - cref.start;
+            const size = cref.end - cref.start + 1;
             const r = result.get(cref.id) || {
                 id: cref.id,
                 key: this.index_entry.key[cref.id],
@@ -135,15 +134,15 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             r.refs.push({
                 token: keyword,
                 path: cref.path,
-                pos: cref.pos,
-                wordaround: this.index_entry.content.slice(Math.max(pos[0] - 20, 0), pos[0] + keyword.length + 20),
+                pos: find_pos,
+                wordaround: this.index_entry.content.slice(Math.max(pos[0] - 20, cref.start), Math.min(pos[0] + keyword.length + 20, cref.end + 1)),
                 distance: pos[1],
             });
 
             result.set(cref.id, r);
 
             const id_size = content_size.get(cref.id) || new Map<string, number>();
-            id_size.set(cref.path, cref.size);
+            id_size.set(cref.path, size);
             content_size.set(cref.id, id_size);
         }
 
@@ -157,7 +156,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
                         (v.distance + 1),
                 )
                 .reduce((x, y) => x + y);
-            r.score = tf * idf * (weight || 1);
+            r.score = tf * idf * (env.weight || 1);
         }
 
         return Array.from(result.values());
@@ -174,20 +173,15 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         return result;
     }
 
-    protected getReference(pos: number): ContentRef {
+    protected getReference(pos: number): ContentRange {
         const index = binarySearch(
             { id: 0, path: "", start: pos, end: pos },
             (a, b) => (a.start < b.start ? -1 : a.end > b.end ? 1 : 0),
             this.index_entry.toc,
             BinarySearchType.Exact,
         );
+        console.log(pos, this.index_entry.toc);
         if (index === null) throw new UniSearchError("unisearch.js: getReference internal error.");
-        const toc = this.index_entry.toc[index];
-        return {
-            id: toc.id,
-            path: toc.path,
-            pos: pos - toc.start,
-            size: toc.end - toc.start + 1,
-        };
+        return this.index_entry.toc[index];
     }
 }

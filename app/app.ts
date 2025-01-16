@@ -109,5 +109,17 @@ async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword:
     console.log(hybrid_result.results);
 }
 
-await runAll(wikipedia_ja_extracted, wikipedia_ja_keyword, 20);
-await runAll(wikipedia_ja_extracted_1000, wikipedia_ja_keyword, 20);
+
+const contents = [
+    { title: "タイトル１", text: "テキスト１．１テキスト１．２テキスト１．３"},
+    { title: "タイトル２", text: "テキスト２．１テキスト２．２テキスト２．３"},
+    { title: "タイトル３", text: "テキスト３．１テキスト３．２テキスト３．３"},
+];
+
+const index = createIndex(LinearIndex, contents);
+if(index instanceof UniSearchError) throw index;
+const result = await search(index, 'from:title タイトル2');
+console.log(result);
+
+// await runAll(wikipedia_ja_extracted, wikipedia_ja_keyword, 20);
+// await runAll(wikipedia_ja_extracted_1000, wikipedia_ja_keyword, 20);

@@ -48,7 +48,7 @@
 
     if(dist < 4u) {
         let ptr_pos = atomicAdd(&pointer, 1u);
-        result[ptr_pos * 2] = tail_pos;
+        result[ptr_pos * 2] = max(0, tail_pos - keyword_len);
         result[ptr_pos * 2 + 1] = dist;
     }
 }

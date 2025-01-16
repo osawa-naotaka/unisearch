@@ -23,7 +23,7 @@
         let matches = (state & end_mask) != 0u;
         if(matches) {
             let ptr_pos = atomicAdd(&pointer, 1u);
-            result[ptr_pos * 2] = pos;
+            result[ptr_pos * 2] = id.x;
             result[ptr_pos * 2 + 1] = 0;
         }
     }
