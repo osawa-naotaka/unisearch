@@ -50,7 +50,7 @@
 
     if(dist < 4u) {
         let ptr_pos = atomicAdd(&pointer, 1u);
-        result[ptr_pos * 2] = bitcast<u32>(max(0, bitcast<i32>(tail_pos) - bitcast<i32>(keyword_len)));
+        result[ptr_pos * 2] = bitcast<u32>(max(0, bitcast<i32>(tail_pos) - bitcast<i32>(keyword_len) + 1));
         result[ptr_pos * 2 + 1] = dist;
     }
 }
