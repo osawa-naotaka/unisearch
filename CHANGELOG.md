@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.5] - 2025-01-14
+### Fixed
+- in fuzzy search, distance is reduced to min(distance, keyword_length - 1).
+- in HybridBigramInvertedIndex, fix bug that alphabet-and-kanji-combined keyword is not searched correctly.
+
 ## [1.0.4] - 2025-01-07
 ### Fixed
 - fuzzy search bug is fixed.
@@ -37,7 +42,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - search frontend, google-like syntax
 - sorting search result based on TF-IDF
 
-[Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.4...HEAD
+[Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.5...HEAD
+[1.0.5]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.0...v1.0.2

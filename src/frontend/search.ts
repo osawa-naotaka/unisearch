@@ -31,8 +31,10 @@ const evalQuery =
         switch (ast.type) {
             case "exact":
                 return { type: "includes", results: await index.search(createWithProp(env, "distance", 0), ast.str) };
-            case "fuzzy":
-                return { type: "includes", results: await index.search(env, ast.str) };
+            case "fuzzy": {
+                const distance = Math.min(env.distance || 0, Math.max(0, ast.str.length - 1));
+                return { type: "includes", results: await index.search(createWithProp(env, "distance", distance), ast.str) };
+            }
             case "not": {
                 const r = await evalQuery(index, env)(ast.node);
                 return { type: "excludes", results: r.results };

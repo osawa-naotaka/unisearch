@@ -4,7 +4,7 @@ import { createIndex } from "@src/frontend/indexing";
 import { LinearIndex } from "@src/method/linearindex";
 import { search } from "@src/frontend/search";
 
-describe("search test", () => {
+describe("search test", async () => {
     const contents = [
         { title: "タイトル１", text: "テキスト１．１テキスト１．２テキスト１．３"},
         { title: "タイトル２", text: "テキスト２．１テキスト２．２テキスト２．３"},
@@ -16,8 +16,8 @@ describe("search test", () => {
         throw index;
     }
 
-    test("exact search 1", () =>
-        expect(search(index, '"タイトル2"'))
+    test("exact search 1", async () =>
+        expect(await search(index, '"タイトル2"'))
         .toStrictEqual([
             {
                 id: 1,
@@ -36,8 +36,8 @@ describe("search test", () => {
         ])
     );
 
-    test("exact search 2", () =>
-        expect(search(index, '"テキスト3"'))
+    test("exact search 2", async () =>
+        expect(await search(index, '"テキスト3"'))
         .toStrictEqual([
             {
                 id: 2,
@@ -70,8 +70,8 @@ describe("search test", () => {
         ])
     );
 
-    test("fuzzy search 1", () =>
-        expect(search(index, 'タエトル2'))
+    test("fuzzy search 1", async () =>
+        expect(await search(index, 'タエトル2'))
         .toStrictEqual([
             {
                 id: 1,
@@ -90,14 +90,14 @@ describe("search test", () => {
         ])
     );
 
-    test("from: search 1", () =>
-        expect(search(index, 'from:text タイトル2'))
+    test("from: search 1", async () =>
+        expect(await search(index, 'from:text タイトル2'))
         .toStrictEqual([
         ])
     );
 
-    test("weight: search 1", () =>
-        expect(search(index, 'weight:2 "タイトル2"'))
+    test("weight: search 1", async () =>
+        expect(await search(index, 'weight:2 "タイトル2"'))
         .toStrictEqual([
             {
                 id: 1,
@@ -116,8 +116,8 @@ describe("search test", () => {
         ])
     );
 
-    test("distance: search 1", () =>
-        expect(search(index, 'from:title distance:4 エエエエ2'))
+    test("distance: search 1", async () =>
+        expect(await search(index, 'from:title distance:4 エエエエ2'))
         .toStrictEqual([
             {
                 id: 1,
@@ -136,8 +136,8 @@ describe("search test", () => {
         ])
     );
 
-    test("AND search 1", () =>
-        expect(search(index, '"タイトル3" "テキスト3.1"'))
+    test("AND search 1", async () =>
+        expect(await search(index, '"タイトル3" "テキスト3.1"'))
         .toStrictEqual([
             {
                 id: 2,
@@ -163,8 +163,8 @@ describe("search test", () => {
         ])
     );
 
-    test("OR search 1", () =>
-        expect(search(index, '"タイトル3" OR "タイトル2"'))
+    test("OR search 1", async () =>
+        expect(await search(index, '"タイトル3" OR "タイトル2"'))
         .toStrictEqual([
             {
                 id: 2,
@@ -197,8 +197,8 @@ describe("search test", () => {
         ])
     );
 
-    test("NOT search 1", () =>
-        expect(search(index, '"テキスト" -"タイトル１" -"タイトル２"'))
+    test("NOT search 1", async () =>
+        expect(await search(index, '"テキスト" -"タイトル１" -"タイトル２"'))
         .toStrictEqual([
             {
                 id: 2,
@@ -231,8 +231,8 @@ describe("search test", () => {
         ])
     );
 
-    test("NOT search 2", () =>
-        expect(search(index, '-"タイトル１" -"タイトル２" "テキスト"'))
+    test("NOT search 2", async () =>
+        expect(await search(index, '-"タイトル１" -"タイトル２" "テキスト"'))
         .toStrictEqual([
             {
                 id: 2,
