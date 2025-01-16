@@ -118,9 +118,14 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
 
         for (const pos of poses) {
             const cref = this.getReference(pos[0]);
-            if(env.search_targets) {
-                const path = binarySearch(cref.path, (a, b) => a.localeCompare(b), env.search_targets, BinarySearchType.Exact);
-                if(path === null) continue;
+            if (env.search_targets) {
+                const path = binarySearch(
+                    cref.path,
+                    (a, b) => a.localeCompare(b),
+                    env.search_targets,
+                    BinarySearchType.Exact,
+                );
+                if (path === null) continue;
             }
             const find_pos = pos[0] - cref.start;
             const size = cref.end - cref.start + 1;
@@ -135,7 +140,10 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
                 token: keyword,
                 path: cref.path,
                 pos: find_pos,
-                wordaround: this.index_entry.content.slice(Math.max(pos[0] - 20, cref.start), Math.min(pos[0] + keyword.length + 20, cref.end + 1)),
+                wordaround: this.index_entry.content.slice(
+                    Math.max(pos[0] - 20, cref.start),
+                    Math.min(pos[0] + keyword.length + 20, cref.end + 1),
+                ),
                 distance: pos[1],
             });
 

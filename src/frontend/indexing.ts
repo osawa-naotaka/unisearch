@@ -84,7 +84,10 @@ export function createIndex<T>(
 }
 
 export function createIndexFromObject<T>(index: UniIndex<T>): UniIndex<SearchIndex<T>> | UniSearchError {
-    if(index.version !== Version) return new UniSearchError(`Older versions of the index are used. Please rebuild the index with version ${Version}.`);
+    if (index.version !== Version)
+        return new UniSearchError(
+            `Older versions of the index are used. Please rebuild the index with version ${Version}.`,
+        );
     return {
         version: index.version,
         type: index.type,
