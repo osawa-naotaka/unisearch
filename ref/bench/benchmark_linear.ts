@@ -1,16 +1,14 @@
 import { type WikipediaArticle, getAllKeywords } from "@ref/bench/benchmark_common";
-import { type IndexClass, createIndexFromObject, indexToObject } from "@src/frontend/indexing";
-import {
-    FlatLinearIndex,
-    FlatLinearIndexString,
-    HybridBigramInvertedIndex,
-    LinearIndex,
-    LinearIndexString,
-    GPULinearIndex,
-    UniSearchError,
-    createIndex,
-    search,
-} from "@src/main";
+import { type IndexClass, createIndexFromObject, indexToObject } from "@ref/method/indexing";
+import { FlatLinearIndex } from "@ref/method/flatlinearindex";
+import { FlatLinearIndexString } from "@ref/method/flatlinearindexstring";
+import { LinearIndex } from "@ref/method/linearindex";
+import { LinearIndexString } from "@ref/method/linearindexstring";
+import { GPULinearIndex } from "@ref/method/gpulinearindex";
+import { HybridBigramInvertedIndex } from "@ref/method/indextypes";
+import { UniSearchError } from "@src/main";
+import { createIndex } from "@src/frontend/indexing";
+import { search } from "@src/frontend/search";
 import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
 import { calculateGzipedJsonSize } from "@ref/util";

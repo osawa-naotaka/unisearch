@@ -1,7 +1,8 @@
 import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
 import { getAllKeywords } from "@ref/bench/benchmark_common";
-import { createIndex, search, GPULinearIndex } from "@src/main";
+import { GPULinearIndex } from "@ref/method/gpulinearindex";
+import { createIndex, search } from "@src/main";
 
 const keywords = getAllKeywords(wikipedia_ja_keyword).slice(0, 100);
 const articles = wikipedia_ja_extracted_1000;

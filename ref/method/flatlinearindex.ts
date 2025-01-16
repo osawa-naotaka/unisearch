@@ -1,8 +1,8 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
 import { UniSearchError } from "@src/frontend/base";
-import bitap_dist1 from "@src/method/wgsl/bitap_dist1.wgsl?raw";
-import bitap_dist2 from "@src/method/wgsl/bitap_dist2.wgsl?raw";
-import bitap_dist3 from "@src/method/wgsl/bitap_dist3.wgsl?raw";
+import bitap_dist1 from "@ref/method/wgsl/bitap_dist1.wgsl?raw";
+import bitap_dist2 from "@ref/method/wgsl/bitap_dist2.wgsl?raw";
+import bitap_dist3 from "@ref/method/wgsl/bitap_dist3.wgsl?raw";
 import {
     BinarySearchType,
     binarySearch,

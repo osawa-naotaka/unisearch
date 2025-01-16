@@ -27,7 +27,7 @@ const input = new Uint32Array(
 const kwd = defaultNormalizer("アンパサンド");
 const keyword = new Uint32Array([...kwd].map((x) => x.charCodeAt(0)));
 
-const bkey = createBitapKey(bitapKeyNumber(), [...kwd]);
+const bkey = createBitapKey<number, number>(bitapKeyNumber(), [...kwd].map((x) => x.charCodeAt(0)));
 const bitap_key_tmp = [];
 for(const [key, mask] of bkey.mask.entries()) {
     bitap_key_tmp.push(key);

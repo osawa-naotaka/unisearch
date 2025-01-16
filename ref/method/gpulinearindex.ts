@@ -1,8 +1,8 @@
 import type { SearchEnv, SearchResult } from "@src/frontend/base";
-import { LinearIndex } from "@src/method/linearindex";
-import bitap_dist1 from "@src/method/wgsl/bitap_dist1.wgsl?raw";
-import bitap_dist2 from "@src/method/wgsl/bitap_dist2.wgsl?raw";
-import bitap_dist3 from "@src/method/wgsl/bitap_dist3.wgsl?raw";
+import { FlatLinearIndexString } from "@ref/method/flatlinearindexstring";
+import bitap_dist1 from "@ref/method/wgsl/bitap_dist1.wgsl?raw";
+import bitap_dist2 from "@ref/method/wgsl/bitap_dist2.wgsl?raw";
+import bitap_dist3 from "@ref/method/wgsl/bitap_dist3.wgsl?raw";
 import { bitapKeyNumber, createBitapKey } from "@src/util/algorithm";
 import { splitByGrapheme } from "@src/util/preprocess";
 
@@ -17,7 +17,7 @@ type GPUBuffers = {
     pointer_copy: GPUBuffer;
 };
 
-export class GPULinearIndex extends LinearIndex {
+export class GPULinearIndex extends FlatLinearIndexString {
     private device: GPUDevice | undefined = undefined;
     private gpu_buffers: GPUBuffers | undefined = undefined;
     private gpu_pipeline: GPUComputePipeline[] = [];

@@ -12,7 +12,7 @@ dist
 dist-ssr
 *.local
 
-bitap/target
+ref/bitap-wasm/target
 
 # Editor directories and files
 .idea
