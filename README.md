@@ -12,7 +12,7 @@ import { LinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
 const index = createIndex(LinearIndex, array_of_articles);
 
 if(index instanceof UniSearchError) throw index;
-const result = search(index, "search word");
+const result = await search(index, "search word");
 ```
 
 unisearch.jsは検索に必要な一通りの機能を備えています。完全一致検索のほか、あいまい検索機能も備えます。さらに、and検索、or検索、not検索、フィールドを限定した検索、スコアリングのウェイト指定の機能があります。Google likeのクエリを使うことができ、直感的です。検索結果はTF-IDFというスコアリング方法を元にソートされ、一致箇所周辺の文字列とともに検索結果が得られます。
@@ -110,7 +110,7 @@ export function createIndexFromObject<T>(index: UniIndex<T>): UniIndex<SearchInd
 const resp = await fetch(index_url);
 const re_index = createIndexFromObject(resp.json());
 
-const result = search(re_index, "search word");
+const result = await search(re_index, "search word");
 ```
 
 インデックスの生成には多少時間がかかります。1000記事程度、全文で20MByte程度の場合、100msec程度かかります。
@@ -119,7 +119,7 @@ const result = search(re_index, "search word");
 インデックスを作成したあとは、同じインデックスを使って何度も検索を実行できます。
 
 ```
-export function search<T>(index: UniIndex<SearchIndex<T>>, query: string): SearchResult[] | UniSearchError;
+export async function search<T>(index: UniIndex<SearchIndex<T>>, query: string): Promise<SearchResult[] | UniSearchError>
 ```
 
 クエリは文字列としてインデックスとともにsearch関数に与えます。クエリの書式はおおむねGoogle検索の書式に類似しています。
@@ -199,17 +199,28 @@ tokenにはクエリ中の個々の検索文字列が設定されます。path�
 静的サイトに使われる前提の、ほとんどのユースケースにおいて、前述のLinearIndexに基づく全文検索で十分なパフォーマンスが達成できます。
 しかし、もしもっと高速な検索を必要とする場合、違うインデックス形式を使うことにより、検索の高速化が達成できます。
 
+### GPU Linear Index
+```
+import { GPULinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
+
+const index = createIndex(GPULinearIndex, array_of_articles);
+```
+
+GPULinearIndexを使うことにより、あいまい検索をGPUで行います。おおよそ数倍の高速化が達成できます。検索の使い方はLinearIndex時と全く同一です。
+また、GPUが使えない環境では自動的にLinearIndexが代わりに使われます。
+
+### Hybrid Bigram Inverted Index
 ```
 import { HybridBigramInvertedIndex, createIndex, search, UniSearchError } from "unisearch.js";
 
 const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
 ```
 
-HybridBigramInvertedIndexを使うことにより、おおよそ10倍の検索速度向上がみられます。検索の使い方はLinearIndex時と全く同一です。
+HybridBigramInvertedIndexを使うことにより、おおよそ10-100倍の検索速度向上がみられます。検索の使い方はLinearIndex時と全く同一です。
 
 ただし、検索の速度向上のかわり、多数の欠点も存在します。
 
-1. インデックス生成に時間がかかります。1000記事で20秒ほどです。そのため、SSGなどで前もってインデックスを作ることが必須になります。
+1. インデックス生成に時間がかかります。1000記事で数十秒ほどです。そのため、SSGなどで前もってインデックスを作ることが必須になります。
 2. 検索ノイズが増えます。false positive(一致するはずのない文章が検索結果に出てきてしまう)が増加します。
 3. 日本語などを対象にしたあいまい検索はかなりノイズが増えます。意図した編集距離より遠い文字列にもマッチしてしまいます。
 4. 検索結果の情報の一部が欠けます。posとwordaroundが存在しなくなります。

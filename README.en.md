@@ -10,7 +10,7 @@ import { LinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
 const index = createIndex(LinearIndex, array_of_articles);
 
 if(index instanceof UniSearchError) throw index;
-const result = search(index, "search word");
+const result = await search(index, "search word");
 ```
 
 unisearch.js provides a complete set of search functions. In addition to exact match search, it also provides a fuzzy search function. In addition, there are and, or, not, and field-specific searches, as well as the ability to specify scoring weights. Search results are sorted based on a scoring method called TF-IDF, along with strings around the match.
@@ -107,7 +107,7 @@ export function createIndexFromObject<T>(index: UniIndex<T>): UniIndex<SearchInd
 const resp = await fetch(index_url);
 const re_index = createIndexFromObject(resp.json());
 
-const result = search(re_index, "search word");
+const result = await search(re_index, "search word");
 ```
 
 Index generation takes some time: for about 1000 articles, or 20 MByte of full text, it takes about 100 msec.
@@ -116,7 +116,7 @@ Index generation takes some time: for about 1000 articles, or 20 MByte of full t
 Once an index has been created, searches can be performed many times using the same index.
 
 ```
-export function search<T>(index: UniIndex<SearchIndex<T>>, query: string): SearchResult[] | UniSearchError;
+export async function search<T>(index: UniIndex<SearchIndex<T>>, query: string): Promise<SearchResult[] | UniSearchError>
 ```
 
 The query is given to the search function as a string with an index. The format of the query is generally similar to that of a Google search.
@@ -196,17 +196,28 @@ The token is set to the individual search string in the query. path is the path 
 Full-text search based on the LinearIndex described above will provide sufficient performance for most use cases, assuming it is used for static sites.
 However, if a faster search is needed, a different index format can be used to speed up the search.
 
+### GPU Linear Index
+```
+import { GPULinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
+
+const index = createIndex(GPULinearIndex, array_of_articles);
+```
+
+By using GPULinearIndex, fuzzy search is performed on the GPU. It can be approximately several times faster. The usage of the search is exactly the same as with LinearIndex.
+In environments where GPUs are not available, LinearIndex is automatically used instead.
+
+### Hybrid Bigram Inverted Index
 ```
 import { HybridBigramInvertedIndex, createIndex, search, UniSearchError } from "unisearch.js";
 
 const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
 ```
 
-Using HybridBigramInvertedIndex improves the search speed by a factor of approximately 10. The usage of the search is exactly the same as with LinearIndex.
+Using HybridBigramInvertedIndex improves the search speed by a factor of approximately 10-100. The usage of the search is exactly the same as with LinearIndex.
 
 However, in exchange for the improved search speed, there are a number of drawbacks
 
-1. Indexing takes a long time, about 20 seconds for 1000 articles. Therefore, it is essential to create the index in advance with SSG, etc. 
+1. Indexing takes a long time, about several tens of seconds for 1000 articles. Therefore, it is essential to create the index in advance with SSG, etc. 
 2. Search noise increases, and false positives (sentences that should not match appear in the search results) increase.
 3. fuzzy searches for CJK(Chinese, Japanese, Korean)-like languages will increase the noise considerably. It also matches strings that are farther away from the intended edit distance. 
 4. Some of the information in the search results will be missing: pos and wordaround will not exist.

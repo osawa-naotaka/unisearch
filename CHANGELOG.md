@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Security: in case of vulnerabilities.
 
 ## [Unreleased]
+### Added
+- GPU Linear Index scheme is added.
 
 ## [1.0.5] - 2025-01-14
 ### Fixed
@@ -42,7 +44,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - search frontend, google-like syntax
 - sorting search result based on TF-IDF
 
-[Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.5...HEAD
+[Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.5...v1.1.0
 [1.0.5]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.2...v1.0.3
