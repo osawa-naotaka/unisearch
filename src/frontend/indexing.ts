@@ -21,6 +21,7 @@ export function createIndex<T>(
 
         contents.forEach((content, id) => {
             if (env.search_targets) {
+                env.search_targets.sort();
                 // indexing required filed only
                 for (const path of env.search_targets) {
                     const obj = getValueByPath(path, content);

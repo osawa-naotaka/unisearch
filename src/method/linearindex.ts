@@ -98,7 +98,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         for (const [pos, distance] of raw_result.slice(1)) {
             if (latest_pos + 1 === pos || latest_pos === pos) {
                 latest_pos = pos;
-                if (distance < latest_item[1]) {
+                if (distance <= latest_item[1]) {
                     latest_item = [pos, distance];
                 }
             } else {
@@ -180,7 +180,6 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             this.index_entry.toc,
             BinarySearchType.Exact,
         );
-        console.log(pos, this.index_entry.toc);
         if (index === null) throw new UniSearchError("unisearch.js: getReference internal error.");
         return this.index_entry.toc[index];
     }
