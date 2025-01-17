@@ -1,111 +1,16 @@
-import type { WikipediaArticle, WikipediaKeyword } from "@ref/bench/benchmark_common";
-import { benchmark, getAllKeywords } from "@ref/bench/benchmark_common";
-import type { BenchmarkResult } from "@ref/bench/benchmark_common";
-import { calculateGzipedJsonSize } from "@ref/util";
-import { UniSearchError } from "@src/frontend/base";
-import { createIndex, indexToObject } from "@src/frontend/indexing";
-import { HybridBigramInvertedIndex } from "@src/frontend/indextypes";
-import { search } from "@src/frontend/search";
-import { LinearIndex } from "@src/method/linearindex";
-import { GPULinearIndex } from "@src/method/gpulinearindex";
-import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
+import { benchmarkMethod } from "@app/benchmark";
+import type { BechmarkResultAll } from "@app/benchmark";
+import { getAllKeywords } from "@ref/bench/benchmark_common";
 import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
 
-async function benchmarkAsync<T, R>(fn: (args: T, idx: number) => Promise<R>, args: T[]): Promise<BenchmarkResult<R>> {
-    const start = performance.now();
-    const results = [];
-    for(let i = 0; i < args.length; i++) {
-        results.push(await fn(args[i], i));
-    }
-    const end = performance.now();
-    return {
-        time: end - start,
-        results: results,
-    };
+const run_nums = [100];
+// const run_nums = [10, 100, 1000];
+const keywords = getAllKeywords(wikipedia_ja_keyword).slice(0, 100);
+const benchmark_results_all: BechmarkResultAll[] = []
+
+for(const num of run_nums) {
+    benchmark_results_all.push(await benchmarkMethod(keywords, wikipedia_ja_extracted_1000.slice(0, num)));
 }
 
-async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[], n: number) {
-    console.log("initializing benchmark...");
-    const keywords = getAllKeywords(wikipedia_keyword).slice(0, n);
-
-    console.log("benchmarking linear index...");
-    const index_result = benchmark(
-        (arg) => createIndex(LinearIndex, arg, { key_field: "title" }),
-        [wikipedia_articles],
-    );
-    console.log(`indexing time: ${index_result.time} ms`);
-
-    const index = index_result.results[0];
-    if (index instanceof UniSearchError) {
-        throw index;
-    }
-
-    console.log(index);
-    console.log(`gziped index size: ${await calculateGzipedJsonSize(indexToObject(index))}`);
-
-    const exact_result = await benchmarkAsync(
-        (x) => search(index, x),
-        keywords.map((x) => `"${x}"`),
-    );
-    console.log(`exact search time per one keyword: ${exact_result.time / keywords.length} ms`);
-    console.log(exact_result.results);
-
-    const fuzzy_result = await benchmarkAsync((x) => search(index, x), keywords);
-    console.log(`fuzzy search time per one keyword: ${fuzzy_result.time / keywords.length} ms`);
-    console.log(fuzzy_result.results);
-
-
-
-    console.log("benchmarking gpu linear index...");
-    const gpu_index_result = benchmark(
-        (arg) => createIndex(GPULinearIndex, arg, { key_field: "title" }),
-        [wikipedia_articles],
-    );
-    console.log(`indexing time: ${gpu_index_result.time} ms`);
-
-    const gpu_index = gpu_index_result.results[0];
-    if (gpu_index instanceof UniSearchError) {
-        throw gpu_index;
-    }
-
-    console.log(gpu_index);
-    console.log(`gziped index size: ${await calculateGzipedJsonSize(indexToObject(gpu_index))}`);
-
-    const gpu_exact_result = await benchmarkAsync(
-        (x) => search(gpu_index, x),
-        keywords.map((x) => `"${x}"`),
-    );
-    console.log(`exact search time per one keyword: ${gpu_exact_result.time / keywords.length} ms`);
-    console.log(gpu_exact_result.results);
-
-    const gpu_fuzzy_result = await benchmarkAsync((x) => search(gpu_index, x), keywords);
-    console.log(`fuzzy search time per one keyword: ${gpu_fuzzy_result.time / keywords.length} ms`);
-    console.log(gpu_fuzzy_result.results);
-
-
-    
-    console.log("benchmarking hybrid index...");
-    const hybrid_index_result = benchmark(
-        (arg) => createIndex(HybridBigramInvertedIndex, arg, { key_field: "title" }),
-        [wikipedia_articles],
-    );
-    console.log(`hybrid indexing time: ${hybrid_index_result.time} ms`);
-
-    const hybrid_index = hybrid_index_result.results[0];
-    if (hybrid_index instanceof UniSearchError) {
-        throw hybrid_index;
-    }
-    console.log(hybrid_index);
-    console.log(`gziped index size: ${await calculateGzipedJsonSize(indexToObject(hybrid_index))}`);
-
-    const hybrid_result = await benchmarkAsync(
-        (x) => search(hybrid_index, x),
-        keywords.map((x) => `"${x}"`),
-    );
-    console.log(`hybrid search time per keyword: ${hybrid_result.time / keywords.length} ms`);
-    console.log(hybrid_result.results);
-}
-
-await runAll(wikipedia_ja_extracted, wikipedia_ja_keyword, 100);
-await runAll(wikipedia_ja_extracted_1000, wikipedia_ja_keyword, 100);
+console.log(benchmark_results_all);

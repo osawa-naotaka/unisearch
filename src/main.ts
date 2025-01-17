@@ -17,3 +17,4 @@ export type {
 export type { HybridIndexEntry } from "@src/method/hybrid";
 export type { InvertedIndexEntry } from "@src/method/invertedindex";
 export type { LinearIndexEntry } from "@src/method/linearindex";
+export type { IndexClass } from "@src/frontend/indexing";

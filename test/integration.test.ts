@@ -237,6 +237,7 @@ describe("index to object, stringify, json, re-create index.", async () => {
 
     const json = JSON.stringify(indexToObject(index));
     const re_index = createIndexFromObject(JSON.parse(json));
+    if(re_index instanceof UniSearchError) throw re_index;
 
     const result1 = await search(re_index, "maintainability");
     test("matches single english article", () => 
