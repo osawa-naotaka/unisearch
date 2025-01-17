@@ -15,7 +15,7 @@ const result = await search(index, "search word");
 
 unisearch.js provides a complete set of search functions. In addition to exact match search, it also provides a fuzzy search function. In addition, there are and, or, not, and field-specific searches, as well as the ability to specify scoring weights. Search results are sorted based on a scoring method called TF-IDF, along with strings around the match.
 
-unisearch.js is reasonably fast: an exact match search for about 1000 Wikipedia articles with a total size of about 20 Mbytes takes only a few milliseconds, while a fuzzy search takes about 100 milliseconds. By limiting the fuzzy search function, a large number of articles can be searched.
+unisearch.js is reasonably fast: an exact match search for about 100 Wikipedia articles with a total size of about 3 Mbytes takes less than 1 msec, and a fuzzy search takes less than 50 msec. By changing the indexing scheme, the search speed can be further improved and more articles can be included in the search.
 
 unisearch.js can search for all languages that can be represented by unicode. General normalization, Japanese-specific normalization, and grapheme-by-grapheme searches ensure correct searches for Kanji variants and pictographs.
 
@@ -114,7 +114,7 @@ const result = await search(re_index, "search word");
 
 If the versions of the indexes do not match, an error will occur. In this case, please re-generate the index by matching the version of unisearch.js.
 
-Index generation takes some time: for about 1000 articles, or 20 MByte of full text, it takes about 100-1000 msec.
+Index generation takes some time: for about 100 articles, or 3 MByte of full text, it takes about 500 msec.
 
 ### Searching using an index
 Once an index has been created, searches can be performed many times using the same index.
@@ -221,7 +221,7 @@ Using HybridBigramInvertedIndex improves the search speed by a factor of approxi
 
 However, in exchange for the improved search speed, there are a number of drawbacks
 
-1. Indexing takes a long time, about several hundreds of seconds for 1000 articles. Therefore, it is essential to create the index in advance with SSG, etc. 
+1. Indexing takes a long time, about 3-6 seconds for 100 articles. Therefore, it is essential to create the index in advance with SSG, etc. 
 2. Search noise increases, and false positives (sentences that should not match appear in the search results) increase.
 3. fuzzy searches for CJK(Chinese, Japanese, Korean)-like languages will increase the noise considerably. It also matches strings that are farther away from the intended edit distance. 
 4. Some of the information in the search results will be missing: pos and wordaround will not exist.
@@ -229,13 +229,78 @@ However, in exchange for the improved search speed, there are a number of drawba
 
 Overall, HybridBigramInvertedIndex is not really worth using. Consider using it only if you really need a fast search.
 
+## Benchmark
+
+Benchmarks using Intel Core i5 13400F + NVIDIA GeForce RTX 4070 are shown below, where index size is in bytes and other fields are in msec.
+
+### Exact Match Search
+| index size | Linear | GPU | Inverted |
+| ---------- | ------ | --- | -------- |
+| 475576     | 0.1084 | 0.1146 | 0.0784   |
+| 789021     | 0.1498 | 0.1548 | 0.0824   |
+| 1305328    | 0.2194 | 0.2264 | 0.0958   |
+| 2394217    | 0.3442 | 0.3618 | 0.1254   |
+| 3020497    | 0.4134 | 0.435  | 0.0984   |
+
+### Fuzzy Search
+| index size | Linear | GPU | Inverted |
+| ---------- | ------ | --- | -------- |
+| 475576     | 2.7128 | 4.594 | 0.1128   |
+| 789021     | 4.5344 | 5.684 | 0.1182   |
+| 1305328    | 7.4618 | 7.0552 | 0.1472   |
+| 2394217    | 13.6572  | 8.6452   | 0.1968   |
+| 3020497    | 17.2486  | 9.038    | 0.226    |
+
+### Index Creation
+| index size | Linear | GPU | Inverted |
+| ---------- | ------ | --- | -------- |
+| 475576     | 20.04  | 20.04 | 373.48   |
+| 789021     | 30.36  | 36.04 | 626.14   |
+| 1305328    | 72.3   | 60.86 | 1009.88  |
+| 2394217    | 123.36 | 126.12 | 1782.74  |
+| 3020497    | 158.4  | 159.84 | 2361.58  |
+
+Similarly, the benchmark using Intel N100 is shown below.
+
+### Exact Match Search
+| index size |	Linear|	GPU	| Inverted |
+| ---------- | ------ | --- | -------- |
+| 475576     | 0.2984 | 0.405 | 0.2912   |
+| 789021     | 0.4336 | 0.5104 | 0.3136   |
+| 1305328    | 0.6962 | 0.5976 | 0.4366   |
+| 2394217    | 0.955  | 0.9446 | 0.3536   |
+| 3020497    | 1.0758 | 1.0874 | 0.4388   |
+
+### Fuzzy Search
+| index size | Linear | GPU | Inverted |
+| ---------- | ------ | --- | -------- |
+| 475576     | 6.5576 | 8.6892 | 0.3864   |
+| 789021     | 11.3006 | 9.6058 | 0.413    |
+| 1305328    | 17.8096 | 13.2846 | 0.6518   |
+| 2394217    | 31.8176 | 18.4438 | 0.7692   |
+| 3020497    | 40.6314 | 22.5536 | 1.0842   |
+
+### Index Creation
+| index size | Linear | GPU | Inverted |
+| ---------- | ------ | --- | -------- |
+| 475576     | 62.5   | 63.98 | 1076.14  |
+| 789021     | 108.82 | 131.28 | 1725.02 |
+| 1305328    | 189.16 | 203.3 | 2809.88 |
+| 2394217    | 332    | 333.74 | 5114.64 |
+| 3020497    | 433.86 | 426.08 | 6377.6  |
+
+
 ## Introduction of search algorithm
 
 ### LinearIndex
 
 When using LinearIndex, the exact match search algorithm is very simple. Or rather, it just uses JavaScript's built-in String.prototype.indexOf(). It is probably optimized on the side of engines such as V8, and runs very fast for a full-text search in a straightforward manner. As expected, the speed becomes unsatisfactory when the number of articles increases to 10,000 or so, but in that case, the index size should be in the unit of 100 MByte, which is quite unrealistic for a full-text search target for a static site.
 
-The fuzzy search uses the bitap algorithm, which is 50-100 times slower than indexOf. I tried to realize bitap in Rust-WASM, but the speed was not much different from that of JavaScript, so I did not adopt it. The characters to be searched are segmented into grapheme units using Intl.Segmenter(). Therefore, edit distances can be calculated correctly even for characters consisting of multiple code points, such as Kanji variants, pictographs, national flags, and so on. However, the memory usage is doubled because the index of each grapheme unit is generated separately from the index of an ordinary string.
+The fuzzy search uses the bitap algorithm, which is 50 times slower than indexOf. I tried to realize bitap in Rust-WASM, but the speed was much slower than that of JavaScript, so I did not adopt it. The characters to be searched are segmented into grapheme units using Intl.Segmenter(). Therefore, edit distances can be calculated correctly even for characters consisting of multiple code points, such as Kanji variants, pictographs, national flags, and so on. However, the memory usage is doubled because the index of each grapheme unit is generated separately from the index of an ordinary string.
+
+### GPULinearIndex
+
+GPULinearIndex uses the exact same algorithm as LinearIndex for exact match search. Also, when the fuzzy search string exceeds 32 characters, it uses the same algorithm as LinearIndex. For fuzzy search, the bitap algorithm is implemented on the GPU. A search thread is created for every character position in the index, and a match search based on the bitap algorithm is performed for the length of the search string.
 
 ### HybridBigramInvertedIndex
 
@@ -244,7 +309,7 @@ Although increasing the number of ngrams (e.g., Trigram) can reduce search noise
 
 ### Preprocessing
 
-Preprocessing is simple: Unicode normalization (NFKC), lowercasing of alphabetic and other characters, and some normalization of Japanese. Stopwords and stemming are not used for inverted indexes, such as English. Since we aimed to be language-neutral, we did not include too many special processes, but aimed to achieve a range of search capabilities.
+Preprocessing is simple: Unicode normalization (NFKC), lowercasing of alphabetic and other characters, and some normalization of Japanese. Stopwords and stemming are not used for inverted indexes, such as English. In addition, for characters (such as emojis) where one grapheme consists of multiple code points, only the first code point is extracted for the search. Since we aimed to be language-neutral, we did not include too many special processes, but aimed to achieve a range of search capabilities.
 
 In addition to the above, HybridBigramInvertedIndex removes symbols and signs and uses them as delimiters, divides by whitespace, and divides by character type (classifying languages that cannot be tokenized, such as Japanese, and those that can). Therefore, symbols by themselves cannot be searched, and URLs are also tokenized. It would be nice if there was a mechanism that could be shared across all languages, but it seems to be incomplete. Intl.Segmenter() can be used for Japanese and Chinese, so we are looking forward to the future.
 

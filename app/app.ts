@@ -5,7 +5,7 @@ import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
 
 const run_nums = [100];
-// const run_nums = [10, 100, 1000];
+// const run_nums = [10, 20, 40, 80, 100];
 const keywords = getAllKeywords(wikipedia_ja_keyword).slice(0, 100);
 const benchmark_results_all: BechmarkResultAll[] = []
 
