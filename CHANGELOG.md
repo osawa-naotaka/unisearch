@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Security: in case of vulnerabilities.
 
 ## [Unreleased]
+
+## [1.1.0] - 2025-01-17
 ### Added
 - GPU Linear Index scheme is added.
 
