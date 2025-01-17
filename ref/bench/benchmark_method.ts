@@ -30,7 +30,7 @@ import { addToWasmLinearIndex, searchWasmLinear } from "@ref/wasmlinear";
 import { wikipedia_ja_extracted } from "@test/wikipedia_ja_extracted";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
 import { wikipedia_ja_keyword_long } from "@test/wikipedia_ja_keyword_long";
-import { StringManager } from "bitap/pkg/bitap";
+import { StringManager } from "../bitap-wasm/pkg/bitap";
 
 async function runAll(wikipedia_articles: WikipediaArticle[], wikipedia_keyword: WikipediaKeyword[], n: number) {
     console.log("initializing benchmark...");

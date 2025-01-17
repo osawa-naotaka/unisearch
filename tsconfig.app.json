@@ -3,8 +3,11 @@
         "target": "ES2022",
         "useDefineForClassFields": true,
         "module": "ESNext",
-        "lib": ["ES2022"],
+        "lib": ["ES2022", "DOM", "DOM.Iterable"],
         "skipLibCheck": true,
+
+        /* webgpu */
+        "types": ["@webgpu/types"],
 
         /* Bundler mode */
         "moduleResolution": "Bundler",

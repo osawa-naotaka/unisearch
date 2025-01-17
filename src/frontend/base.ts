@@ -1,5 +1,5 @@
 // version
-export const Version = "1.0";
+export const Version = "1.1";
 
 // types
 
@@ -49,5 +49,5 @@ export interface SearchIndex<T> {
     setToIndex(id: number, path: Path, str: string): void;
     addKey(id: number, key: string): void;
     fixIndex(): void;
-    search(env: SearchEnv, keyword: string): SearchResult[];
+    search(env: SearchEnv, keyword: string): Promise<SearchResult[]>;
 }

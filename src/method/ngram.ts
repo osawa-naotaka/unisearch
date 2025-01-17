@@ -37,7 +37,7 @@ export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass 
                 this.ngram_index.fixIndex();
             }
 
-            public search(env: SearchEnv, keyword: string): SearchResult[] {
+            public async search(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
                 const grapheme = splitByGrapheme(keyword);
                 const search_env = createWithProp(env, "distance", grapheme.length < num_gram ? 1 : 0);
                 const max_match = Math.max(1, grapheme.length - num_gram + 1);
@@ -45,7 +45,9 @@ export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass 
                     grapheme.length < num_gram ? 1 : Math.max(1, max_match - (env.distance || 0) * num_gram);
                 return intersectResultsNgram(
                     threshold,
-                    generateNgram(num_gram, grapheme).map((t) => this.ngram_index.search(search_env, t)),
+                    await Promise.all(
+                        generateNgram(num_gram, grapheme).map((t) => this.ngram_index.search(search_env, t)),
+                    ),
                 );
             }
         },

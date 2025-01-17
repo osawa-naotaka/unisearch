@@ -45,7 +45,7 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
         }
     }
 
-    public search(env: SearchEnv, keyword: string): SearchResult[] {
+    public async search(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
         const results = new Map<Id, SearchResult>();
         for (const path of env.search_targets || Object.keys(this.index_entry.index)) {
             let res: [string, PostingList, number][] = [];
@@ -57,7 +57,7 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
                 const grapheme = splitByGrapheme(keyword);
                 const refined = refine([grapheme[0], []], this.prefixComp, this.index_entry.index[path] || []);
                 if (grapheme.length < 50) {
-                    const bitapkey = createBitapKey(bitapKeyNumber(), grapheme);
+                    const bitapkey = createBitapKey<number, string>(bitapKeyNumber(), grapheme);
                     for (const [term, plist] of refined) {
                         const r = bitapSearch(bitapkey, env.distance || 0, splitByGrapheme(term));
                         if (r.length !== 0) {
@@ -67,7 +67,7 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
                         }
                     }
                 } else {
-                    const bitapkey = createBitapKey(bitapKeyBigint(), grapheme);
+                    const bitapkey = createBitapKey<bigint, string>(bitapKeyBigint(), grapheme);
                     for (const [term, plist] of refined) {
                         const r = bitapSearch(bitapkey, env.distance || 0, splitByGrapheme(term));
                         if (r.length !== 0) {

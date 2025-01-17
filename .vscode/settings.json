@@ -1,3 +1,4 @@
 {
-    "files.insertFinalNewline": true
+    "files.insertFinalNewline": true,
+    "wgsl-analyzer.server.path": "~/.cargo/bin/wgsl_analyzer"
 }

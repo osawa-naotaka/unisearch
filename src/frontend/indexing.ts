@@ -21,6 +21,7 @@ export function createIndex<T>(
 
         contents.forEach((content, id) => {
             if (env.search_targets) {
+                env.search_targets.sort();
                 // indexing required filed only
                 for (const path of env.search_targets) {
                     const obj = getValueByPath(path, content);
@@ -82,7 +83,11 @@ export function createIndex<T>(
     }
 }
 
-export function createIndexFromObject<T>(index: UniIndex<T>): UniIndex<SearchIndex<T>> {
+export function createIndexFromObject<T>(index: UniIndex<T>): UniIndex<SearchIndex<T>> | UniSearchError {
+    if (index.version !== Version)
+        return new UniSearchError(
+            `Older versions of the index are used. Please rebuild the index with version ${Version}.`,
+        );
     return {
         version: index.version,
         type: index.type,

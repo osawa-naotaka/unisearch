@@ -6,6 +6,9 @@
         "lib": ["ES2022", "DOM", "DOM.Iterable"],
         "skipLibCheck": true,
 
+        /* webgpu */
+        "types": ["@webgpu/types"],
+
         /* Bundler mode */
         "moduleResolution": "Bundler",
         "allowImportingTsExtensions": true,
@@ -19,7 +22,7 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
-        "noUncheckedSideEffectImports": true,
+        // "noUncheckedSideEffectImports": true,
 
         /* Paths */
         "baseUrl": ".",

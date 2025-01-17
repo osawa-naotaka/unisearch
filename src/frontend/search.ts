@@ -4,10 +4,13 @@ import type { ASTNode } from "@src/frontend/parse";
 import { expr } from "@src/frontend/parse";
 import { defaultNormalizer, splitBySpace } from "@src/util/preprocess";
 
-export function search<T>(index: UniIndex<SearchIndex<T>>, query: string): SearchResult[] | UniSearchError {
+export async function search<T>(
+    index: UniIndex<SearchIndex<T>>,
+    query: string,
+): Promise<SearchResult[] | UniSearchError> {
     const ast = expr([...normalizeQuery(query)]);
     if (ast === null) return [];
-    const r = evalQuery(index.index_entry, index.env)(ast.val);
+    const r = await evalQuery(index.index_entry, index.env)(ast.val);
     return r.type === "excludes" ? [] : r.results.sort((a, b) => b.score - a.score);
 }
 
@@ -24,16 +27,19 @@ type QueryResult = {
 
 const evalQuery =
     <T>(index: SearchIndex<T>, env: SearchEnv) =>
-    (ast: ASTNode): QueryResult => {
+    async (ast: ASTNode): Promise<QueryResult> => {
         switch (ast.type) {
             case "exact":
-                return { type: "includes", results: index.search(createWithProp(env, "distance", 0), ast.str) };
+                return { type: "includes", results: await index.search(createWithProp(env, "distance", 0), ast.str) };
             case "fuzzy": {
                 const distance = Math.min(env.distance || 0, Math.max(0, ast.str.length - 1));
-                return { type: "includes", results: index.search(createWithProp(env, "distance", distance), ast.str) };
+                return {
+                    type: "includes",
+                    results: await index.search(createWithProp(env, "distance", distance), ast.str),
+                };
             }
             case "not": {
-                const r = evalQuery(index, env)(ast.node);
+                const r = await evalQuery(index, env)(ast.node);
                 return { type: "excludes", results: r.results };
             }
             case "from":
@@ -49,9 +55,9 @@ const evalQuery =
             case "distance":
                 return evalQuery(index, createWithProp(env, "distance", ast.distance))(ast.node);
             case "and":
-                return intersectQueryResults(ast.nodes.map(evalQuery(index, env)));
+                return intersectQueryResults(await Promise.all(ast.nodes.map(evalQuery(index, env))));
             case "or":
-                return unionQueryResults(ast.nodes.map(evalQuery(index, env)));
+                return unionQueryResults(await Promise.all(ast.nodes.map(evalQuery(index, env))));
             default:
                 return { type: "excludes", results: [] };
         }

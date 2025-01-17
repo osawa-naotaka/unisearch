@@ -1,6 +1,6 @@
 import type { Reference } from "@ref/common";
 import { normalizeText } from "@ref/preprocess";
-import type { StringManager } from "../bitap/pkg/bitap";
+import type { StringManager } from "@ref/bitap-wasm/pkg/bitap";
 
 export type WasmLinearIndex = StringManager;
 

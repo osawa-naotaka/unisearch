@@ -53,8 +53,8 @@ export function refine<T>(key: T, comp: (a: T, b: T) => number, array: T[]): T[]
     return startIndex !== null && endIndex !== null ? array.slice(startIndex, endIndex + 1) : [];
 }
 
-export type BitapKey<T> = {
-    mask: Map<string, T>;
+export type BitapKey<T, S> = {
+    mask: Map<S, T>;
     length: number;
     and: (n1: T, n2: T) => T;
     or: (n1: T, n2: T) => T;
@@ -63,9 +63,9 @@ export type BitapKey<T> = {
     sl1: (shift: number) => T;
 };
 
-export function bitapKeyBigint(): BitapKey<bigint> {
+export function bitapKeyBigint<T>(): BitapKey<bigint, T> {
     return {
-        mask: new Map<string, bigint>(),
+        mask: new Map<T, bigint>(),
         length: -1,
         and: (n1, n2) => n1 & n2,
         or: (n1, n2) => n1 | n2,
@@ -75,9 +75,9 @@ export function bitapKeyBigint(): BitapKey<bigint> {
     };
 }
 
-export function bitapKeyNumber(): BitapKey<number> {
+export function bitapKeyNumber<T>(): BitapKey<number, T> {
     return {
-        mask: new Map<string, number>(),
+        mask: new Map<T, number>(),
         length: -1,
         and: (n1, n2) => n1 & n2,
         or: (n1, n2) => n1 | n2,
@@ -87,7 +87,7 @@ export function bitapKeyNumber(): BitapKey<number> {
     };
 }
 
-export function createBitapKey<T>(key: BitapKey<T>, pattern: string[]): BitapKey<T> {
+export function createBitapKey<T, S>(key: BitapKey<T, S>, pattern: S[]): BitapKey<T, S> {
     if (pattern.length > 32) throw new Error("createBitapKey: key length must be less than 32.");
     key.length = pattern.length;
 
@@ -106,7 +106,11 @@ export function createBitapKey<T>(key: BitapKey<T>, pattern: string[]): BitapKey
     return key;
 }
 
-export function bitapSearch<T>(key: BitapKey<T>, maxErrors: number, text: string[]): [number, number][] {
+export function bitapSearch<T, S extends string | number>(
+    key: BitapKey<T, S>,
+    maxErrors: number,
+    text: S extends string ? string[] : Uint32Array,
+): [number, number][] {
     const state: T[] = Array(maxErrors + 1).fill(key.to(0));
     const matchbit = key.sl1(key.length - 1);
     const result: [number, number][] = [];
@@ -114,7 +118,7 @@ export function bitapSearch<T>(key: BitapKey<T>, maxErrors: number, text: string
     const zero = key.to(0);
     const one = key.to(1);
     for (let i = 0; i < text.length; i++) {
-        const mask = key.mask.get(text[i]) || zero;
+        const mask = key.mask.get(text[i] as S) || zero; // using as. fix it.
         let replace = zero;
         let insertion = zero;
         let deletion = zero;
