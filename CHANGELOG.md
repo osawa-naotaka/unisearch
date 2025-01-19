@@ -13,10 +13,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.1] - 2025-01-19
+### Fixed
+- in LinearIndex, the wordaround of search result is extended to 100 characters.
+
 ## [1.1.0] - 2025-01-17
 ### Added
 - GPU Linear Index scheme is added.
-- 
+
 ## [1.0.5] - 2025-01-14
 ### Fixed
 - in fuzzy search, distance is reduced to min(distance, keyword_length - 1).
@@ -46,7 +50,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - search frontend, google-like syntax
 - sorting search result based on TF-IDF
 
-[Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/osawa-naotaka/unisearch/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.5...v1.1.0
 [1.0.5]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.3...v1.0.4
