@@ -13,14 +13,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-## [1.1.1] - 2025-01-20
+## [1.1.1] - 2025-01-19
 ### Fixed
 - in LinearIndex, the wordaround of search result is extended to 100 characters.
 
 ## [1.1.0] - 2025-01-17
 ### Added
 - GPU Linear Index scheme is added.
-- 
+
 ## [1.0.5] - 2025-01-14
 ### Fixed
 - in fuzzy search, distance is reduced to min(distance, keyword_length - 1).
