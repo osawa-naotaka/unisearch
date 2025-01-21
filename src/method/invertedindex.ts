@@ -7,7 +7,7 @@ type Id = number;
 type TF = number;
 type PostingList = [Id, TF][];
 type Dictionary = [Term, PostingList][];
-export type InvertedIndexEntry = { key: string[]; index: Record<Path, Dictionary> };
+export type InvertedIndexEntry = { key: Record<Path, unknown>[]; index: Record<Path, Dictionary> };
 
 type TemporalPostingList = Map<Id, TF>;
 type TemporalDictionary = Map<Term, TemporalPostingList>;
@@ -30,7 +30,7 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
         this.temporal_index_entry.set(path, dict);
     }
 
-    public addKey(id: number, key: string): void {
+    public addKey(id: number, key: Record<Path, unknown>): void {
         this.index_entry.key[id] = key;
     }
 

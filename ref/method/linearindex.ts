@@ -3,7 +3,7 @@ import { bitapKeyBigint, bitapKeyNumber, bitapSearch, createBitapKey } from "@sr
 import type { BitapKey } from "@src/util/algorithm";
 import { splitByGrapheme } from "@src/util/preprocess";
 
-export type LinearIndexEntry = { key: string[]; index: Record<Path, string>[] };
+export type LinearIndexEntry = { key: Record<Path, unknown>[]; index: Record<Path, string>[] };
 
 export class LinearIndex implements SearchIndex<LinearIndexEntry> {
     public readonly index_entry: LinearIndexEntry;
@@ -36,7 +36,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         this.grapheme_index[id][path] = new Uint32Array(splitByGrapheme(str).map((x) => x.charCodeAt(0)));
     }
 
-    public addKey(id: number, key: string): void {
+    public addKey(id: number, key: Record<Path, unknown>): void {
         this.index_entry.key[id] = key;
     }
 

@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2025-01-21
+### Added
+- key_fields option now supports multiple fields.
+
 ## [1.1.1] - 2025-01-19
 ### Fixed
 - in LinearIndex, the wordaround of search result is extended to 100 characters.
@@ -50,7 +54,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - search frontend, google-like syntax
 - sorting search result based on TF-IDF
 
-[Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/osawa-naotaka/unisearch/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/osawa-naotaka/unisearch/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.5...v1.1.0
 [1.0.5]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.4...v1.0.5

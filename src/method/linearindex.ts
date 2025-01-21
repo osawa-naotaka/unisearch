@@ -18,7 +18,7 @@ type ContentRange = {
 };
 
 export type LinearIndexEntry = {
-    key: string[];
+    key: Record<Path, unknown>[];
     content: string;
     content_length: number;
     num_id: number;
@@ -57,7 +57,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         this.index_entry.num_id = Math.max(this.index_entry.num_id, id + 1);
     }
 
-    public addKey(id: number, key: string): void {
+    public addKey(id: number, key: Record<string, unknown>): void {
         this.index_entry.key[id] = key;
     }
 

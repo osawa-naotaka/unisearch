@@ -25,7 +25,7 @@ type ContentRef = {
 };
 
 export type FlatLinearIndexStringEntry = {
-    key: string[];
+    key: Record<Path, unknown>[];
     content: string;
     content_length: number;
     num_id: number;
@@ -64,7 +64,7 @@ export class FlatLinearIndexString implements SearchIndex<FlatLinearIndexStringE
         this.index_entry.num_id = Math.max(this.index_entry.num_id, id + 1);
     }
 
-    public addKey(id: number, key: string): void {
+    public addKey(id: number, key: Record<Path, unknown>): void {
         this.index_entry.key[id] = key;
     }
 

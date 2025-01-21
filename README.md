@@ -40,7 +40,7 @@ export function createIndex<T>(
 
 export type SearchEnv = {
     field_names?: Record<FieldName, Path>;
-    key_field?: Path;
+    key_fields?: Path[];
     search_targets?: Path[];
     weight?: number;
     distance?: number;
@@ -53,7 +53,7 @@ index_classには全文検索で使用するアルゴリズムをクラスで指
 
 検索を行った結果は、配列のインデックスとして得られます。追加で、その検索オブジェクトに属する文字列を検索結果として返すこともできます。例えば記事のslugなどを設定することで、検索結果の利用をより容易にできます。
 
-検索結果に任意の文字列フィールドを含めるには、createIndex関数のenv引数に、key_fieldフィールドを指定します。key_fieldフィールドには、オブジェクトのルートからkeyフィールドへ向かうパスをドットで区切った文字列として指定します。以下のようなオブジェクト構成でtitleをkeyに指定する例を示します。
+検索結果に任意のフィールドを含めるには、createIndex関数のenv引数に、key_fieldsフィールドを指定します。key_fieldsフィールドには、オブジェクトのルートからkeyフィールドへ向かうパスをドットで区切った文字列の配列として指定します。以下のようなオブジェクト構成でslugとtitleをkeyに指定する例を示します。
 
 ```
 export const array_of_articles = [
@@ -71,7 +71,7 @@ export const array_of_articles = [
 ```
 
 ```
-const index = createIndex(LinearIndex, array_of_articles, {key_field: 'data.title'});
+const index = createIndex(LinearIndex, array_of_articles, {key_fields: ['slug', 'data.title']});
 ```
 
 インデックスには、標準で与えられたオブジェクトのテキストフィールド全てをそのまま含みます。そのため、インデックスサイズは検索対象の文章の総サイズにおおむね等しくなります。httpプロトコルではgzip圧縮がなされると思いますが、それでも10Mbyteを超えるような総文章量の場合は、Local Storageを利用してインデックスを保存するなどの工夫が必要となるでしょう。インデックスをjsonファイルとして分離し、検索時に動的にfetchするなどの工夫も必要となります。
