@@ -46,7 +46,7 @@ export type SearchEnv = {
 
 index_class specifies the algorithm to be used for full-text search by class. Usually, the LinearIndex class is specified. contents specifies an array of JavaScript objects to be searched. The search is limited to the fields of this object that are either strings or arrays of strings. If there is an array field in between up to the string field, it is not included in the search even if the field is a string. env specifies default options for indexing and searching.
 
-The return value of the function is the index created. If LinearIndex is specified in index_class, T becomes LinearIndexEntry and the return value of createIndex is UniIndex<SearchIndex<LinearIndexEntry>> | UniSearchError. If there is a problem with the specified contents or env, UniSearchError is returned. An error is generated if the specified field is missing when indexed.
+The return value of the function is the index created. If LinearIndex is specified in index_class, T becomes LinearIndexEntry and the return value of createIndex is UniIndex<SearchIndex<LinearIndexEntry>> | UniSearchError. If there is a problem with the specified contents or env, UniSearchError is returned. 
 
 The result of the search is obtained as an array of ids. Additional strings belonging to the search object can also be returned as search results. For example, you can set the SLUG of an article to make it easier to use the search results.
 

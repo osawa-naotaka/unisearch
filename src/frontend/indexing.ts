@@ -25,7 +25,7 @@ export function createIndex<T>(
                 // indexing required filed only
                 for (const path of env.search_targets) {
                     const obj = getValueByPath(path, content);
-                    if (obj === undefined) throw new UniSearchError(`unisearch: cannot find path ${path}`);
+                    if (obj === undefined) continue;
                     if (typeof obj === "string") {
                         search_index.setToIndex(id, path, defaultNormalizer(obj));
                     } else if (Array.isArray(obj)) {
@@ -46,7 +46,6 @@ export function createIndex<T>(
                 const key: Record<Path, unknown> = {};
                 for(const path of env.key_fields) {
                     const obj = getValueByPath(path, content);
-                    if (obj === undefined) throw new UniSearchError(`unisearch: cannot find path ${path}`);
                     key[path] = obj;
                 }
                 search_index.addKey(id, key);
