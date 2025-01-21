@@ -59,7 +59,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - sorting search result based on TF-IDF
 
 [Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.2.1...HEAD
-[1.2.1]: https://github.com/osawa-naotaka/unisearch/compare/v1.1.2...v1.2.1
+[1.2.1]: https://github.com/osawa-naotaka/unisearch/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/osawa-naotaka/unisearch/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/osawa-naotaka/unisearch/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/osawa-naotaka/unisearch/compare/v1.0.5...v1.1.0
