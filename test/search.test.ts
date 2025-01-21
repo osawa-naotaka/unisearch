@@ -11,7 +11,7 @@ describe("search test", async () => {
         { title: "タイトル３", text: "テキスト３．１テキスト３．２テキスト３．３"},
     ];
 
-    const index = createIndex(LinearIndex, contents, { key_field: "title" });
+    const index = createIndex(LinearIndex, contents, { key_fields: ["title"] });
     if(index instanceof UniSearchError) {
         throw index;
     }
@@ -21,7 +21,7 @@ describe("search test", async () => {
         .toStrictEqual([
             {
                 id: 1,
-                key: "タイトル２",
+                key: { title: "タイトル２" },
                 score: 1.4054651081081644,
                 refs: [
                     {
@@ -41,7 +41,7 @@ describe("search test", async () => {
         .toStrictEqual([
             {
                 id: 2,
-                key: "タイトル３",
+                key: { title: "タイトル３" },
                 score: 1.0039036486486888,
                 refs: [
                     {
@@ -75,7 +75,7 @@ describe("search test", async () => {
         .toStrictEqual([
             {
                 id: 1,
-                key: "タイトル２",
+                key: { title: "タイトル２" },
                 score: 0.7027325540540822,
                 refs: [
                     {
@@ -95,7 +95,7 @@ describe("search test", async () => {
         .toStrictEqual([
             {
                 id: 1,
-                key: "タイトル２",
+                key: { title: "タイトル２" },
                 score: 0.2810930216216329,
                 refs: [
                     {
@@ -115,7 +115,7 @@ describe("search test", async () => {
         .toStrictEqual([
             {
                 id: 1,
-                key: "タイトル２",
+                key: { title: "タイトル２" },
                 score: 1.4054651081081644 * 2,
                 refs: [
                     {
@@ -135,7 +135,7 @@ describe("search test", async () => {
         .toStrictEqual([
             {
                 id: 1,
-                key: "タイトル２",
+                key: { title: "タイトル２" },
                 score: 0.2810930216216329,
                 refs: [
                     {
@@ -155,7 +155,7 @@ describe("search test", async () => {
         .toStrictEqual([
             {
                 id: 2,
-                key: "タイトル３",
+                key: { title: "タイトル３" },
                 score: 1.8739534774775524,
                 refs: [
                     {
@@ -182,7 +182,7 @@ describe("search test", async () => {
         .toStrictEqual([
             {
                 id: 2,
-                key: "タイトル３",
+                key: { title: "タイトル３" },
                 score: 1.4054651081081644,
                 refs: [
                     {
@@ -196,7 +196,7 @@ describe("search test", async () => {
             },
             {
                 id: 1,
-                key: "タイトル２",
+                key: { title: "タイトル２" },
                 score: 1.4054651081081644,
                 refs: [
                     {
@@ -216,7 +216,7 @@ describe("search test", async () => {
         .toStrictEqual([
             {
                 id: 2,
-                key: "タイトル３",
+                key: { title: "タイトル３" },
                 score: 0.4070388157418395,
                 refs: [
                     {
@@ -250,7 +250,7 @@ describe("search test", async () => {
         .toStrictEqual([
             {
                 id: 2,
-                key: "タイトル３",
+                key: { title: "タイトル３" },
                 score: 0.4070388157418395,
                 refs: [
                     {

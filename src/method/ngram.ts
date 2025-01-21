@@ -29,7 +29,7 @@ export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass 
                 }
             }
 
-            public addKey(id: number, key: string): void {
+            public addKey(id: number, key: Record<Path, unknown>): void {
                 this.ngram_index.addKey(id, key);
             }
 

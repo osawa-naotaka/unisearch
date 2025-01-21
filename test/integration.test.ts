@@ -165,14 +165,14 @@ describe("basic Linear index with array of strings.", async () => {
 });
 
 describe("index with key_field", async () => {
-    const index = createIndex(LinearIndex, array_of_articles, {key_field: 'slug'})
+    const index = createIndex(LinearIndex, array_of_articles, {key_fields: ['slug', 'data.title']})
     if(index instanceof UniSearchError) throw index;
     const result1 = await search(index, "maintainability");
     test("matches single english article", () => 
         expect(result1).toStrictEqual([
             {
                 id: 2,
-                key: "typescript-guide",
+                key: { slug: "typescript-guide", "data.title": "TypeScript Guide" },
                 score: 0.13830942998767318,
                 refs: [
                     {
@@ -525,7 +525,7 @@ describe("not search", async () => {
 });
 
 describe("or search", async () => {
-    const index = createIndex(LinearIndex, array_of_articles, {key_field: "slug"});
+    const index = createIndex(LinearIndex, array_of_articles, {key_fields: ["slug"]});
     if(index instanceof UniSearchError) throw index;
 
     const result2 = await search(index, 'デザイン OR インタラクション');
@@ -533,7 +533,7 @@ describe("or search", async () => {
         expect(result2).toStrictEqual([
             {
                 id: 6,
-                key: "javascript基本",
+                key: { slug: "javascript基本" },
                 score: 0.1799612353402828,
                 refs: [
                     {
@@ -547,7 +547,7 @@ describe("or search", async () => {
             },
             {
                 id: 5,
-                key: "html-css入門",
+                key: { slug: "html-css入門" },
                 score: 0.12136920522949304,
                 refs: [
                     {

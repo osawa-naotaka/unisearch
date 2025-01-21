@@ -22,7 +22,7 @@ export type UniIndex<T> = {
 // query
 export type SearchEnv = {
     field_names?: FieldNameMap;
-    key_field?: Path;
+    key_fields?: Path[];
     search_targets?: Path[];
     weight?: number;
     distance?: number;
@@ -38,7 +38,7 @@ export type Reference = {
 
 export type SearchResult = {
     id: number;
-    key: string | null;
+    key: Record<Path, unknown>;
     score: number;
     refs: Reference[];
 };
@@ -47,7 +47,7 @@ export type SearchResult = {
 export interface SearchIndex<T> {
     index_entry: T;
     setToIndex(id: number, path: Path, str: string): void;
-    addKey(id: number, key: string): void;
+    addKey(id: number, key: Record<Path, unknown>): void;
     fixIndex(): void;
     search(env: SearchEnv, keyword: string): Promise<SearchResult[]>;
 }

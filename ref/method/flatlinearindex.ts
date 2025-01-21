@@ -25,7 +25,7 @@ type ContentRef = {
     size: number;
 };
 
-export type FlatLinearIndexEntry = { key: string[]; gpu_content: Uint32Array; toc: ContentRange[]; num_id: number };
+export type FlatLinearIndexEntry = { key: Record<Path, unknown>[]; gpu_content: Uint32Array; toc: ContentRange[]; num_id: number };
 
 export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
     public index_entry: FlatLinearIndexEntry;
@@ -55,7 +55,7 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
         this.index_entry.num_id = Math.max(this.index_entry.num_id, id + 1);
     }
 
-    public addKey(id: number, key: string): void {
+    public addKey(id: number, key: Record<Path, unknown>): void {
         this.index_entry.key[id] = key;
     }
 

@@ -37,7 +37,7 @@ export function createIndex<T>(
 
 export type SearchEnv = {
     field_names?: Record<FieldName, Path>;
-    key_field?: Path;
+    key_fields?: Path[];
     search_targets?: Path[];
     weight?: number;
     distance?: number;
@@ -50,7 +50,7 @@ The return value of the function is the index created. If LinearIndex is specifi
 
 The result of the search is obtained as an array of ids. Additional strings belonging to the search object can also be returned as search results. For example, you can set the SLUG of an article to make it easier to use the search results.
 
-To include an arbitrary string field in the search results, specify a key_field field in the env argument of the createIndex function, where the key_field field is the path from the root of the object to the key field as a string separated by a dot. The following is an example of specifying title as key field in the following object configuration.
+To include an arbitrary field in the search results, specify a key_fields field in the env argument of the createIndex function, where the key_fields field is array of the path from the root of the object to the key field as a string separated by a dot. The following is an example of specifying slug and title as key fields in the following object configuration.
 
 ```
 export const array_of_articles = [
@@ -68,7 +68,7 @@ export const array_of_articles = [
 ```
 
 ```
-const index = createIndex(LinearIndex, array_of_articles, {key_field: 'data.title'});
+const index = createIndex(LinearIndex, array_of_articles, {key_fields: ['slug', 'data.title']});
 ```
 
 The index contains all text fields of a given standard object as is. The index size is roughly equal to the total size of the text to be searched. http protocol will probably use gzip compression, but if the total text size still exceeds 10Mbytes, it may be necessary to use Local Storage to store the index. It is also necessary to separate the index as a json file and dynamically fetch it at search time.

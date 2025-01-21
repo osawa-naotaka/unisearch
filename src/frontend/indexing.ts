@@ -42,11 +42,14 @@ export function createIndex<T>(
             }
 
             // register key entry
-            if (env.key_field) {
-                const obj = getValueByPath(env.key_field, content);
-                if (obj === undefined) throw new UniSearchError(`unisearch: cannot find path ${env.key_field}`);
-                if (typeof obj !== "string") throw new UniSearchError(`unisearch: ${env.key_field} is not string.`);
-                search_index.addKey(id, obj);
+            if (env.key_fields && env.key_fields.length !== 0) {
+                const key: Record<Path, unknown> = {};
+                for(const path of env.key_fields) {
+                    const obj = getValueByPath(path, content);
+                    if (obj === undefined) throw new UniSearchError(`unisearch: cannot find path ${path}`);
+                    key[path] = obj;
+                }
+                search_index.addKey(id, key);
             }
         });
 
