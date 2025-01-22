@@ -43,6 +43,7 @@ body > header {
     max-width: var(--content-width);
     box-sizing: content-box;
     margin-inline: auto;
+    margin-block: var(--content-padding);
     padding-inline: var(--content-padding);
 }
 
