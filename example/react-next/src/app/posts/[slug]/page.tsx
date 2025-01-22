@@ -1,19 +1,14 @@
 import { notFound } from "next/navigation";
-import { getPostBySlug } from "@/lib/api";
-import markdownToHtml from "@/lib/markdownToHtml";
-import { Post } from "@/app/_components/post";
-import { getAllPosts } from "@/lib/api";
+import { getPostBySlug, getAllPosts } from "@/lib/posts";
+import { remark } from "remark";
+import html from "remark-html";
 
 export async function generateStaticParams() {
   const posts = getAllPosts();
-  return posts.map((post) => ({
-      slug: post.slug,
-  }));
+  return posts.map((post) => ({ slug: post.slug }));
 }
 
-type Params = {
-  params: Promise<{ slug: string; }>;
-};
+type Params = { params: Promise<{ slug: string; }>; };
 
 export default async function PostPage(props: Params) {
   const params = await props.params;
@@ -23,15 +18,13 @@ export default async function PostPage(props: Params) {
     return notFound();
   }
 
-  const content = await markdownToHtml(post.content || "");
+  const content = (await remark().use(html).process(post.content || "")).toString();
 
   return (
     <section>
-        <article className="mb-32">
-          <Post
-            title={post.title}
-            content={content}
-          />
+        <article>
+          <h2>{post.title}</h2>
+          <div className="main-text" dangerouslySetInnerHTML={{ __html: content }} />
         </article>
     </section>
   );
