@@ -30,17 +30,17 @@ npm run build
 At first, you need to create index. In this example, src/app/linearindex.json/route.ts is used to create index static file, and /linearindex.json is the path to the index file.
 
 ```ts
-import { createIndex, UniSearchError, GPULinearIndex, indexToObject } from "unisearch.js";
 import { getAllPosts } from "@/lib/posts";
+import { GPULinearIndex, UniSearchError, createIndex, indexToObject } from "unisearch.js";
 
 export const dynamic = "force-static";
 export const revalidate = false;
 
 export async function GET(request: Request) {
-    const allPosts = getAllPosts();
-    const index = createIndex(GPULinearIndex, allPosts, {key_fields: ["title", "slug"], search_targets: ["title", "content"]});
+    const allPosts = await getAllPosts();
+    const index = createIndex(GPULinearIndex, allPosts, { key_fields: ["data.title", "slug"], search_targets: ["data.title", "content"] });
     if (index instanceof UniSearchError) {
-      return new Response(index.message, { status:500 });
+        return new Response(index.message, { status: 500 });
     }
     return Response.json(indexToObject(index));
 }
@@ -57,79 +57,78 @@ After that, index is converted to JSON object by indexToObject function, and ret
 Next, you need to create search page. src/app/page.tsx is used for this purpose.
 
 ```tsx
-"use client"
+"use client";
 
-import { search, UniSearchError, createIndexFromObject } from "unisearch.js";
-import type { UniSearchIndex, SearchResult } from "unisearch.js";
 import Link from "next/link";
 import { useState } from "react";
+import { UniSearchError, createIndexFromObject, search } from "unisearch.js";
+import type { SearchResult, UniSearchIndex } from "unisearch.js";
 
 export default function Index() {
-  const INDEX_STATE = {
-    NOT_INITIALIZED: 0,
-    FETCHING: 1,
-    INITIALIZED: 2
-  } as const;
-  type INDEX_STATE = typeof INDEX_STATE[keyof typeof INDEX_STATE];
+    const INDEX_STATE = {
+        NOT_INITIALIZED: 0,
+        FETCHING: 1,
+        INITIALIZED: 2,
+    } as const;
+    type INDEX_STATE = (typeof INDEX_STATE)[keyof typeof INDEX_STATE];
 
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [index_state, setIndexState] = useState<INDEX_STATE>(INDEX_STATE.NOT_INITIALIZED);
-  const [index, setIndex] = useState<UniSearchIndex | null>(null);
+    const [results, setResults] = useState<SearchResult[]>([]);
+    const [index_state, setIndexState] = useState<INDEX_STATE>(INDEX_STATE.NOT_INITIALIZED);
+    const [index, setIndex] = useState<UniSearchIndex | null>(null);
 
-  const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const start = performance.now();
-    if (index_state === INDEX_STATE.FETCHING) return;
-    if (index_state !== INDEX_STATE.INITIALIZED) {
-      setIndexState(INDEX_STATE.FETCHING);
+    const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const start = performance.now();
+        if (index_state === INDEX_STATE.FETCHING) return;
+        if (index_state !== INDEX_STATE.INITIALIZED) {
+            setIndexState(INDEX_STATE.FETCHING);
 
-      const response = await fetch("/linearindex.json");
-      const response_json = await response.json();
-      const newIndex = createIndexFromObject(response_json);
-      
-      if (newIndex instanceof UniSearchError) {
-        console.error(newIndex);
-        return;
-      }
-      
-      setIndex(newIndex); 
+            const response = await fetch("/linearindex.json");
+            const response_json = await response.json();
+            const newIndex = createIndexFromObject(response_json);
 
-      setResults(await execSearch(newIndex, e.target.value));
-      setIndexState(INDEX_STATE.INITIALIZED);
-      console.log(`search time: ${performance.now() - start}ms`);
-      return ;
-    }
+            if (newIndex instanceof UniSearchError) {
+                console.error(newIndex);
+                return;
+            }
 
-    if(!index) return;
-    setResults(await execSearch(index, e.target.value));
-    console.log(`search time: ${performance.now() - start}ms`);
-  };
+            setIndex(newIndex);
 
-  return (
-    <section>
-      <div className="input-area">
-        <div>search</div>
-        <input type="text" name="search" id="search" onChange={handleSearch} />
-      </div>
-      <h2>results</h2>
-        <ul>
-          {results.length > 0 && results.map((r) => (
-            <li key={r.key.slug as string}>
-              <Link href={`/posts/${r.key.slug as string}`}><h3>{r.key.title as string}</h3></Link>
-              <p>{r.refs[0].wordaround}</p>
-            </li>
-          ))}
-        </ul>
-    </section>
-  );
+            setResults(await execSearch(newIndex, e.target.value));
+            setIndexState(INDEX_STATE.INITIALIZED);
+            console.log(`search time: ${performance.now() - start}ms`);
+            return;
+        }
+
+        if (!index) return;
+        setResults(await execSearch(index, e.target.value));
+        console.log(`search time: ${performance.now() - start}ms`);
+    };
+
+    return (
+        <section>
+            <div className="input-area">
+                <div>search</div>
+                <input type="text" name="search" id="search" onChange={handleSearch} />
+            </div>
+            <h2>results</h2>
+            <ul>
+                {results.length > 0 &&
+                    results.map((r) => (
+                        <li key={r.key.slug as string}>
+                            <Link href={`/posts/${r.key.slug as string}`}>
+                                <h3>{r.key["data.title"] as string}</h3>
+                            </Link>
+                            <p>{r.refs[0].wordaround}</p>
+                        </li>
+                    ))}
+            </ul>
+        </section>
+    );
 }
 
 async function execSearch(index: UniSearchIndex, searchText: string): Promise<SearchResult[]> {
-  const results = await search(index, searchText);
-  if (results instanceof UniSearchError) {
-    return [];
-  } else {
-    return results;
-  }
+    const results = await search(index, searchText);
+    return results instanceof UniSearchError ? [] : results;
 }
 ```
 
@@ -143,5 +142,5 @@ After the index is fetched, it is converted to UniSearchIndex object by 'const i
 Then, the search results are fetched by 'const results = await search(index, search_keyword)'.
 
 Results are sorted by score, and you can use SearchResult type to render search results.
-In this example, results[x].key.title and results[x].key.slug are used to link to the post page. These information is indexed because key_fields is specified when creating index.
+In this example, results[x].key["data.title"] and results[x].key.slug are used to link to the post page. These information is indexed because key_fields is specified when creating index.
 In addition, results[x].refs[0].wordaround is used to show the mached part of the text content.
