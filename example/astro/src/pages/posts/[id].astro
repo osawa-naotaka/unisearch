@@ -1,0 +1,24 @@
+---
+import Html from "../../layout/html.astro";
+import type { CollectionEntry } from "astro:content";
+import { getCollection, render } from "astro:content";
+
+type Props = CollectionEntry<"posts">;
+
+export async function getStaticPaths() {
+    return (await getCollection("posts")).map((p) => ({
+        params: { id: p.id },
+        props: p,
+    }));
+}
+
+const post = Astro.props;
+const { title } = post.data;
+const { Content } = await render(post);
+---
+<Html>
+    <section>
+        <h2>{title}</h2>
+        <Content />
+    </section>
+</Html>

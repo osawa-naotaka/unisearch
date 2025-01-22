@@ -23,7 +23,7 @@ export default function Index() {
         if (index_state !== INDEX_STATE.INITIALIZED) {
             setIndexState(INDEX_STATE.FETCHING);
 
-            const response = await fetch("/linearindex.json");
+            const response = await fetch("/searchindex.json");
             const response_json = await response.json();
             const newIndex = createIndexFromObject(response_json);
 

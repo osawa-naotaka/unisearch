@@ -27,7 +27,7 @@ npm run build
 
 ### 1. Create index to static file
 
-At first, you need to create index. In this example, src/app/linearindex.json/route.ts is used to create index static file, and /linearindex.json is the path to the index file.
+At first, you need to create index. In this example, src/app/searchindex.json/route.ts is used to create index static file, and /searchindex.json is the path to the index file.
 
 ```ts
 import { getAllPosts } from "@/lib/posts";
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
 
 dynamic = "force-static" is required to create static file.
 In this example, index is created using GPULinearIndex, but you can use other index types.
-allPosts is an array of posts, and each post has title, slug and content fields. All of them are indexed by default, but you can specify search_targets to index only specific fields. In this example, title and content are indexed, and slug is not indexed.
+Variable allPosts is an array of posts, and each post has title, slug and content fields. All of them are indexed by default, but you can specify search_targets to index only specific fields. In this example, title and content are indexed, and slug is not indexed.
 When calling createIndex function, key_fields is specified to use title and slug when rendering search results.
 After that, index is converted to JSON object by indexToObject function, and returned as Response object.
 
@@ -82,7 +82,7 @@ export default function Index() {
         if (index_state !== INDEX_STATE.INITIALIZED) {
             setIndexState(INDEX_STATE.FETCHING);
 
-            const response = await fetch("/linearindex.json");
+            const response = await fetch("/searchindex.json");
             const response_json = await response.json();
             const newIndex = createIndexFromObject(response_json);
 
@@ -135,7 +135,7 @@ async function execSearch(index: UniSearchIndex, searchText: string): Promise<Se
 "use client" is required to use React hooks. Index is fetched when the first search is executed to avoid unnecessary fetch.
 Search results are rendered via useState hook of "results" state.
 
-When the first search is executed, index is fetched from /linearindex.json, 'const response = await fetch("/linearindex.json")'.
+When the first search is executed, index is fetched from /searchindex.json, 'const response = await fetch("/searchindex.json")'.
 
 After the index is fetched, it is converted to UniSearchIndex object by 'const index = createIndexFromObject(response.json())'.
 
