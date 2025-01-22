@@ -29,11 +29,11 @@ unisearch.js performs search by following two steps: index creation and search u
 The type of function to create an index is shown below.
 
 ```
-export function createIndex<T>(
+export function createIndex(
     index_class: IndexClass,
     contents: unknown[],
     env: SearchEnv = {},
-): UniIndex<SearchIndex<T>> | UniSearchError;
+): UniSearchIndex | UniSearchError;
 
 export type SearchEnv = {
     field_names?: Record<FieldName, Path>;
@@ -46,7 +46,7 @@ export type SearchEnv = {
 
 index_class specifies the algorithm to be used for full-text search by class. Usually, the LinearIndex class is specified. contents specifies an array of JavaScript objects to be searched. The search is limited to the fields of this object that are either strings or arrays of strings. If there is an array field in between up to the string field, it is not included in the search even if the field is a string. env specifies default options for indexing and searching.
 
-The return value of the function is the index created. If LinearIndex is specified in index_class, T becomes LinearIndexEntry and the return value of createIndex is UniIndex<SearchIndex<LinearIndexEntry>> | UniSearchError. If there is a problem with the specified contents or env, UniSearchError is returned. 
+The return value of the function is the index created. The return value of createIndex is UniSearchIndex | UniSearchError. If there is a problem with the specified contents or env, UniSearchError is returned. 
 
 The result of the search is obtained as an array of ids. Additional strings belonging to the search object can also be returned as search results. For example, you can set the SLUG of an article to make it easier to use the search results.
 
@@ -86,7 +86,7 @@ Indexes can also be created in advance to reduce the amount of processing requir
 To convert an index into a JavaScript object, use the indexToObject function.
 
 ```
-export function indexToObject<T>(index: UniIndex<SearchIndex<T>>): UniIndex<T>
+export function indexToObject(index: UniSearchIndex): UniSearchIndexObject
 ```
 
 ```
@@ -100,7 +100,7 @@ const json = JSON.stringify(indexToObject(index));
 Also, to reconstruct an index from a JavaScript object, use the createIndexFromObject function.
 
 ```
-export function createIndexFromObject<T>(index: UniIndex<T>): UniIndex<SearchIndex<T>> | UniSearchError;
+export function createIndexFromObject(index: UniSearchIndexObject): UniSearchIndex | UniSearchError;
 ```
 
 ```
@@ -120,7 +120,7 @@ Index generation takes some time: for about 100 articles, or 3 MByte of full tex
 Once an index has been created, searches can be performed many times using the same index.
 
 ```
-export async function search<T>(index: UniIndex<SearchIndex<T>>, query: string): Promise<SearchResult[] | UniSearchError>
+export async function search(index: UniSearchIndex, query: string): Promise<SearchResult[] | UniSearchError>
 ```
 
 The query is given to the search function as a string with an index. The format of the query is generally similar to that of a Google search.

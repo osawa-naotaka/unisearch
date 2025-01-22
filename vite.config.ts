@@ -12,10 +12,6 @@ export default defineConfig({
     },
     outDir: './dist',
     emptyOutDir: true,
-    minify: "terser",
-    terserOptions: {
-      keep_classnames: true,
-    },
   },
   plugins: [
     wasm(),

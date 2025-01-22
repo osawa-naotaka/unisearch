@@ -71,12 +71,17 @@ export function createIndex<T>(
         // fix index
         search_index.fixIndex();
 
-        return {
-            version: Version,
-            type: index_class.name,
-            env: env,
-            index_entry: search_index,
-        };
+        for (const [key, value] of Object.entries(IndexTypes)) {
+            if (value === index_class) {
+                return {
+                    version: Version,
+                    type: key,
+                    env: env,
+                    index_entry: search_index,
+                };
+            }
+        }
+        throw new UniSearchError("unisearch: index class not found.");
     } catch (e) {
         if (e instanceof UniSearchError) {
             return e;

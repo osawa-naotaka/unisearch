@@ -1,16 +1,27 @@
 "use client"
 
 import { search, UniSearchError, createIndexFromObject } from "unisearch.js";
+import type { UniSearchIndex, SearchResult } from "unisearch.js";
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import type { SearchResult } from "unisearch.js";
+import { useState } from "react";
 
 export default function Index() {
   const [results, setResults] = useState<SearchResult[]>([]);
-  const [index, setIndex] = useState<any>(null);
+  const INDEX_STATE = {
+    NOT_INITIALIZED: 0,
+    FETCHING: 1,
+    INITIALIZED: 2
+  } as const;
+  type INDEX_STATE = typeof INDEX_STATE[keyof typeof INDEX_STATE];
 
-  useEffect(() => {
-    const fetchIndex = async () => {
+  let index_state : INDEX_STATE = INDEX_STATE.NOT_INITIALIZED;
+  let index : UniSearchIndex | null = null;
+
+  const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (index_state === INDEX_STATE.FETCHING) return;
+    if (index_state !== INDEX_STATE.INITIALIZED) {
+      index_state = INDEX_STATE.FETCHING;
+
       const response = await fetch("/linearindex.json");
       const response_json = await response.json();
       const newIndex = createIndexFromObject(response_json);
@@ -20,14 +31,11 @@ export default function Index() {
         return;
       }
       
-      setIndex(newIndex);
-    };
+      index = newIndex; 
 
-    fetchIndex();
-  }, []);
-
-  const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!index) return;
+      index_state = INDEX_STATE.INITIALIZED;
+    }
+    if(!index) return;
     
     const searchText = e.target.value;
     const results = await search(index, searchText);

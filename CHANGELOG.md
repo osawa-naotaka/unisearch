@@ -13,20 +13,36 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-## [1.2.2] - 2025-01-21
+## [1.2.3] - 2025-01-22
+### Added
+- export type UniSearchIndex and UniSearchIndexObject.
+
+### Changed
+- return type of createIndex and createIndexFromObject is now UniSearchIndex | UniSearchError.
+- return type of indexToObject is now UniSearchIndexObject.
+- update README due to the change of return type of createIndex, createIndexFromObject, and indexToObject.
+
 ### Fixed
+- fix bug that index class is not found.
+- some categories in CHANGELOG are fixed.
+
+### Removed
+- remove unused types.
+
+## [1.2.2] - 2025-01-21
+### Changed
 - index version is updated to 1.2.2.
 
 ## [1.2.1] - 2025-01-21
-### Fixed
+### Changed
 - allow undefined value in search_targets and key_fields.
 
 ## [1.2.0] - 2025-01-21
-### Added
+### Changed
 - key_fields option now supports multiple fields.
 
 ## [1.1.1] - 2025-01-19
-### Fixed
+### Changed
 - in LinearIndex, the wordaround of search result is extended to 100 characters.
 
 ## [1.1.0] - 2025-01-17
@@ -34,8 +50,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - GPU Linear Index scheme is added.
 
 ## [1.0.5] - 2025-01-14
-### Fixed
+### Changed
 - in fuzzy search, distance is reduced to min(distance, keyword_length - 1).
+
+### Fixed
 - in HybridBigramInvertedIndex, fix bug that alphabet-and-kanji-combined keyword is not searched correctly.
 
 ## [1.0.4] - 2025-01-07
@@ -48,11 +66,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Typo of search class is fixed. Not HyblidBigramInvertedIndex, but HybridBigramInvertedIndex.
 
 ## [1.0.3] - 2024-12-28
-### Fixed
+### Changed
 - update README.
 
 ## [1.0.2] - 2024-12-26
-### Fixed
+### Added
 - export type SearchIndex.
 
 ## [1.0.0] - 2024-12-25
@@ -62,7 +80,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - search frontend, google-like syntax
 - sorting search result based on TF-IDF
 
-[Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.2.2...HEAD
+[Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.2.3...HEAD
+[1.2.3]: https://github.com/osawa-naotaka/unisearch/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/osawa-naotaka/unisearch/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/osawa-naotaka/unisearch/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/osawa-naotaka/unisearch/compare/v1.1.1...v1.2.0

@@ -32,11 +32,11 @@ unisearch.jsは、インデックスの作成と、インデックスを用い�
 インデックスを作成する関数の型を以下に示します。
 
 ```
-export function createIndex<T>(
+export function createIndex(
     index_class: IndexClass,
     contents: unknown[],
     env: SearchEnv = {},
-): UniIndex<SearchIndex<T>> | UniSearchError;
+): UniSearchIndex | UniSearchError;
 
 export type SearchEnv = {
     field_names?: Record<FieldName, Path>;
@@ -49,7 +49,7 @@ export type SearchEnv = {
 
 index_classには全文検索で使用するアルゴリズムをクラスで指定します。通常はLinearIndexクラスを指定します。contentsは検索対象のJavaScriptオブジェクトの配列を指定します。検索対象は、このオブジェクトのうち、文字列のフィールドか、文字列の配列のフィールドに限られます。また、文字列のフィールドまでの間に配列のフィールドが挟まる場合は、そのフィールドが文字列であっても検索対象に含まれません。envはインデックス作成及び検索時のデフォルトオプションを指定します。
 
-関数の戻り値は作成されたインデックスです。index_classにLinearIndexが指定された場合、TはLinearIndexEntryとなり、createIndexの戻り値はUniIndex<SearchIndex<LinearIndexEntry>> | UniSearchErrorとなります。指定されたcontentsやenvに問題がある場合は、UniSearchErrorを返します。
+関数の戻り値は作成されたインデックスです。createIndexの戻り値はUniSearchIndex | UniSearchErrorとなります。指定されたcontentsやenvに問題がある場合は、UniSearchErrorを返します。
 
 検索を行った結果は、配列のインデックスとして得られます。追加で、その検索オブジェクトに属する文字列を検索結果として返すこともできます。例えば記事のslugなどを設定することで、検索結果の利用をより容易にできます。
 
@@ -89,7 +89,7 @@ const index = createIndex(LinearIndex, array_of_articles, {search_targets: ['dat
 インデックスをJavaScriptオブジェクトに変換するには、indexToObject関数を使います。
 
 ```
-export function indexToObject<T>(index: UniIndex<SearchIndex<T>>): UniIndex<T>
+export function indexToObject(index: UniSearchIndex): UniSearchIndexObject
 ```
 
 ```
@@ -103,7 +103,7 @@ const json = JSON.stringify(indexToObject(index));
 また、JavaScriptオブジェクトからindexを再構築するにはcreateIndexFromObject関数を使います。
 
 ```
-export function createIndexFromObject<T>(index: UniIndex<T>): UniIndex<SearchIndex<T>> | UniSearchError;
+export function createIndexFromObject(index: UniSearchIndexObject): UniSearchIndex | UniSearchError;
 ```
 
 ```
@@ -123,7 +123,7 @@ const result = await search(re_index, "search word");
 インデックスを作成したあとは、同じインデックスを使って何度も検索を実行できます。
 
 ```
-export async function search<T>(index: UniIndex<SearchIndex<T>>, query: string): Promise<SearchResult[] | UniSearchError>
+export async function search(index: UniSearchIndex, query: string): Promise<SearchResult[] | UniSearchError>
 ```
 
 クエリは文字列としてインデックスとともにsearch関数に与えます。クエリの書式はおおむねGoogle検索の書式に類似しています。
