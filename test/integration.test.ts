@@ -1,11 +1,11 @@
 import { test, expect, describe } from "vitest";
 import { array_of_articles } from "@test/array_of_articles.js";
 import { LinearIndex, createIndex, search, UniSearchError, HybridBigramInvertedIndex } from "../dist/unisearch.js";
-import { UniIndex, SearchIndex, LinearIndexEntry } from "../dist/unisearch.js";
+import type { UniSearchIndex } from "../dist/unisearch.js";
 import { createIndexFromObject, indexToObject } from "../dist/unisearch.js";
 
 describe("basic Linear index creation and search", async () => {
-    const index: UniIndex<SearchIndex<LinearIndexEntry>> | UniSearchError  = createIndex(LinearIndex, array_of_articles);
+    const index: UniSearchIndex | UniSearchError  = createIndex(LinearIndex, array_of_articles);
 
     if(index instanceof UniSearchError) throw index;
     const result1 = await search(index, "maintainability");

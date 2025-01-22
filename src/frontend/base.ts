@@ -1,5 +1,5 @@
 // version
-export const Version = "1.2.2";
+export const Version = "1.2.3";
 
 // types
 
@@ -51,3 +51,6 @@ export interface SearchIndex<T> {
     fixIndex(): void;
     search(env: SearchEnv, keyword: string): Promise<SearchResult[]>;
 }
+
+export type UniSearchIndex = UniIndex<SearchIndex<unknown>>;
+export type UniSearchIndexObject = UniIndex<unknown>;
