@@ -6,7 +6,7 @@ export const revalidate = false;
 
 export async function GET(request: Request) {
     const allPosts = getAllPosts();
-    const index = createIndex(GPULinearIndex, allPosts, {key_fields: ["title", "slug"]});
+    const index = createIndex(GPULinearIndex, allPosts, {key_fields: ["title", "slug"], search_targets: ["title", "content"]});
     if (index instanceof UniSearchError) {
       return new Response(index.message, { status:500 });
     }
