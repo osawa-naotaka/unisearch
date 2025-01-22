@@ -1,31 +1,27 @@
-import fs from "fs";
+import fs from "node:fs";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import matter from "gray-matter";
-import { join } from "path";
 
 export type Post = {
     slug: string;
-    title: string;
+    data: Record<string, unknown>;
     content: string;
 };
 
-const postsDirectory = join(process.cwd(), "../posts");
+const postsDirectory = path.join(path.resolve(), "..", "posts");
 
-export function getPostSlugs() {
-  return fs.readdirSync(postsDirectory);
+export function getPostSlugs(): string[] {
+    return fs.readdirSync(postsDirectory).map((file) => file.replace(/\.md$/, ""));
 }
 
-export function getPostBySlug(slug: string) {
-  const realSlug = slug.replace(/\.md$/, "");
-  const fullPath = join(postsDirectory, `${realSlug}.md`);
-  const fileContents = fs.readFileSync(fullPath, "utf8");
-  const { data, content } = matter(fileContents);
-
-  return { ...data, slug: realSlug, content } as Post;
+export async function getPostBySlug(slug: string): Promise<Post> {
+    const mdxpath = path.join(postsDirectory, `${slug}.md`);
+    const text = await readFile(mdxpath, { encoding: "utf-8" });
+    const { data, content } = matter(text);
+    return { slug, content, data };
 }
 
-export function getAllPosts(): Post[] {
-  const slugs = getPostSlugs();
-  const posts = slugs
-    .map((slug) => getPostBySlug(slug))
-  return posts;
+export async function getAllPosts(): Promise<Post[]> {
+    return await Promise.all(getPostSlugs().map((slug) => getPostBySlug(slug)));
 }
