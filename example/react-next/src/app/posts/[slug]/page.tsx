@@ -1,38 +1,24 @@
-import { notFound } from "next/navigation";
-import { getPostBySlug } from "@/lib/api";
-import markdownToHtml from "@/lib/markdownToHtml";
-import { Post } from "@/app/_components/post";
-import { getAllPosts } from "@/lib/api";
+import { getPostBySlug, getPostSlugs } from "@/lib/posts";
+import { compileMDX } from "next-mdx-remote/rsc";
 
 export async function generateStaticParams() {
-  const posts = getAllPosts();
-  return posts.map((post) => ({
-      slug: post.slug,
-  }));
+    const posts = getPostSlugs();
+    return posts.map((slug) => ({ slug: slug }));
 }
 
-type Params = {
-  params: Promise<{ slug: string; }>;
-};
+type Params = { params: Promise<{ slug: string }> };
 
 export default async function PostPage(props: Params) {
-  const params = await props.params;
-  const post = getPostBySlug(params.slug);
+    const params = await props.params;
+    const post = await getPostBySlug(params.slug);
+    const { content } = await compileMDX({ source: post.content, options: { mdxOptions: { format: "md" } } });
 
-  if (!post) {
-    return notFound();
-  }
-
-  const content = await markdownToHtml(post.content || "");
-
-  return (
-    <section>
-        <article className="mb-32">
-          <Post
-            title={post.title}
-            content={content}
-          />
-        </article>
-    </section>
-  );
+    return (
+        <section>
+            <article>
+                <h2>{post.data.title as string}</h2>
+                {content}
+            </article>
+        </section>
+    );
 }

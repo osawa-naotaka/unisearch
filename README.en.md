@@ -21,6 +21,12 @@ unisearch.js can search for all languages that can be represented by unicode. Ge
 
 unisearch.js does not depend on any other JavaScript libraries and can be easily embedded in your site.
 
+unisearch.js can be used in conjunction with SSG generators such as next.js and astro.js to create an index at page load time and perform searches. These samples are also registered in the repository. Please feel free to use them.
+
+- [react and next.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/react-next)
+- [astro.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/astro)
+
+
 ## Usage
 
 unisearch.js performs search by following two steps: index creation and search using the index. The index is created only once when the page is loaded, and the index is used for each search.

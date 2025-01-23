@@ -23,6 +23,11 @@ unisearch.jsは、unicodeで表すことのできる全ての言語を対象に�
 
 unisearch.jsは他のJavaScriptライブラリに依存していないため、あなたのサイトに簡単に埋め込むことができます。
 
+unisearch.jsをnext.jsやastro.jsなどのSSGジェネレータと組み合わせることで、ページ読み込み時にインデックスを作成し、検索を実現できます。これらのサンプルもレポジトリに登録してあります。ご利用の際はぜひご覧ください。
+
+- [react and next.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/react-next)
+- [astro.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/astro)
+
 
 ## 使い方
 

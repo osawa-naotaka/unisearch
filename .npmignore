@@ -4,6 +4,8 @@
 /node_modules
 /ref
 /test
+/example
+/src
 /src/vite-env.d.ts
 index.html
 shell.nix
