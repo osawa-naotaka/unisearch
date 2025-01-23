@@ -12,7 +12,10 @@ export type Post = {
 const postsDirectory = path.join(path.resolve(), "..", "posts");
 
 export function getPostSlugs(): string[] {
-    return fs.readdirSync(postsDirectory).filter((file) => file.endsWith(".md")).map((file) => file.replace(/\.md$/, ""));
+    return fs
+        .readdirSync(postsDirectory)
+        .filter((file) => file.endsWith(".md"))
+        .map((file) => file.replace(/\.md$/, ""));
 }
 
 export async function getPostBySlug(slug: string): Promise<Post> {
