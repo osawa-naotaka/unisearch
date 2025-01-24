@@ -187,7 +187,6 @@ export class GPULinearIndex extends LinearIndex {
             }
             gpu_buffers.result_copy.unmap();
             gpu_buffers.pointer_copy.unmap();
-            this.mutex.release();
 
             const poses = this.mergeResults(raw_result.sort((a, b) => a[0] - b[0]));
             return this.createSearchResult(poses, grapheme.map((x) => String.fromCharCode(x)).join(""), env);
