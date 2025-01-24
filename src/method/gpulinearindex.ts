@@ -4,6 +4,7 @@ import bitap_dist1 from "@src/method/wgsl/bitap_dist1.wgsl?raw";
 import bitap_dist2 from "@src/method/wgsl/bitap_dist2.wgsl?raw";
 import bitap_dist3 from "@src/method/wgsl/bitap_dist3.wgsl?raw";
 import { bitapKeyNumber, createBitapKey } from "@src/util/algorithm";
+import { Mutex } from "@src/util/mutex";
 import { splitByGrapheme } from "@src/util/preprocess";
 
 type GPUBuffers = {
@@ -18,6 +19,7 @@ type GPUBuffers = {
 };
 
 export class GPULinearIndex extends LinearIndex {
+    private mutex = new Mutex();
     private device: GPUDevice | undefined = undefined;
     private gpu_buffers: GPUBuffers | undefined = undefined;
     private gpu_pipeline: GPUComputePipeline[] = [];
@@ -86,7 +88,9 @@ export class GPULinearIndex extends LinearIndex {
             pointer_copy: this.gpuCopy(this.device, 4),
         };
 
+        await this.mutex.acquire();
         this.device.queue.writeBuffer(this.gpu_buffers.content, 0, this.gpu_content);
+        this.mutex.release();
 
         this.gpu_pipeline[1] = this.gpuPipeline(this.device, bitap_dist1);
         this.gpu_pipeline[2] = this.gpuPipeline(this.device, bitap_dist2);
@@ -128,6 +132,7 @@ export class GPULinearIndex extends LinearIndex {
         env: SearchEnv,
         grapheme: number[],
     ): Promise<SearchResult[]> {
+        await this.mutex.acquire();
         const bitap_key = createBitapKey<number, number>(bitapKeyNumber(), grapheme);
         const bitap_dict_tmp = [];
         for (const [key, mask] of bitap_key.mask.entries()) {
@@ -178,6 +183,7 @@ export class GPULinearIndex extends LinearIndex {
         }
         gpu_buffers.result_copy.unmap();
         gpu_buffers.pointer_copy.unmap();
+        this.mutex.release();
 
         const poses = this.mergeResults(raw_result.sort((a, b) => a[0] - b[0]));
         return this.createSearchResult(poses, grapheme.map((x) => String.fromCharCode(x)).join(""), env);

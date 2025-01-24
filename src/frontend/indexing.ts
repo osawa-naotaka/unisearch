@@ -44,7 +44,7 @@ export function createIndex<T>(
             // register key entry
             if (env.key_fields && env.key_fields.length !== 0) {
                 const key: Record<Path, unknown> = {};
-                for(const path of env.key_fields) {
+                for (const path of env.key_fields) {
                     const obj = getValueByPath(path, content);
                     key[path] = obj;
                 }
