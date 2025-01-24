@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.4] - 2025-01-24
+### Fixed
+- fix bug that long query search more than 32 characters causes error.
+- fix bug that GPU buffer may access concurrently.
+
+### Changed
+- update README.
+
 ## [1.2.3] - 2025-01-22
 ### Added
 - export type UniSearchIndex and UniSearchIndexObject.
@@ -80,7 +88,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - search frontend, google-like syntax
 - sorting search result based on TF-IDF
 
-[Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.2.3...HEAD
+[Unreleased]: https://github.com/osawa-naotaka/unisearch/compare/v1.2.4...HEAD
+[1.2.4]: https://github.com/osawa-naotaka/unisearch/compare/v1.2.3...v1.2.4
 [1.2.3]: https://github.com/osawa-naotaka/unisearch/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/osawa-naotaka/unisearch/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/osawa-naotaka/unisearch/compare/v1.2.0...v1.2.1

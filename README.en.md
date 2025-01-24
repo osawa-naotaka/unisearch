@@ -13,6 +13,17 @@ if(index instanceof UniSearchError) throw index;
 const result = await search(index, "search word");
 ```
 
+If you want to use WebGPU for searching, use GPULinearIndex instead of LinearIndex.
+
+```
+import { GPULinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
+
+const index = createIndex(GPULinearIndex, array_of_articles);
+
+if(index instanceof UniSearchError) throw index;
+const result = await search(index, "search word");
+```
+
 unisearch.js provides a complete set of search functions. In addition to exact match search, it also provides a fuzzy search function. In addition, there are and, or, not, and field-specific searches, as well as the ability to specify scoring weights. Search results are sorted based on a scoring method called TF-IDF, along with strings around the match.
 
 unisearch.js is reasonably fast: an exact match search for about 100 Wikipedia articles with a total size of about 3 Mbytes takes less than 1 msec, and a fuzzy search takes less than 50 msec. By changing the indexing scheme, the search speed can be further improved and more articles can be included in the search.
@@ -21,10 +32,10 @@ unisearch.js can search for all languages that can be represented by unicode. Ge
 
 unisearch.js does not depend on any other JavaScript libraries and can be easily embedded in your site.
 
-unisearch.js can be used in conjunction with SSG generators such as next.js and astro.js to create an index at page load time and perform searches. These samples are also registered in the repository. Please feel free to use them.
+unisearch.js can be used in conjunction with SSG (Static Site Generator) such as Next.js and Astro.js to create an index in advance and load the index at search start time. These samples are also registered in the repository. Please feel free to use them.
 
-- [react and next.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/react-next)
-- [astro.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/astro)
+- [React and Next.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/react-next)
+- [Astro.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/astro)
 
 
 ## Usage
@@ -50,11 +61,11 @@ export type SearchEnv = {
 };
 ```
 
-index_class specifies the algorithm to be used for full-text search by class. Usually, the LinearIndex class is specified. contents specifies an array of JavaScript objects to be searched. The search is limited to the fields of this object that are either strings or arrays of strings. If there is an array field in between up to the string field, it is not included in the search even if the field is a string. env specifies default options for indexing and searching.
+index_class specifies the algorithm to be used for full-text search by class. Usually, the LinearIndex class is specified. If you want to use WebGPU for searching, use GPULinearIndex instead of LinearIndex. If you want to use a faster search, use HybridBigramInvertedIndex instead of LinearIndex or GPULinearIndex. contents specifies an array of JavaScript objects to be searched. The search is limited to the fields of this object that are either strings or arrays of strings. If there is an array field in between up to the string field, it is not included in the search even if the field is a string. env specifies default options for indexing and searching.
 
 The return value of the function is the index created. The return value of createIndex is UniSearchIndex | UniSearchError. If there is a problem with the specified contents or env, UniSearchError is returned. 
 
-The result of the search is obtained as an array of ids. Additional strings belonging to the search object can also be returned as search results. For example, you can set the SLUG of an article to make it easier to use the search results.
+The result of the search is obtained as an array of ids. Additional infomation belonging to the search object can also be returned as search results. For example, you can set the slug of an article to make it easier to use the search results.
 
 To include an arbitrary field in the search results, specify a key_fields field in the env argument of the createIndex function, where the key_fields field is array of the path from the root of the object to the key field as a string separated by a dot. The following is an example of specifying slug and title as key fields in the following object configuration.
 
@@ -89,7 +100,7 @@ const index = createIndex(LinearIndex, array_of_articles, {search_targets: ['dat
 
 Indexes can also be created in advance to reduce the amount of processing required when loading pages. When using a static site generator (SSG), indexes can be created at deployment time and placed as json files so that the indexes can be loaded from the client side using fetch, reducing the size of bundles in html files and reducing loading time when no search is performed. 
 
-To convert an index into a JavaScript object, use the indexToObject function.
+To convert an index into a JavaScript object, use the indexToObject function. This function is used when creating an index at deployment time in SSG and publishing the index as a JSON file.
 
 ```
 export function indexToObject(index: UniSearchIndex): UniSearchIndexObject
@@ -104,6 +115,7 @@ const json = JSON.stringify(indexToObject(index));
 ```
 
 Also, to reconstruct an index from a JavaScript object, use the createIndexFromObject function.
+When using SSG, you can reconstruct the index by fetching and loading the JSON file - it is created using the `indexToObject` function - from the client side.
 
 ```
 export function createIndexFromObject(index: UniSearchIndexObject): UniSearchIndex | UniSearchError;
@@ -233,7 +245,7 @@ However, in exchange for the improved search speed, there are a number of drawba
 4. Some of the information in the search results will be missing: pos and wordaround will not exist.
 5. Scoring based on TF-IDF is incomplete. Only simple TFs are calculated now.
 
-Overall, HybridBigramInvertedIndex is not really worth using. Consider using it only if you really need a fast search.
+In spite of these drawbacks, the search is very fast, and the user experience is not affected by the search speed even on any device or search target. If you prioritize user experience, please use this index format.
 
 ## Benchmark
 
@@ -306,7 +318,7 @@ The fuzzy search uses the bitap algorithm, which is 50 times slower than indexOf
 
 ### GPULinearIndex
 
-GPULinearIndex uses the exact same algorithm as LinearIndex for exact match search. Also, when the fuzzy search string exceeds 32 characters, it uses the same algorithm as LinearIndex. For fuzzy search, the bitap algorithm is implemented on the GPU. A search thread is created for every character position in the index, and a match search based on the bitap algorithm is performed for the length of the search string.
+GPULinearIndex uses the exact same algorithm as LinearIndex for exact match search. Also, when the fuzzy search string exceeds 32 characters, it uses the same algorithm as LinearIndex. For fuzzy search, the bitap algorithm is implemented on the GPU. A search thread is created for every character position in the index, and a match search based on the bitap algorithm is performed for the length of the search string. The backend uses WebGPU, and the bitap algorithm is implemented in wgsl.
 
 ### HybridBigramInvertedIndex
 

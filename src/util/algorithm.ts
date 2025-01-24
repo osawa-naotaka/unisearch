@@ -88,7 +88,6 @@ export function bitapKeyNumber<T>(): BitapKey<number, T> {
 }
 
 export function createBitapKey<T, S>(key: BitapKey<T, S>, pattern: S[]): BitapKey<T, S> {
-    if (pattern.length > 32) throw new Error("createBitapKey: key length must be less than 32.");
     key.length = pattern.length;
 
     for (let i = 0; i < key.length; i++) {

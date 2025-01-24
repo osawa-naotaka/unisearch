@@ -4,6 +4,7 @@ import bitap_dist1 from "@src/method/wgsl/bitap_dist1.wgsl?raw";
 import bitap_dist2 from "@src/method/wgsl/bitap_dist2.wgsl?raw";
 import bitap_dist3 from "@src/method/wgsl/bitap_dist3.wgsl?raw";
 import { bitapKeyNumber, createBitapKey } from "@src/util/algorithm";
+import { Mutex } from "@src/util/mutex";
 import { splitByGrapheme } from "@src/util/preprocess";
 
 type GPUBuffers = {
@@ -18,6 +19,7 @@ type GPUBuffers = {
 };
 
 export class GPULinearIndex extends LinearIndex {
+    private mutex = new Mutex();
     private device: GPUDevice | undefined = undefined;
     private gpu_buffers: GPUBuffers | undefined = undefined;
     private gpu_pipeline: GPUComputePipeline[] = [];
@@ -86,7 +88,12 @@ export class GPULinearIndex extends LinearIndex {
             pointer_copy: this.gpuCopy(this.device, 4),
         };
 
-        this.device.queue.writeBuffer(this.gpu_buffers.content, 0, this.gpu_content);
+        await this.mutex.acquire();
+        try {
+            this.device.queue.writeBuffer(this.gpu_buffers.content, 0, this.gpu_content);
+        } finally {
+            this.mutex.release();
+        }
 
         this.gpu_pipeline[1] = this.gpuPipeline(this.device, bitap_dist1);
         this.gpu_pipeline[2] = this.gpuPipeline(this.device, bitap_dist2);
@@ -128,58 +135,63 @@ export class GPULinearIndex extends LinearIndex {
         env: SearchEnv,
         grapheme: number[],
     ): Promise<SearchResult[]> {
-        const bitap_key = createBitapKey<number, number>(bitapKeyNumber(), grapheme);
-        const bitap_dict_tmp = [];
-        for (const [key, mask] of bitap_key.mask.entries()) {
-            bitap_dict_tmp.push(key);
-            bitap_dict_tmp.push(mask);
-        }
-        const bitap_dict = new Uint32Array(bitap_dict_tmp);
-        device.queue.writeBuffer(gpu_buffers.bitap_dict, 0, bitap_dict);
+        await this.mutex.acquire();
+        try {
+            const bitap_key = createBitapKey<number, number>(bitapKeyNumber(), grapheme);
+            const bitap_dict_tmp = [];
+            for (const [key, mask] of bitap_key.mask.entries()) {
+                bitap_dict_tmp.push(key);
+                bitap_dict_tmp.push(mask);
+            }
+            const bitap_dict = new Uint32Array(bitap_dict_tmp);
+            device.queue.writeBuffer(gpu_buffers.bitap_dict, 0, bitap_dict);
 
-        device.queue.writeBuffer(gpu_buffers.pointer, 0, new Uint32Array([0]));
-        device.queue.writeBuffer(
-            gpu_buffers.end_mask,
-            0,
-            new Uint32Array(new Array(4).fill(1 << (grapheme.length - 1))),
-        );
-        device.queue.writeBuffer(gpu_buffers.keyword_len, 0, new Uint32Array([grapheme.length]));
+            device.queue.writeBuffer(gpu_buffers.pointer, 0, new Uint32Array([0]));
+            device.queue.writeBuffer(
+                gpu_buffers.end_mask,
+                0,
+                new Uint32Array(new Array(4).fill(1 << (grapheme.length - 1))),
+            );
+            device.queue.writeBuffer(gpu_buffers.keyword_len, 0, new Uint32Array([grapheme.length]));
 
-        const pipeline = this.gpu_pipeline[env.distance || 1];
+            const pipeline = this.gpu_pipeline[env.distance || 1];
 
-        const encoder = device.createCommandEncoder();
-        encoder.pushDebugGroup("bitap");
-        const pass = encoder.beginComputePass();
-        pass.setPipeline(pipeline);
-        pass.setBindGroup(0, this.gpu_bind_group);
-        pass.dispatchWorkgroups(Math.ceil(this.index_entry.content_length / 256)); // 256 workgroup_size
-        pass.end();
+            const encoder = device.createCommandEncoder();
+            encoder.pushDebugGroup("bitap");
+            const pass = encoder.beginComputePass();
+            pass.setPipeline(pipeline);
+            pass.setBindGroup(0, this.gpu_bind_group);
+            pass.dispatchWorkgroups(Math.ceil(this.index_entry.content_length / 256)); // 256 workgroup_size
+            pass.end();
 
-        encoder.copyBufferToBuffer(gpu_buffers.result, 0, gpu_buffers.result_copy, 0, gpu_buffers.result.size);
-        encoder.copyBufferToBuffer(gpu_buffers.pointer, 0, gpu_buffers.pointer_copy, 0, gpu_buffers.pointer.size);
-        encoder.popDebugGroup();
+            encoder.copyBufferToBuffer(gpu_buffers.result, 0, gpu_buffers.result_copy, 0, gpu_buffers.result.size);
+            encoder.copyBufferToBuffer(gpu_buffers.pointer, 0, gpu_buffers.pointer_copy, 0, gpu_buffers.pointer.size);
+            encoder.popDebugGroup();
 
-        const commandBuffer = encoder.finish();
-        device.queue.submit([commandBuffer]);
+            const commandBuffer = encoder.finish();
+            device.queue.submit([commandBuffer]);
 
-        await gpu_buffers.pointer_copy.mapAsync(GPUMapMode.READ);
-        const pointer = new Uint32Array(gpu_buffers.pointer_copy.getMappedRange());
-        if (pointer[0] === 0) {
+            await gpu_buffers.pointer_copy.mapAsync(GPUMapMode.READ);
+            const pointer = new Uint32Array(gpu_buffers.pointer_copy.getMappedRange());
+            if (pointer[0] === 0) {
+                gpu_buffers.pointer_copy.unmap();
+                return [];
+            }
+
+            await gpu_buffers.result_copy.mapAsync(GPUMapMode.READ);
+            const count = Math.min(pointer[0], this.num_result);
+            const gpu_result = new Uint32Array(gpu_buffers.result_copy.getMappedRange(0, count * 4 * 2));
+            const raw_result: [number, number][] = [];
+            for (let i = 0; i < gpu_result.length; i += 2) {
+                raw_result.push([gpu_result[i], gpu_result[i + 1]]);
+            }
+            gpu_buffers.result_copy.unmap();
             gpu_buffers.pointer_copy.unmap();
-            return [];
-        }
 
-        await gpu_buffers.result_copy.mapAsync(GPUMapMode.READ);
-        const count = Math.min(pointer[0], this.num_result);
-        const gpu_result = new Uint32Array(gpu_buffers.result_copy.getMappedRange(0, count * 4 * 2));
-        const raw_result: [number, number][] = [];
-        for (let i = 0; i < gpu_result.length; i += 2) {
-            raw_result.push([gpu_result[i], gpu_result[i + 1]]);
+            const poses = this.mergeResults(raw_result.sort((a, b) => a[0] - b[0]));
+            return this.createSearchResult(poses, grapheme.map((x) => String.fromCharCode(x)).join(""), env);
+        } finally {
+            this.mutex.release();
         }
-        gpu_buffers.result_copy.unmap();
-        gpu_buffers.pointer_copy.unmap();
-
-        const poses = this.mergeResults(raw_result.sort((a, b) => a[0] - b[0]));
-        return this.createSearchResult(poses, grapheme.map((x) => String.fromCharCode(x)).join(""), env);
     }
 }

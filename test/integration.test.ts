@@ -613,6 +613,19 @@ describe("from: weight: search", async () => {
     );
 });
 
+describe("long query search", async () => {
+    const index = createIndex(LinearIndex, array_of_articles);
+    if(index instanceof UniSearchError) throw index;
+
+    const keyword = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    console.log(keyword.length);
+    const result1 = await search(index, keyword);
+    test("no match", () => 
+        expect(result1).toStrictEqual([])
+    );
+});
+
+
 describe("Hybrid bigram inverted index creation and search", async () => {
     const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
     if(index instanceof UniSearchError) throw index;
