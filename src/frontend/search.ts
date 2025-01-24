@@ -1,5 +1,5 @@
 import type { SearchEnv, SearchIndex, SearchResult, UniIndex } from "@src/frontend/base";
-import type { UniSearchError } from "@src/frontend/base";
+import { UniSearchError } from "@src/frontend/base";
 import type { ASTNode } from "@src/frontend/parse";
 import { expr } from "@src/frontend/parse";
 import { defaultNormalizer, splitBySpace } from "@src/util/preprocess";
@@ -8,10 +8,15 @@ export async function search<T>(
     index: UniIndex<SearchIndex<T>>,
     query: string,
 ): Promise<SearchResult[] | UniSearchError> {
-    const ast = expr([...normalizeQuery(query)]);
-    if (ast === null) return [];
-    const r = await evalQuery(index.index_entry, index.env)(ast.val);
-    return r.type === "excludes" ? [] : r.results.sort((a, b) => b.score - a.score);
+    try {
+        const ast = expr([...normalizeQuery(query)]);
+        if (ast === null) return [];
+        const r = await evalQuery(index.index_entry, index.env)(ast.val);
+        return r.type === "excludes" ? [] : r.results.sort((a, b) => b.score - a.score);
+    } catch (e) {
+        if (e instanceof UniSearchError) return e;
+        throw e;
+    }
 }
 
 export function createWithProp<T>(obj: SearchEnv, prop: string, val: T): SearchEnv {

@@ -74,7 +74,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             poses = this.allIndexOf(keyword, this.index_entry.content);
         } else {
             const grapheme = splitByGrapheme(keyword).map((x) => x.charCodeAt(0));
-            if (grapheme.length < 50) {
+            if (grapheme.length <= 32) {
                 const key = createBitapKey<number, number>(bitapKeyNumber(), grapheme);
                 const raw_result = bitapSearch(key, env.distance, this.gpu_content);
                 poses = this.mergeResults(raw_result);
