@@ -13,6 +13,15 @@ if(index instanceof UniSearchError) throw index;
 const result = await search(index, "search word");
 ```
 
+If you want to use WebGPU for searching, use GPULinearIndex instead of LinearIndex.
+
+```
+import { GPULinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
+
+const index = createIndex(GPULinearIndex, array_of_articles);
+...
+```
+
 unisearch.js provides a complete set of search functions. In addition to exact match search, it also provides a fuzzy search function. In addition, there are and, or, not, and field-specific searches, as well as the ability to specify scoring weights. Search results are sorted based on a scoring method called TF-IDF, along with strings around the match.
 
 unisearch.js is reasonably fast: an exact match search for about 100 Wikipedia articles with a total size of about 3 Mbytes takes less than 1 msec, and a fuzzy search takes less than 50 msec. By changing the indexing scheme, the search speed can be further improved and more articles can be included in the search.
@@ -21,10 +30,10 @@ unisearch.js can search for all languages that can be represented by unicode. Ge
 
 unisearch.js does not depend on any other JavaScript libraries and can be easily embedded in your site.
 
-unisearch.js can be used in conjunction with SSG generators such as next.js and astro.js to create an index at page load time and perform searches. These samples are also registered in the repository. Please feel free to use them.
+unisearch.js can be used in conjunction with SSG such as Next.js and Astro.js to create an index in advance and load the index at search start time. These samples are also registered in the repository. Please feel free to use them.
 
-- [react and next.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/react-next)
-- [astro.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/astro)
+- [React and Next.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/react-next)
+- [Astro.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/astro)
 
 
 ## Usage
@@ -50,11 +59,11 @@ export type SearchEnv = {
 };
 ```
 
-index_class specifies the algorithm to be used for full-text search by class. Usually, the LinearIndex class is specified. contents specifies an array of JavaScript objects to be searched. The search is limited to the fields of this object that are either strings or arrays of strings. If there is an array field in between up to the string field, it is not included in the search even if the field is a string. env specifies default options for indexing and searching.
+index_class specifies the algorithm to be used for full-text search by class. Usually, the LinearIndex class is specified. If you want to use WebGPU for searching, use GPULinearIndex instead of LinearIndex. contents specifies an array of JavaScript objects to be searched. The search is limited to the fields of this object that are either strings or arrays of strings. If there is an array field in between up to the string field, it is not included in the search even if the field is a string. env specifies default options for indexing and searching.
 
 The return value of the function is the index created. The return value of createIndex is UniSearchIndex | UniSearchError. If there is a problem with the specified contents or env, UniSearchError is returned. 
 
-The result of the search is obtained as an array of ids. Additional strings belonging to the search object can also be returned as search results. For example, you can set the SLUG of an article to make it easier to use the search results.
+The result of the search is obtained as an array of ids. Additional infomation belonging to the search object can also be returned as search results. For example, you can set the slug of an article to make it easier to use the search results.
 
 To include an arbitrary field in the search results, specify a key_fields field in the env argument of the createIndex function, where the key_fields field is array of the path from the root of the object to the key field as a string separated by a dot. The following is an example of specifying slug and title as key fields in the following object configuration.
 

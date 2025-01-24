@@ -15,6 +15,15 @@ if(index instanceof UniSearchError) throw index;
 const result = await search(index, "search word");
 ```
 
+検索のためにWebGPUを使う場合は、LinearIndexの代わりにGPULinearIndexを使います。
+
+```
+import { GPULinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
+
+const index = createIndex(GPULinearIndex, array_of_articles);
+...
+```
+
 unisearch.jsは検索に必要な一通りの機能を備えています。完全一致検索のほか、あいまい検索機能も備えます。さらに、and検索、or検索、not検索、フィールドを限定した検索、スコアリングのウェイト指定の機能があります。Google likeのクエリを使うことができ、直感的です。検索結果はTF-IDFというスコアリング方法を元にソートされ、一致箇所周辺の文字列とともに検索結果が得られます。
 
 unisearch.jsはそこそこ高速です。Wikipediaの記事100個ほど、総サイズ3Mbyte程度に対する完全一致検索は1msec以下で、あいまい検索は50msec以下で完了します。インデックススキームを変更することで、検索速度はさらに向上し、より多くの記事を検索対象にできます。
@@ -23,10 +32,10 @@ unisearch.jsは、unicodeで表すことのできる全ての言語を対象に�
 
 unisearch.jsは他のJavaScriptライブラリに依存していないため、あなたのサイトに簡単に埋め込むことができます。
 
-unisearch.jsをnext.jsやastro.jsなどのSSGジェネレータと組み合わせることで、ページ読み込み時にインデックスを作成し、検索を実現できます。これらのサンプルもレポジトリに登録してあります。ご利用の際はぜひご覧ください。
+unisearch.jsをNext.jsやAstro.jsなどのSSGと組み合わせることで、前もってインデックスを作成し、検索開始時にインデックスを読み込むことができます。これらのサンプルもレポジトリに登録してあります。ご利用の際はぜひご覧ください。
 
-- [react and next.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/react-next)
-- [astro.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/astro)
+- [React and Next.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/react-next)
+- [Astro.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/astro)
 
 
 ## 使い方
@@ -52,11 +61,11 @@ export type SearchEnv = {
 };
 ```
 
-index_classには全文検索で使用するアルゴリズムをクラスで指定します。通常はLinearIndexクラスを指定します。contentsは検索対象のJavaScriptオブジェクトの配列を指定します。検索対象は、このオブジェクトのうち、文字列のフィールドか、文字列の配列のフィールドに限られます。また、文字列のフィールドまでの間に配列のフィールドが挟まる場合は、そのフィールドが文字列であっても検索対象に含まれません。envはインデックス作成及び検索時のデフォルトオプションを指定します。
+index_classには全文検索で使用するアルゴリズムをクラスで指定します。通常はLinearIndexクラスを指定します。WebGPUを使用する場合は、GPULinearIndexクラスを指定します。contentsは検索対象のJavaScriptオブジェクトの配列を指定します。検索対象は、このオブジェクトのうち、文字列のフィールドか、文字列の配列のフィールドに限られます。また、文字列のフィールドまでの間に配列のフィールドが挟まる場合は、そのフィールドが文字列であっても検索対象に含まれません。envはインデックス作成及び検索時のデフォルトオプションを指定します。
 
 関数の戻り値は作成されたインデックスです。createIndexの戻り値はUniSearchIndex | UniSearchErrorとなります。指定されたcontentsやenvに問題がある場合は、UniSearchErrorを返します。
 
-検索を行った結果は、配列のインデックスとして得られます。追加で、その検索オブジェクトに属する文字列を検索結果として返すこともできます。例えば記事のslugなどを設定することで、検索結果の利用をより容易にできます。
+検索を行った結果は、配列のインデックスとして得られます。追加で、その検索オブジェクトに属する情報を検索結果として返すこともできます。例えば記事のslugなどを設定することで、検索結果の利用をより容易にできます。
 
 検索結果に任意のフィールドを含めるには、createIndex関数のenv引数に、key_fieldsフィールドを指定します。key_fieldsフィールドには、オブジェクトのルートからkeyフィールドへ向かうパスをドットで区切った文字列の配列として指定します。以下のようなオブジェクト構成でslugとtitleをkeyに指定する例を示します。
 
