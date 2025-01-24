@@ -21,7 +21,9 @@ const result = await search(index, "search word");
 import { GPULinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
 
 const index = createIndex(GPULinearIndex, array_of_articles);
-...
+
+if(index instanceof UniSearchError) throw index;
+const result = await search(index, "search word");
 ```
 
 unisearch.jsは検索に必要な一通りの機能を備えています。完全一致検索のほか、あいまい検索機能も備えます。さらに、and検索、or検索、not検索、フィールドを限定した検索、スコアリングのウェイト指定の機能があります。Google likeのクエリを使うことができ、直感的です。検索結果はTF-IDFというスコアリング方法を元にソートされ、一致箇所周辺の文字列とともに検索結果が得られます。
@@ -32,7 +34,7 @@ unisearch.jsは、unicodeで表すことのできる全ての言語を対象に�
 
 unisearch.jsは他のJavaScriptライブラリに依存していないため、あなたのサイトに簡単に埋め込むことができます。
 
-unisearch.jsをNext.jsやAstro.jsなどのSSGと組み合わせることで、前もってインデックスを作成し、検索開始時にインデックスを読み込むことができます。これらのサンプルもレポジトリに登録してあります。ご利用の際はぜひご覧ください。
+unisearch.jsをNext.jsやAstro.jsなどのSSG(静的サイトジェネレータ、Static Site Generator)と組み合わせることで、前もってインデックスを作成し、検索開始時にインデックスを読み込むことができます。これらのサンプルもレポジトリに登録してあります。ご利用の際はぜひご覧ください。
 
 - [React and Next.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/react-next)
 - [Astro.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/astro)
@@ -61,7 +63,7 @@ export type SearchEnv = {
 };
 ```
 
-index_classには全文検索で使用するアルゴリズムをクラスで指定します。通常はLinearIndexクラスを指定します。WebGPUを使用する場合は、GPULinearIndexクラスを指定します。contentsは検索対象のJavaScriptオブジェクトの配列を指定します。検索対象は、このオブジェクトのうち、文字列のフィールドか、文字列の配列のフィールドに限られます。また、文字列のフィールドまでの間に配列のフィールドが挟まる場合は、そのフィールドが文字列であっても検索対象に含まれません。envはインデックス作成及び検索時のデフォルトオプションを指定します。
+index_classには全文検索で使用するアルゴリズムをクラスで指定します。通常はLinearIndexクラスを指定します。WebGPUを使用する場合は、GPULinearIndexクラスを指定します。これらのインデックスを使ってなお遅い場合は、HybridBigramInvertedIndexを指定してください。contentsは検索対象のJavaScriptオブジェクトの配列を指定します。検索対象は、このオブジェクトのうち、文字列のフィールドか、文字列の配列のフィールドに限られます。また、文字列のフィールドまでの間に配列のフィールドが挟まる場合は、そのフィールドが文字列であっても検索対象に含まれません。envはインデックス作成及び検索時のデフォルトオプションを指定します。
 
 関数の戻り値は作成されたインデックスです。createIndexの戻り値はUniSearchIndex | UniSearchErrorとなります。指定されたcontentsやenvに問題がある場合は、UniSearchErrorを返します。
 
@@ -100,7 +102,7 @@ const index = createIndex(LinearIndex, array_of_articles, {search_targets: ['dat
 
 インデックスの作成を事前に作成して、ページ読み込み時の処理量を削減することもできます。静的サイトジェネレータ(SSG)を用いる場合、デプロイ時にインデックスを作成し、jsonファイルとして配置することで、クライアント側からfetchを利用したインデックスの読み込みが可能になります。htmlファイルへのバンドルサイズが削減でき、検索を実行しない場合の読み込み時間を短縮てきます。
 
-インデックスをJavaScriptオブジェクトに変換するには、indexToObject関数を使います。
+インデックスをJavaScriptオブジェクトに変換するには、indexToObject関数を使います。この関数は、SSGを利用する際にデプロイ時にインデックスを静的に作成し、そのインデックスをJSONファイルとして公開する際に利用します。
 
 ```
 export function indexToObject(index: UniSearchIndex): UniSearchIndexObject
@@ -114,7 +116,8 @@ if(index instanceof UniSearchError) throw index;
 const json = JSON.stringify(indexToObject(index));
 ```
 
-また、JavaScriptオブジェクトからindexを再構築するにはcreateIndexFromObject関数を使います。
+また、indexToObject関数で作成したJavaScriptオブジェクトからindexを再構築するにはcreateIndexFromObject関数を使います。
+SSGを用いる場合、indexToObject関数を用いて作成したJSONファイルをクライアント側からfetchで読み込むことで、インデックスを再構築できます。
 
 ```
 export function createIndexFromObject(index: UniSearchIndexObject): UniSearchIndex | UniSearchError;
@@ -245,7 +248,7 @@ HybridBigramInvertedIndexを使うことにより、おおよそ10-100倍の検�
 4. 検索結果の情報の一部が欠けます。posとwordaroundが存在しなくなります。
 5. TF-IDFに基づくスコアリングが未完成です。今は単純なTFのみ計算しています。
 
-総合的に見て、HybridBigramInvertedIndexを使う価値はあまりありません。どうしても高速な検索が必要な場合のみ利用を検討してください。
+これらの欠点はありますが、検索は非常に高速になり、どのようなデバイス・検索対象でもユーザーを待たせることがありません。ユーザー体験を重視する場合はこちらをご利用ください。
 
 ## ベンチマーク
 
@@ -318,7 +321,7 @@ LinearIndexを使う場合、完全一致検索アルゴリズムは非常に単
 ### GPULinearIndex
 
 GPULinearIndexでは、完全一致検索はLinearIndexと全く同じアルゴリズムを使います。また、あいまい検索文字列が32文字を超える場合もLinearIndexと同じアルゴリズムを使います。
-あいまい検索は、bitapアルゴリズムをGPUで実現しています。インデックス中の全ての文字位置ごとに検索用のスレッドを生成し、その中で検索文字列長だけbitapアルゴリズムに基づく一致検索を行います。
+あいまい検索は、bitapアルゴリズムをGPUで実現しています。インデックス中の全ての文字位置ごとに検索用のスレッドを生成し、その中で検索文字列長だけbitapアルゴリズムに基づく一致検索を行います。バックエンドはWebGPUを利用しており、bitapアルゴリズムはwgslで実現しています。
 
 ### HybridBigramInvertedIndex
 
