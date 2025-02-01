@@ -82,16 +82,17 @@ const search_function = generateSearchFunction();
 
 text?.addEventListener('input', async () =>
 {
+	const start = performance.now();
 	result.innerText = "";
 	if(text.value) {
 		const search_results = await search_function(text.value);
 
-		console.log(search_results);
 		if(search_results && search_results.length !== 0) {
 			generateResultHTMLElement(search_results).map((e) => result.appendChild(e));
 		} else {
 			result.innerText = "not found";
 		}
+		console.log(`search time: ${performance.now() - start}ms`);
 	}
 });
 </script>

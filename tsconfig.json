@@ -34,5 +34,5 @@
         }
     },
     "include": ["src", "ref", "app", "test"],
-    "exclude": ["dist"]
+    "exclude": ["dist", "example"]
 }
