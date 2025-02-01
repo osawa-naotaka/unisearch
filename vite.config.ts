@@ -15,7 +15,7 @@ export default defineConfig({
   },
   plugins: [
     wasm(),
-    tsConfigPaths(),
+    tsConfigPaths({ projects: ['.'] }),
     dts({ tsconfigPath: './tsconfig.app.json', rollupTypes: true })
   ],
 });

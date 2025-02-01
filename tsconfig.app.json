@@ -31,5 +31,5 @@
         }
     },
     "include": ["src"],
-    "exclude": ["dist", "app", "test", "ref"]
+    "exclude": ["dist", "app", "test", "ref", "example"]
 }
