@@ -1,7 +1,7 @@
 import type { WikipediaArticle } from "@ref/bench/benchmark_common";
 import { calculateGzipedJsonSize, calculateJsonSize } from "@ref/util";
-import { createIndex, search, indexToObject, createIndexFromObject, UniSearchError, LinearIndex, GPULinearIndex, HybridBigramInvertedIndex } from "dist/unisearch";
-import type { IndexClass } from "dist/unisearch";
+import { createIndex, search, indexToObject, createIndexFromObject, UniSearchError, LinearIndex, GPULinearIndex, HybridBigramInvertedIndex } from "@dist/unisearch";
+import type { IndexClass } from "@dist/unisearch";
 export type BenchmarkResult = {
     type: string;
     indexing_time: number;
