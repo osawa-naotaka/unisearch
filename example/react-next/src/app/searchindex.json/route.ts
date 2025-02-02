@@ -5,6 +5,13 @@ import type { IndexClass } from "unisearch.js";
 export const dynamic = "force-static";
 export const revalidate = false;
 
+export type SearchKey = {
+    slug: string;
+    data: {
+      title: string;
+    }
+};
+
 export async function GET(request: Request) {
     const allPosts = await getAllPosts();
     const index_class: IndexClass = GPULinearIndex;

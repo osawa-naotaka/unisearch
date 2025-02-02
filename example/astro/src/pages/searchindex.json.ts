@@ -2,6 +2,13 @@ import { getCollection } from "astro:content";
 import { GPULinearIndex, UniSearchError, createIndex, indexToObject } from "unisearch.js";
 import type { IndexClass } from "unisearch.js";
 
+export type SearchKey = {
+    id: string;
+    data: {
+      title: string;
+    }
+};
+
 export async function GET() {
     const posts = await getCollection("posts");
     const index_class: IndexClass = GPULinearIndex;

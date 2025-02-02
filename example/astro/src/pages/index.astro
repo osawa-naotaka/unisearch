@@ -15,8 +15,9 @@ import Html from "../layout/html.astro";
 <script>
 import { createIndexFromObject, search, UniSearchError } from "unisearch.js";
 import type { SearchResult, UniSearchIndex } from "unisearch.js";
+import type { SearchKey } from "./searchindex.json.ts";
 
-function generateSearchFunction() {
+function generateSearchFunction(result_element: HTMLElement) {
 	const STATE = {
 		NOT_INITIALIZED: 0,
 		FETCHING: 1,
@@ -27,14 +28,16 @@ function generateSearchFunction() {
 	let state : number = STATE.NOT_INITIALIZED;
 	let index: UniSearchIndex;
 
-	return async (search_text: string) : Promise<SearchResult[]> => {
+	return async (search_text: string) : Promise<SearchResult[] | null> => {
 		if(state !== STATE.INITIALIZED) {
-			if(state === STATE.FETCHING) return [];
+			if(state === STATE.FETCHING) return null;
 			state = STATE.FETCHING;
+			result_element.innerText = "loading search index...";
 			const response = await fetch("/searchindex.json");
 			const unisearch_index = createIndexFromObject(await response.json());
 			if(unisearch_index instanceof UniSearchError) throw unisearch_index;
 			index = unisearch_index;
+			result_element.innerText = "";
 			state = STATE.INITIALIZED;
 		}
 
@@ -49,17 +52,16 @@ function generateSearchFunction() {
 
 function generateResultHTMLElement(search_results: SearchResult[]): HTMLLIElement[] {
 	const result = search_results.map(sr => {
-		const post = sr.key;
-		const title = post["data.title"] as string;
-		const slug = post["id"] as string;
+		const post = sr.key as SearchKey;	// ad-hock solution. you might as well use zod or something like that to validate the key.
+		if(!post.data.title || !post.id) throw new Error("title or id is not found in the search result.");
 
 		const li = document.createElement("li");
 
 		const h3 = document.createElement("h3");
-		h3.appendChild(document.createTextNode(title));
+		h3.appendChild(document.createTextNode(post.data.title));
 
 		const a = document.createElement("a");
-		a.setAttribute("href", `/posts/${slug}`);
+		a.setAttribute("href", `/posts/${post.id}`);
 		a.appendChild(h3);
 
 		const p = document.createElement("p");
@@ -78,18 +80,18 @@ const text   = document.querySelector<HTMLInputElement>('.search');
 const result = document.querySelector<HTMLElement>('.search-result');
 if(!text || !result) throw new Error("text or result is not found");
 
-const search_function = generateSearchFunction();
+const search_function = generateSearchFunction(result);
 
 text?.addEventListener('input', async () =>
 {
 	const start = performance.now();
-	result.innerText = "";
 	if(text.value) {
 		const search_results = await search_function(text.value);
 
 		if(search_results && search_results.length !== 0) {
+			result.innerText = "";
 			generateResultHTMLElement(search_results).map((e) => result.appendChild(e));
-		} else {
+		} else if(search_results !== null) {
 			result.innerText = "not found";
 		}
 		console.log(`search time: ${performance.now() - start}ms`);
