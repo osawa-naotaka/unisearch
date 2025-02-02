@@ -38,7 +38,7 @@ export type Reference = {
 
 export type SearchResult = {
     id: number;
-    key: Record<Path, unknown>;
+    key: Record<string, unknown>;
     score: number;
     refs: Reference[];
 };
@@ -47,7 +47,7 @@ export type SearchResult = {
 export interface SearchIndex<T> {
     index_entry: T;
     setToIndex(id: number, path: Path, str: string): void;
-    addKey(id: number, key: Record<Path, unknown>): void;
+    addKey(id: number, key: Record<string, unknown>): void;
     fixIndex(): void;
     search(env: SearchEnv, keyword: string): Promise<SearchResult[]>;
 }

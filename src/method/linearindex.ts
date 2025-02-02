@@ -18,7 +18,7 @@ type ContentRange = {
 };
 
 export type LinearIndexEntry = {
-    key: Record<Path, unknown>[];
+    key: Record<string, unknown>[];
     content: string;
     content_length: number;
     num_id: number;
@@ -131,7 +131,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             const size = cref.end - cref.start + 1;
             const r = result.get(cref.id) || {
                 id: cref.id,
-                key: this.index_entry.key[cref.id],
+                key: this.index_entry.key[cref.id] || {},
                 score: 0,
                 refs: [],
             };

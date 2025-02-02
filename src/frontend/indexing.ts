@@ -2,7 +2,7 @@ import type { SearchEnv, SearchIndex, UniIndex } from "@src/frontend/base";
 import { type Path, UniSearchError, Version } from "@src/frontend/base";
 import { IndexTypes } from "@src/frontend/indextypes";
 import { defaultNormalizer } from "@src/util/preprocess";
-import { extractStringsAll, getValueByPath } from "@src/util/traverser";
+import { extractStringsAll, getValueByPath, setObject } from "@src/util/traverser";
 
 // biome-ignore lint: using any. fix it.
 export type IndexClass = new (index?: any) => SearchIndex<any>;
@@ -43,10 +43,10 @@ export function createIndex<T>(
 
             // register key entry
             if (env.key_fields && env.key_fields.length !== 0) {
-                const key: Record<Path, unknown> = {};
+                const key: Record<string, unknown> = {};
                 for (const path of env.key_fields) {
                     const obj = getValueByPath(path, content);
-                    key[path] = obj;
+                    setObject(key, path, obj);
                 }
                 search_index.addKey(id, key);
             }

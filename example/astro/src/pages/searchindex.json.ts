@@ -1,9 +1,18 @@
 import { getCollection } from "astro:content";
 import { GPULinearIndex, UniSearchError, createIndex, indexToObject } from "unisearch.js";
+import type { IndexClass } from "unisearch.js";
+
+export type SearchKey = {
+    id: string;
+    data: {
+      title: string;
+    }
+};
 
 export async function GET() {
     const posts = await getCollection("posts");
-    const linear_index = createIndex(GPULinearIndex, posts, {
+    const index_class: IndexClass = GPULinearIndex;
+    const linear_index = createIndex(index_class, posts, {
         search_targets: ["body", "data.title"],
         key_fields: ["data.title", "id"],
     });

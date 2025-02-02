@@ -7,7 +7,7 @@ type Id = number;
 type TF = number;
 type PostingList = [Id, TF][];
 type Dictionary = [Term, PostingList][];
-export type InvertedIndexEntry = { key: Record<Path, unknown>[]; index: Record<Path, Dictionary> };
+export type InvertedIndexEntry = { key: Record<string, unknown>[]; index: Record<Path, Dictionary> };
 
 type TemporalPostingList = Map<Id, TF>;
 type TemporalDictionary = Map<Term, TemporalPostingList>;
@@ -81,7 +81,7 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
 
             for (const [term, plist, distance] of res) {
                 for (const [id, tf] of plist) {
-                    const r = results.get(id) || { id: id, key: this.index_entry.key[id], score: 0, refs: [] };
+                    const r = results.get(id) || { id: id, key: this.index_entry.key[id] || {}, score: 0, refs: [] };
                     r.refs.push({ token: term, path: path, distance: distance });
                     r.score += tf;
                     results.set(id, r);

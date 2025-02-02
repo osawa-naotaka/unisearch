@@ -30,7 +30,8 @@
             "@src/*": ["src/*"],
             "@app/*": ["app/*"],
             "@ref/*": ["ref/*"],
-            "@test/*": ["test/*"]
+            "@test/*": ["test/*"],
+            "@dist/*": ["dist/*"]
         }
     },
     "include": ["src", "ref", "app", "test"],
