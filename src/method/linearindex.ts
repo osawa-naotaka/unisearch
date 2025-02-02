@@ -18,7 +18,7 @@ type ContentRange = {
 };
 
 export type LinearIndexEntry = {
-    key: Record<Path, unknown>[];
+    key: Record<string, unknown>[];
     content: string;
     content_length: number;
     num_id: number;

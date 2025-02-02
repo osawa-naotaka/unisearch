@@ -7,7 +7,7 @@ type Id = number;
 type TF = number;
 type PostingList = [Id, TF][];
 type Dictionary = [Term, PostingList][];
-export type InvertedIndexEntry = { key: Record<Path, unknown>[]; index: Record<Path, Dictionary> };
+export type InvertedIndexEntry = { key: Record<string, unknown>[]; index: Record<Path, Dictionary> };
 
 type TemporalPostingList = Map<Id, TF>;
 type TemporalDictionary = Map<Term, TemporalPostingList>;
