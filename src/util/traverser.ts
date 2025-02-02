@@ -36,3 +36,20 @@ export function extractStringsAll(path: Path, obj: unknown): [Path, string][] {
     }
     return [];
 }
+
+export function setObject(obj: Record<string, unknown>, path: string, value: unknown): void {
+    const keys = path.split(".");
+    let current: Record<string, unknown> = obj;
+
+    for (let i = 0; i < keys.length - 1; i++) {
+        const key = keys[i];
+
+        if (!(key in current) || typeof current[key] !== "object" || current[key] === null) {
+            current[key] = {};
+        }
+
+        current = current[key] as Record<string, unknown>;
+    }
+
+    current[keys[keys.length - 1]] = value;
+}

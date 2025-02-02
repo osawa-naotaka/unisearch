@@ -172,7 +172,7 @@ describe("index with key_field", async () => {
         expect(result1).toStrictEqual([
             {
                 id: 2,
-                key: { slug: "typescript-guide", "data.title": "TypeScript Guide" },
+                key: { slug: "typescript-guide", "data": {"title": "TypeScript Guide" }},
                 score: 0.13830942998767318,
                 refs: [
                     {
