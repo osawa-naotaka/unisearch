@@ -1,63 +1,118 @@
-[english README.md](https://github.com/osawa-naotaka/unisearch/blob/main/README.en.md)
+[README.md in Japanese](https://github.com/osawa-naotaka/unisearch/blob/main/README.ja.md)
 
-# unisearch.js: 軽量でそこそこ速い、静的サイトのための全文検索エンジン
-## 概要
-unisearch.jsは静的サイト向けに作られた、完全クライアントサイドの全文検索エンジンです。任意のJavaScriptオブジェクト配列内にある文字列および文字列の配列を検索することができます。検索対象の記事をJavaScriptオブジェクト化することで、サーバーサイドの実装なしに全文検索機能を静的サイト上で実現することができます。
+# unisearch.js: A Lightweight, Fast Full-text Search Engine for Static Sites
 
-unisearch.jsは非常に簡単に使用することができます。検索のために必要なコードを以下に示します。コードはほんのわずかしか必要ありません。
+## Overview
+unisearch.js is a client-side full-text search engine designed specifically for static websites. It enables searching through arrays of JavaScript objects containing strings or string arrays. By converting your articles into JavaScript objects, you can implement full-text search functionality on static sites without any server-side implementation.
 
-```
+## Key Features
+- Simple and intuitive API
+- Support for fuzzy search with customizable edit distance
+- Advanced search operations (AND, OR, NOT)
+- Field-specific search capabilities
+- TF-IDF based scoring with customizable weights
+- Google-like query syntax
+- Unicode support for all languages including CJK characters and emojis
+- Multiple index implementations for different performance needs
+- Zero dependencies
+- Seamless integration with popular Static Site Generators (SSG)
+
+## Quick Start
+
+```javascript
 import { LinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
 
+// Create an index
 const index = createIndex(LinearIndex, array_of_articles);
-
 if(index instanceof UniSearchError) throw index;
+
+// Perform a search
 const result = await search(index, "search word");
 ```
 
-検索のためにWebGPUを使う場合は、LinearIndexの代わりにGPULinearIndexを使います。
+For WebGPU-accelerated searching:
 
-```
+```javascript
 import { GPULinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
 
 const index = createIndex(GPULinearIndex, array_of_articles);
-
 if(index instanceof UniSearchError) throw index;
+
 const result = await search(index, "search word");
 ```
 
-unisearch.jsは検索に必要な一通りの機能を備えています。完全一致検索のほか、あいまい検索機能も備えます。さらに、and検索、or検索、not検索、フィールドを限定した検索、スコアリングのウェイト指定の機能があります。Google likeのクエリを使うことができ、直感的です。検索結果はTF-IDFというスコアリング方法を元にソートされ、一致箇所周辺の文字列とともに検索結果が得られます。
+## Search Features
 
-unisearch.jsはそこそこ高速です。Wikipediaの記事100個ほど、総サイズ3Mbyte程度に対する完全一致検索は1msec以下で、あいまい検索は50msec以下で完了します。インデックススキームを変更することで、検索速度はさらに向上し、より多くの記事を検索対象にできます。
+### Query Syntax
+- **Fuzzy Search**: Default behavior with configurable edit distance
+  - `distance:2 searchterm` - allows 2 character edits
+- **Exact Match**: `"exact phrase"`
+- **AND Search**: `term1 term2`
+- **OR Search**: `term1 OR term2`
+- **NOT Search**: `-term1 term2`
+- **Field-Specific**: `from:title searchterm`
+- **Custom Weights**: `from:title weight:2.5 searchterm`
 
-unisearch.jsは、unicodeで表すことのできる全ての言語を対象に検索できます。一般的な正規化や日本語特有の正規化、グラフェム単位の検索により、漢字の異字体や絵文字に対しても正しく検索できます。
+### Index Types
 
-unisearch.jsは他のJavaScriptライブラリに依存していないため、あなたのサイトに簡単に埋め込むことができます。
+1. **LinearIndex** (Default)
+   - Best for small to medium-sized content
+   - Simple and reliable
+   - Good balance of performance and accuracy
 
-unisearch.jsをNext.jsやAstro.jsなどのSSG(静的サイトジェネレータ、Static Site Generator)と組み合わせることで、前もってインデックスを作成し、検索開始時にインデックスを読み込むことができます。これらのサンプルもレポジトリに登録してあります。ご利用の際はぜひご覧ください。
+2. **GPULinearIndex**
+   - WebGPU-accelerated fuzzy search
+   - ~2x faster for larger datasets
+   - Gracefully falls back to LinearIndex when WebGPU is unavailable
 
+3. **HybridBigramInvertedIndex**
+   - 10-100x faster search performance
+   - Ideal for larger datasets
+   - Trade-offs:
+     - Slower index generation
+     - Higher false positive rate
+     - Less precise fuzzy search for CJK languages
+     - Limited result metadata
+
+## Performance
+
+Search performance for a 3MB dataset (approximately 100 articles):
+
+- Exact Match: < 1ms
+- Fuzzy Search: < 50ms
+- Index Generation: ~500ms, or ~5sec for optimized index
+
+For detailed benchmarks across different hardware configurations and index types, see the Benchmarks section below.
+
+## Integration with Static Site Generators
+
+Example implementations are available for:
 - [React and Next.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/react-next)
 - [Astro.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/astro)
 
+## Limitations
 
-## 使い方
+- Index size roughly equals total text size
+- WebGPU acceleration requires compatible hardware/browser
+- Limited support for very large datasets (>10MB)
 
-unisearch.jsは、インデックスの作成と、インデックスを用いた検索、の2ステップをふむことで検索を実現します。インデックス作成はページ読み込み時に1回だけ行い、検索のたびにインデックスを使い回します。
+## Creating Search Indices
 
-### インデックスの作成
-インデックスを作成する関数の型を以下に示します。
+unisearch.js operates in two phases: index creation and search execution. The index is created once when the page loads and is reused for all subsequent searches.
 
-```
-export type Path = string;
-export type FieldName = string;
+### Basic Index Creation
 
-export function createIndex(
+```typescript
+type Path = string;
+type FieldName = string;
+
+function createIndex(
     index_class: IndexClass,
     contents: unknown[],
     env: SearchEnv = {},
 ): UniSearchIndex | UniSearchError;
 
-export type SearchEnv = {
+type SearchEnv = {
     field_names?: Record<FieldName, Path>;
     key_fields?: Path[];
     search_targets?: Path[];
@@ -66,16 +121,32 @@ export type SearchEnv = {
 };
 ```
 
-index_classには全文検索で使用するアルゴリズムをクラスで指定します。通常はLinearIndexクラスを指定します。WebGPUを使用する場合は、GPULinearIndexクラスを指定します。これらのインデックスを使ってなお遅い場合は、HybridBigramInvertedIndexを指定してください。contentsは検索対象のJavaScriptオブジェクトの配列を指定します。検索対象は、このオブジェクトのうち、文字列のフィールドか、文字列の配列のフィールドに限られます。また、文字列のフィールドまでの間に配列のフィールドが挟まる場合は、そのフィールドが文字列であっても検索対象に含まれません。envはインデックス作成及び検索時のデフォルトオプションを指定します。
+#### Parameters
 
-関数の戻り値は作成されたインデックスです。createIndexの戻り値はUniSearchIndex | UniSearchErrorとなります。指定されたcontentsやenvに問題がある場合は、UniSearchErrorを返します。
+- `index_class`: Specifies the search algorithm implementation
+  - `LinearIndex`: Standard implementation (default choice)
+  - `GPULinearIndex`: WebGPU-accelerated implementation
+  - `HybridBigramInvertedIndex`: High-performance implementation for larger datasets
 
-検索を行った結果は、配列のインデックスとして得られます。追加で、その検索オブジェクトに属する情報を検索結果として返すこともできます。例えば記事のslugなどを設定することで、検索結果の利用をより容易にできます。
+- `contents`: Array of JavaScript objects to be indexed
+  - Supports string fields and string array fields
+  - Nested arrays containing strings are excluded from search
+  
+- `env`: Configuration options for indexing and searching (optional)
+  - `field_names`: Custom field mapping for search queries (e.g., `{ link: "slug" }`)
+  - `key_fields`: Fields to include in search results
+  - `search_targets`: Fields to index for searching
+  - `weight`: Default weight for scoring
+  - `distance`: Default edit distance for fuzzy search
 
-検索結果に任意のフィールドを含めるには、createIndex関数のenv引数に、key_fieldsフィールドを指定します。key_fieldsフィールドには、オブジェクトのルートからkeyフィールドへ向かうパスをドットで区切った文字列の配列として指定します。以下のようなオブジェクト構成でslugとtitleをkeyに指定する例を示します。
+The function returns either a `UniSearchIndex` object or `UniSearchError` if validation fails.
 
-```
-export const array_of_articles = [
+### Configuring Search Results
+
+When creating an index, you can specify which fields should be included in search results. Here's an example data structure:
+
+```javascript
+const array_of_articles = [
     {
       slug: "introduction-to-js",
       content: "JavaScript is a versatile programming language widely used for web development. It enables interactive features on websites, such as dynamic updates, animations, and form validation. JavaScript is essential for creating modern web applications and supports various frameworks like React and Vue.js.",
@@ -85,115 +156,137 @@ export const array_of_articles = [
         tags: ["javascript", "web", "programming"]
       }
     },
-    ...
+    // ...
 ];
 ```
 
-```
-const index = createIndex(LinearIndex, array_of_articles, {key_fields: ['slug', 'data.title']});
-```
+To include specific fields in search results, use the `key_fields` option:
 
-インデックスには、標準で与えられたオブジェクトのテキストフィールド全てをそのまま含みます。そのため、インデックスサイズは検索対象の文章の総サイズにおおむね等しくなります。httpプロトコルではgzip圧縮がなされると思いますが、それでも10Mbyteを超えるような総文章量の場合は、Local Storageを利用してインデックスを保存するなどの工夫が必要となるでしょう。インデックスをjsonファイルとして分離し、検索時に動的にfetchするなどの工夫も必要となります。
-
-また、前述のように、インデックスには全ての文章が含まれるため、本名や住所などのセンシティブな情報を検索対象に含めることは十分に注意してください。
-
-インデックスに含めるフィールドを限定することもできます。指定はenv引数のsearch_targetsフィールドに配列として指定してください。
-
-```
-const index = createIndex(LinearIndex, array_of_articles, {search_targets: ['data.title','data.description','data.tags']});
+```javascript
+const index = createIndex(LinearIndex, array_of_articles, {
+    key_fields: ['slug', 'data.title']
+});
 ```
 
-インデックスの作成を事前に作成して、ページ読み込み時の処理量を削減することもできます。静的サイトジェネレータ(SSG)を用いる場合、デプロイ時にインデックスを作成し、jsonファイルとして配置することで、クライアント側からfetchを利用したインデックスの読み込みが可能になります。htmlファイルへのバンドルサイズが削減でき、検索を実行しない場合の読み込み時間を短縮てきます。
+### Controlling Index Size
 
-インデックスをJavaScriptオブジェクトに変換するには、indexToObject関数を使います。この関数は、SSGを利用する際にデプロイ時にインデックスを静的に作成し、そのインデックスをJSONファイルとして公開する際に利用します。
+#### Field Selection
+You can limit which fields are indexed using the `search_targets` option:
 
-```
-export function indexToObject(index: UniSearchIndex): UniSearchIndexObject
+```javascript
+const index = createIndex(LinearIndex, array_of_articles, {
+    search_targets: ['data.title', 'data.description', 'data.tags']
+});
 ```
 
-```
+#### Storage Considerations
+- Index size approximately equals the total text size
+- HTTP compression (gzip) helps reduce transfer size
+- For indices > 1MB, consider:
+  - Using Local Storage
+  - Dynamic loading via fetch
+
+### Static Site Generator Integration
+
+For static sites, you can pre-generate indices during build time to optimize page load performance:
+
+1. Convert index to a serializable object:
+```javascript
+function indexToObject(index: UniSearchIndex): UniSearchIndexObject
+
 const index = createIndex(LinearIndex, array_of_articles);
-
 if(index instanceof UniSearchError) throw index;
-
 const json = JSON.stringify(indexToObject(index));
 ```
 
-また、indexToObject関数で作成したJavaScriptオブジェクトからindexを再構築するにはcreateIndexFromObject関数を使います。
-SSGを用いる場合、indexToObject関数を用いて作成したJSONファイルをクライアント側からfetchで読み込むことで、インデックスを再構築できます。
+2. Load and reconstruct index on the client:
+```javascript
+function createIndexFromObject(index: UniSearchIndexObject): UniSearchIndex | UniSearchError;
 
-```
-export function createIndexFromObject(index: UniSearchIndexObject): UniSearchIndex | UniSearchError;
-```
-
-```
 const resp = await fetch(index_url);
 const re_index = createIndexFromObject(resp.json());
-
 if(re_index instanceof UniSearchError) throw re_index;
-
 const result = await search(re_index, "search word");
 ```
 
-インデックスのヴァージョンが一致しない場合、エラーが発生します。その場合はunisearch.jsのヴァージョンを合わせてインデックスを再生成してください。
+## Performing Searches
 
-インデックスの生成には多少時間がかかります。100記事程度、全文で3MByte程度の場合、500msec程度かかります。
+Once an index is created, you can perform multiple searches using the same index:
 
-### インデックスを用いた検索
-インデックスを作成したあとは、同じインデックスを使って何度も検索を実行できます。
-
-```
-export async function search(index: UniSearchIndex, query: string): Promise<SearchResult[] | UniSearchError>
+```typescript
+async function search(index: UniSearchIndex, query: string): Promise<SearchResult[] | UniSearchError>
 ```
 
-クエリは文字列としてインデックスとともにsearch関数に与えます。クエリの書式はおおむねGoogle検索の書式に類似しています。
+### Query Syntax
 
-- あいまい検索
+#### Fuzzy Search
+By default, unisearch.js performs fuzzy search with an edit distance of 1,
+meaning it tolerates one character error per search term. You can adjust this tolerance in two ways:
 
-unisearch.jsは標準であいまい検索を行います。あいまい検索では、デフォルトで1文字の間違い(編集距離)まで許容します。間違いの文字数を増やすには、「distance:2 検索文字列」のように、検索文字列の前に許容する間違いの数を正の整数で与えます。distanceとコロンと整数の間にはスペースをあけず、整数と検索文字列をあとはスペースをあけます。以下、検索文字列にオプションを指定する場合は同様のフォーマットを使います。
-
-毎回設定するのではなく、一律で編集距離を設定するには、インデックス作成時にenv引数のdistanceフィールドに指定する編集距離を設定します。また、編集距離を0にすることで、あいまい検索を無効化できます。
-
+For individual searches, specify the edit distance in the query:
 ```
-const index = createIndex(LinearIndex, array_of_articles, {distance: 2});
-```
-
-- 完全一致検索
-
-完全一致検索を行うには、「"検索文字列"」のように、検索文字列をダブルクォーテーションで囲います。ダブルクォーテーションの中にスペースを含めた場合、そのスペース込みで完全一致検索を行います。ダブルクォーテーションの中はエスケープシーケンスに対応し、ダブルクォーテーション自体を検索文字列に加えるには「\"」と入力します。
-
-- and検索
-
-「検索文字列1 検索文字列2」のように、検索文字列を空白で区切ることにより、両方の文字列を含む文章を検索します。空白は、いわゆる全角スペース、半角スペース、タブ、改行など、unicodeにおける一通りの空白に対応します。
-
-- not検索
-
-検索ワードの前に「-検索文字列1 検索文字列2」「-"検索文字列1" 検索文字列2」のようにマイナスをつけることで、その文字列を含まない文章を検索することができます。この例では、検索文字列1を含まず、検索文字列2を含む文章が検索されます。not検索は常にand検索と一緒に使われます。not検索が単体で使われた場合には、その検索ワードは無視されます。
-
-- or検索
-
-検索文字列同士を「検索文字列1 OR 検索文字列2」のように、空白で区切られた大文字のORで区切ることにより、検索文字列1と検索文字列2のどちらか一方、または両方が含まれた文章を検索します。結合の強さはandがorより強く、例えば「検索文字列1 検索文字列2 OR 検索文字列3」は、検索文字列1とを両方含む文章、または、検索文字列3を含む文章が検索されます。
-
-
-- 検索フィールド限定
-
-インデックスした文章全てを検索対象とせず、一部のみを検索対象とすることができます。例えば、前の例でslugフィールドだけ検索対象に含めるには、「from:slug 検索文字列」と入力します。from:直後のフィールド指定は、デフォルトでフィールドへのパス文字列の最後を指します。例えば、「data.title」を指定するには、「from:title 検索文字列」と入力します。
-
-フィールド指定文字列はインデックスを作る際にカスタマイズできます。例えば、slugをfrom:linkという指定で検索できるようにするには、引数envのfield_namesに設定をします。
-
-```
-const index = createIndex(LinearIndex, array_of_articles, { field_names: { link: "slug" } });
+distance:2 searchterm    // Allows up to 2 character differences
 ```
 
-- スコアの重み変更
+Spaces between "distance:" and "2" is not allowed.
 
-例えば、「from:title weight:2.5 検索文字列」とすることで、titleフィールドで検索文字列を検索し、そのスコアを2.5倍します。weight:直後には正の整数または小数が指定できます。from:を指定しなくても動作し、その場合は指定されたキーワードに該当する文章のスコアが2.5倍されます。
-
-
-### 検索結果
-検索結果はSearchResult型の配列として得られます。
-
+To set a different default edit distance for all searches, configure it during index creation:
+```javascript
+const index = createIndex(LinearIndex, array_of_articles, {
+    distance: 2  // Set default edit distance for all searches
+});
 ```
+
+If you set the edit distance to 0, fuzzy serch is disabled and exact match is performed instead.
+
+#### Exact Match Search
+Use double quotes for exact phrase matching:
+```
+"exact phrase"    // Matches the exact phrase including spaces
+```
+Use `\"` to include double quotes in the search term.
+
+#### Boolean Operations
+- **AND Search**: Space-separated terms (both terms must match)
+  ```
+  term1 term2    // Documents containing both terms
+  ```
+
+- **OR Search**: Terms separated by OR (either term can match)
+  ```
+  term1 OR term2    // Documents containing either term
+  ```
+
+- **NOT Search**: Terms prefixed with minus (exclude documents with term)
+  ```
+  -term1 term2    // Documents with term2 but without term1
+  ```
+  Note: NOT search must be used with AND search; standalone NOT terms are ignored.
+
+#### Field-Specific Search
+Limit search to specific fields:
+```
+from:title searchterm    // Search only in title field
+```
+
+Configure custom field names during index creation:
+```javascript
+const index = createIndex(LinearIndex, array_of_articles, {
+    field_names: { link: "slug" }  // Allow "from:link" to search slug field
+});
+```
+
+#### Score Weighting
+Adjust relevance scoring for specific terms:
+```
+from:title weight:2.5 searchterm    // Increase title matches' weight by 2.5x
+```
+
+### Search Results
+
+Search results are returned as an array of `SearchResult` objects:
+
+```typescript
 export type SearchResult = {
     id: number;
     key: Record<string, unknown>;
@@ -202,16 +295,12 @@ export type SearchResult = {
 };
 ```
 
-idフィールドは、一致した文章の配列インデックスを返します。インデックス作成時の配列インデックスです。
+- **id**: The index position of the matching document in the original array.
+- **key**: An object containing the specified fields from the original document. For example, if `['slug', 'data.title']` were set as `key_fields`, the result would include `{ slug: "matching slug", data: { title: "matching title" } }`.
+- **score**: A TF-IDF-based relevance score, where higher scores indicate stronger matches. Scores decrease proportionally to edit distance in fuzzy searches.
+- **refs**: An array of `Reference` objects containing details on the match locations.
 
-keyフィールドは、インデックス作成時に指定したフィールドが設定されたオブジェクトが格納されます。
-例えば、インデックス作成時に["slug", "data.title"]をkey_filedsとして指定した場合、keyは{ slug: "検索結果のスラッグ", data: { title: "検索結果のタイトル" } }のような構造のオブジェクトになります。
-
-scoreはTF-IDFに基づいた値が設定されます。検索ワード個々のTF-IDFの合算値になり、編集距離が増えるごとに1/xで減じられていきます。
-
-refsフィールドは、検索で一致した箇所の情報の配列が設定されます。
-
-```
+```typescript
 export type Reference = {
     token: string;
     path: Path;
@@ -221,48 +310,64 @@ export type Reference = {
 };
 ```
 
-tokenにはクエリ中の個々の検索文字列が設定されます。pathはどのフィールドから検索ワードが見つかったかをフィールドへのパスで示します。posは一致した箇所への、文章の先頭からの文字数です。あいまい検索時は、挿入や削除などの状態により少しposの位置がずれます。wordaroundは、一致した箇所の前後の文字が指定されます。distanceは、あいまい検索にて一致した場合の編集距離が指定されます。
+- **token**: The specific search term that matched.
+- **path**: The field where the match was found.
+- **pos**: The position of the match within the text (character index from the beginning of the field). For fuzzy matches, slight shifts may occur due to insertions/deletions.
+- **wordaround**: A snippet of text surrounding the match for better context.
+- **distance**: The edit distance for fuzzy search matches.
 
-## 高速検索用インデックスの作成
+### Important Notes
 
-静的サイトに使われる前提の、ほとんどのユースケースにおいて、前述のLinearIndexに基づく全文検索で十分なパフォーマンスが達成できます。
-しかし、もしもっと高速な検索を必要とする場合、違うインデックス形式を使うことにより、検索の高速化が達成できます。
+- **Version Compatibility**: Ensure matching unisearch.js versions between index generation and usage
+- **Performance**: Index generation takes ~500ms for 100 articles (~3MB of text)
+- **Security**: Avoid including sensitive information (personal names, addresses) in indexed content
+- **Optimization**: Pre-generating indices with SSG reduces client-side processing and improves load times
+- **Unicode Support**: All whitespace types (full-width, half-width, tabs, newlines, and others) are supported in queries
+
+
+## Creating an Index for Faster Search
+
+The full-text search functionality provided by `LinearIndex` is sufficient for most static site use cases. However, if you require even faster search performance, alternative indexing methods can be utilized to optimize speed and efficiency.
 
 ### GPU Linear Index
-```
+
+```javascript
 import { GPULinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
 
 const index = createIndex(GPULinearIndex, array_of_articles);
 ```
 
-GPULinearIndexを使うことにより、あいまい検索をGPUで行います。インデックスが100記事、3Mbyte程度の場合、おおよそ2倍程度の高速化が達成できます。
-検索の使い方はLinearIndex時と全く同一です。また、GPUが使えない環境では自動的にLinearIndexが代わりに使われます。
-一方、インデックスがより少ない場合は、LinearIndexのほうが高速になる場面が多くなります。
+By leveraging `GPULinearIndex`, fuzzy searches can be offloaded to the GPU, significantly improving performance. This method can achieve several times the speed of `LinearIndex`. The usage remains identical to `LinearIndex`, making it easy to switch between implementations.
+
+If a GPU is not available in the execution environment, `GPULinearIndex` will automatically fall back to `LinearIndex`, ensuring compatibility across different devices.
 
 ### Hybrid Bigram Inverted Index
-```
+
+```javascript
 import { HybridBigramInvertedIndex, createIndex, search, UniSearchError } from "unisearch.js";
 
 const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
 ```
 
-HybridBigramInvertedIndexを使うことにより、おおよそ10-100倍の検索速度向上がみられます。検索の使い方はLinearIndex時と全く同一です。
+The `HybridBigramInvertedIndex` offers an impressive 10-100x search speed improvement compared to `LinearIndex`. The API usage remains the same, making integration seamless.
 
-ただし、検索の速度向上のかわり、多数の欠点も存在します。
+However, this increased speed comes at a cost, introducing several trade-offs:
 
-1. インデックス生成に時間がかかります。100記事で3-6秒ほどです。そのため、SSGなどで前もってインデックスを作ることが必須になります。
-2. 検索ノイズが増えます。false positive(一致するはずのない文章が検索結果に出てきてしまう)が増加します。
-3. 日本語などを対象にしたあいまい検索はかなりノイズが増えます。意図した編集距離より遠い文字列にもマッチしてしまいます。
-4. 検索結果の情報の一部が欠けます。posとwordaroundが存在しなくなります。
-5. TF-IDFに基づくスコアリングが未完成です。今は単純なTFのみ計算しています。
+1. **Longer Indexing Time**: Index creation is significantly slower, taking approximately 3-6 seconds for 100 articles. It is essential to generate the index in advance, such as during a static site generation (SSG) build process.
+2. **Higher Search Noise**: False positives (irrelevant results appearing in search results) become more frequent.
+3. **Reduced Accuracy for CJK Languages**: Fuzzy searches in languages such as Chinese, Japanese, and Korean may produce noisier results, matching unintended terms.
+4. **Limited Result Metadata**: Some search result details, such as exact match position (`pos`) and surrounding text (`wordaround`), are unavailable.
+5. **Incomplete TF-IDF Scoring**: Currently, only term frequency (TF) is calculated, leading to less refined ranking.
 
-これらの欠点はありますが、検索は非常に高速になり、どのようなデバイス・検索対象でもユーザーを待たせることがありません。ユーザー体験を重視する場合はこちらをご利用ください。
+Despite these drawbacks, `HybridBigramInvertedIndex` ensures ultra-fast search performance across all devices, delivering a smooth user experience. If prioritizing responsiveness is critical, this index type is a strong choice.
 
-## ベンチマーク
+## Benchmark
 
-Intel Core i5 13400F + NVIDIA GeForce RTX 4070を使ったベンチマークを以下に示します。index sizeの単位はbyteで、他のフィールドの単位はmsecです。
+### Benchmark on Intel Core i5 13400F and NVIDIA GeForce RTX 4070
 
-### 完全一致検索
+The following benchmarks were conducted using an **Intel Core i5 13400F** and **NVIDIA GeForce RTX 4070**. The index size is represented in bytes, while all other metrics are measured in milliseconds (ms).
+
+#### Exact Match Search
 | index size | Linear | GPU | Inverted |
 | ---------- | ------ | --- | -------- |
 | 475576     | 0.1084 | 0.1146 | 0.0784   |
@@ -271,7 +376,7 @@ Intel Core i5 13400F + NVIDIA GeForce RTX 4070を使ったベンチマークを�
 | 2394217    | 0.3442 | 0.3618 | 0.1254   |
 | 3020497    | 0.4134 | 0.435  | 0.0984   |
 
-### あいまい検索
+#### Fuzzy Search
 | index size | Linear | GPU | Inverted |
 | ---------- | ------ | --- | -------- |
 | 475576     | 2.7128 | 4.594 | 0.1128   |
@@ -280,7 +385,7 @@ Intel Core i5 13400F + NVIDIA GeForce RTX 4070を使ったベンチマークを�
 | 2394217    | 13.6572  | 8.6452   | 0.1968   |
 | 3020497    | 17.2486  | 9.038    | 0.226    |
 
-### インデックス生成
+#### Index Creation
 | index size | Linear | GPU | Inverted |
 | ---------- | ------ | --- | -------- |
 | 475576     | 20.04  | 20.04 | 373.48   |
@@ -289,9 +394,12 @@ Intel Core i5 13400F + NVIDIA GeForce RTX 4070を使ったベンチマークを�
 | 2394217    | 123.36 | 126.12 | 1782.74  |
 | 3020497    | 158.4  | 159.84 | 2361.58  |
 
-同様に、Intel N100を使ったベンチマークを以下に示します。
 
-### 完全一致検索
+### Benchmark on Intel N100
+
+A second benchmark was conducted using an **Intel N100** CPU to evaluate performance on lower-power devices.
+
+#### Exact Match Search
 | index size |	Linear|	GPU	| Inverted |
 | ---------- | ------ | --- | -------- |
 | 475576     | 0.2984 | 0.405 | 0.2912   |
@@ -300,7 +408,7 @@ Intel Core i5 13400F + NVIDIA GeForce RTX 4070を使ったベンチマークを�
 | 2394217    | 0.955  | 0.9446 | 0.3536   |
 | 3020497    | 1.0758 | 1.0874 | 0.4388   |
 
-### あいまい検索
+#### Fuzzy Search
 | index size | Linear | GPU | Inverted |
 | ---------- | ------ | --- | -------- |
 | 475576     | 6.5576 | 8.6892 | 0.3864   |
@@ -309,7 +417,7 @@ Intel Core i5 13400F + NVIDIA GeForce RTX 4070を使ったベンチマークを�
 | 2394217    | 31.8176 | 18.4438 | 0.7692   |
 | 3020497    | 40.6314 | 22.5536 | 1.0842   |
 
-### インデックス生成
+#### Index Creation
 | index size | Linear | GPU | Inverted |
 | ---------- | ------ | --- | -------- |
 | 475576     | 62.5   | 63.98 | 1076.14  |
@@ -318,34 +426,62 @@ Intel Core i5 13400F + NVIDIA GeForce RTX 4070を使ったベンチマークを�
 | 2394217    | 332    | 333.74 | 5114.64 |
 | 3020497    | 433.86 | 426.08 | 6377.6  |
 
-## 検索アルゴリズムの紹介
+
+These benchmarks illustrate the performance trade-offs among the different index types. While `HybridBigramInvertedIndex` is significantly faster, it comes at the cost of higher indexing time and reduced search accuracy. Meanwhile, `GPULinearIndex` provides a substantial speed boost while maintaining accuracy, making it a viable option for environments with GPU support.
+
+For optimal performance, select the index type that best fits your application’s needs.
+
+
+## Introduction to Search Algorithms
 
 ### LinearIndex
 
-LinearIndexを使う場合、完全一致検索アルゴリズムは非常に単純です。単純というか、JavaScript組み込みのString.prototype.indexOf()を使っているだけです。おそらく、V8などのエンジンの側で最適化しているのでしょう、全文を愚直に検索している割にはとても高速に動きます。さすがに1万記事などに増えると速度が満足いかなくなりますが、その場合インデックスサイズも100MByte単位になっているはずで、静的サイトの全文検索対象としてはかなり非現実的です。
+The `LinearIndex` utilizes a straightforward exact match search algorithm. Rather than implementing a custom search mechanism, it simply leverages JavaScript’s built-in `String.prototype.indexOf()`. Due to optimizations in JavaScript engines like V8, this approach achieves high-speed performance even for full-text searches. However, as the number of documents grows, performance may degrade. At such a scale, the index size can reach hundreds of megabytes, making full-text search on a static site impractical.
 
-あいまい検索は、教科書通りのbitapアルゴリズムを用いています。indexOfに比べ50倍程度遅い速度です。Rust-WASMでbitapを実現してみましたが、JavaScriptで実現した場合に比べて非常に遅くなったため、採用を見送りました。検索対象の文字はIntl.Segmenter()を使ってグラフェム単位に分割しています。そのため、漢字の異字体や絵文字、国旗などなど、複数のコードポイントからなる文字についても、正しく編集距離を計算できます。ただし、グラフェム単位のインデックスを普通の文字列のインデックスと別に生成するため、メモリ使用量が倍になっています。
+For fuzzy search, the `bitap` algorithm is employed, which runs approximately 50 times slower than `indexOf()`. An attempt was made to implement `bitap` in Rust-WASM, but the performance was significantly slower than the JavaScript version, leading to its exclusion. The search process segments characters into graphemes using `Intl.Segmenter()`, ensuring correct edit distance calculations even for complex characters like kanji variants, emojis, and national flags. However, due to the need to maintain a separate index for grapheme units, memory usage is effectively doubled.
 
 ### GPULinearIndex
 
-GPULinearIndexでは、完全一致検索はLinearIndexと全く同じアルゴリズムを使います。また、あいまい検索文字列が32文字を超える場合もLinearIndexと同じアルゴリズムを使います。
-あいまい検索は、bitapアルゴリズムをGPUで実現しています。インデックス中の全ての文字位置ごとに検索用のスレッドを生成し、その中で検索文字列長だけbitapアルゴリズムに基づく一致検索を行います。バックエンドはWebGPUを利用しており、bitapアルゴリズムはwgslで実現しています。
+The `GPULinearIndex` follows the same exact match search approach as `LinearIndex`. For fuzzy search queries exceeding 32 characters, it also defaults to the `LinearIndex` method. However, for shorter fuzzy searches, `GPULinearIndex` accelerates processing by running the `bitap` algorithm on the GPU. Each character position in the index spawns a parallel search thread, executing a `bitap`-based search across the query length. This implementation leverages WebGPU and executes in `wgsl`.
 
 ### HybridBigramInvertedIndex
 
-HybridBigramInvertedIndexは、日本語のような、単語の分かち書きが難しい言語と、英語のような、空白で単語が区切れる言語、それぞれに文字を分類して、違うインデックスを生成することで検索を実現しています。英語は普通の単語単位の転置インデックスを作り、日本語などは分かち書きせずBigramで文章を断片化して転置インデックスを生成しました。
-Trigramなど、Ngramを増やすことで検索ノイズは軽減できるのですが、その代わりインデックスサイズが大きくなってしまうため、バランスをみてBigramを採用しました。
+The `HybridBigramInvertedIndex` categorizes characters into two groups: languages such as Japanese, where word boundaries are difficult to define, and languages like English, where words are naturally separated by spaces. Different indexing strategies are applied to each category. For English, a standard word-based inverted index is used, while for Japanese and similar languages, a bigram-based inverted index is created by fragmenting sentences without explicit word segmentation.
 
-### 前処理
+Although increasing the n-gram size (e.g., using trigrams) could reduce search noise, it would also inflate the index size. A balance between accuracy and efficiency was sought, leading to the adoption of bigrams.
 
-前処理は単純です。Unicodeの正規化(NFKC)や英文字などの小文字化、日本語の一部の正規化をしている程度です。また、1グラフェムが複数のコードポイントで構成される文字（絵文字など）は、最初のコードポイントだけを抜粋して検索対象とします。転置インデックスの英語などにおいてもストップワードやステミングは採用していません。言語中立を目指したため、あまり特殊な処理は入れずに検索できる範囲の能力を目指しました。
+### Preprocessing
 
-HybridBigramInvertedIndexでは、上記に加え、約物・記号の削除とそれらをデリミタとした分割、空白による分割、文字種（日本語のようにトークナイズできない言語とできる言語を分類）による分割を行っています。そのため、記号単体では検索できず、URLもトークナイズされます。全言語に共通で分かち書きできる機構があれば良いのですが、未だ未完の状態のようです。一応、Intl.Segmenter()は日本語と中国語の分かち書きができるらしいので、今後に期待します。
+The preprocessing pipeline applies minimal transformations:
+- **Unicode normalization (NFKC)**
+- **Lowercasing for case-insensitive matching**
+- **Basic normalization for Japanese text**
 
-### その他の検討アルゴリズム
+For inverted indexes, stopwords and stemming are not utilized to maintain neutrality across languages. Additionally, for graphemes composed of multiple code points (e.g., emojis), only the first code point is extracted for indexing.
 
-Trieを試したところ、インデックスサイズが逆に大きくなってしまいました。インクリメンタルな検索のため、全てのノードにポスティングリストを追加したせいだと思われます。言語中立を目指し、日本語をインデックス化する場合は、Bigramを採用するためTrieにするうまみがほとんどなく、採用を見送りました。
+For `HybridBigramInvertedIndex`, additional preprocessing steps are performed:
+- Symbols and punctuation are removed and used as delimiters
+- Tokenization by whitespace
+- Classification of languages that require segmentation (e.g., Japanese) versus those that do not (e.g., English)
 
-Bloomフィルターを使うことを検討しましたが、ハッシュ関数の個数分だけポスティングリストのサイズが増大してしまい、インデックスサイズがこれも逆に大きくなってしまいました。面白そうなデータ構造だったのですが、残念です。ちなみに、ハッシュ関数は2-3個程度が良いスペックが出ました。
+As a result, standalone symbols cannot be searched, and URLs are tokenized into components. Ideally, a universal language-agnostic tokenization mechanism would be available, but existing solutions remain incomplete. `Intl.Segmenter()` provides partial support for languages like Japanese and Chinese, and future improvements are anticipated.
 
-LSHやminHash、sentence transformerによる埋め込みなど、他にも色々頭に浮かんだこともありますが、どれもぼくの思い違いで、特にあいまい検索を含む全文検索に応用できるものではありませんでした。単純な完全一致なら可能性はあったのですが、あいまい検索はかなり無理そうでした。例えば、スペリングを間違った単語を入力した場合、それは、新たに辞書に単語が追加されることになり、結果として、超高次元のベクトルに対して次元が1個増えることになります。編集距離が短い次元との距離は、他の次元の距離と同一で、比べようがありません。そこから次元削減なりを行っても、正しく類似単語ににたベクトルを生成できるとは思えませんでした。ただ、セマンティック検索自体の可能性は少し感じました。軽い検討をした結果、セマンティック検索はサーバーが必要なスペックになるとわかったため、また別の機会に実現を考えてみようと思います。
+### Alternative Algorithms Considered
+
+Several alternative algorithms were explored but ultimately discarded due to inefficiencies:
+
+1. **Trie Structures**
+   - While promising for incremental searches, trie-based indexes increased in size due to posting list overhead at each node.
+   - Since `HybridBigramInvertedIndex` already provides strong performance for Japanese, the additional complexity of tries was deemed unnecessary.
+
+2. **Bloom Filters**
+   - Although effective in reducing false negatives, Bloom filters increased posting list sizes proportional to the number of hash functions used.
+   - Even with an optimal configuration of 2-3 hash functions, the resulting index size became impractical.
+
+3. **LSH, MinHash, and Sentence Embeddings**
+   - While these approaches hold potential for semantic search, they proved unsuitable for full-text search with fuzzy matching.
+   - Misspelled words would effectively introduce new dictionary entries, increasing dimensional complexity and making distance calculations unreliable.
+   - Even with dimensionality reduction techniques, vectorized representations failed to accurately capture fuzzy text similarities.
+
+Although semantic search remains a compelling direction, its implementation requires server-side infrastructure, making it unsuitable for a fully client-side static site search engine. Future iterations may explore this capability in greater depth.
+
