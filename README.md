@@ -48,6 +48,9 @@ unisearch.jsは、インデックスの作成と、インデックスを用い�
 インデックスを作成する関数の型を以下に示します。
 
 ```
+export type Path = string;
+export type FieldName = string;
+
 export function createIndex(
     index_class: IndexClass,
     contents: unknown[],
@@ -193,13 +196,18 @@ const index = createIndex(LinearIndex, array_of_articles, { field_names: { link:
 ```
 export type SearchResult = {
     id: number;
-    key: string | null;
+    key: Record<string, unknown>;
     score: number;
     refs: Reference[];
 };
 ```
 
-idフィールドは、一致した文章の配列インデックスを返します。インデックス作成時の配列インデックスです。keyフィールドは、インデックス作成時に指定したフィールドが設定されます。scoreはTF-IDFに基づいた値が設定されます。検索ワード個々のTF-IDFの合算値になり、編集距離が増えるごとに1/xで減じられていきます。
+idフィールドは、一致した文章の配列インデックスを返します。インデックス作成時の配列インデックスです。
+
+keyフィールドは、インデックス作成時に指定したフィールドが設定されたオブジェクトが格納されます。
+例えば、インデックス作成時に["slug", "data.title"]をkey_filedsとして指定した場合、keyは{ slug: "検索結果のスラッグ", data: { title: "検索結果のタイトル" } }のような構造のオブジェクトになります。
+
+scoreはTF-IDFに基づいた値が設定されます。検索ワード個々のTF-IDFの合算値になり、編集距離が増えるごとに1/xで減じられていきます。
 
 refsフィールドは、検索で一致した箇所の情報の配列が設定されます。
 

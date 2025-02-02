@@ -13,7 +13,7 @@ describe("basic Linear index creation and search", async () => {
         expect(result1).toStrictEqual([
             {
                 id: 2,
-                key: undefined,
+                key: {},
                 score: 0.13830942998767318,
                 refs: [
                     {
@@ -33,7 +33,7 @@ describe("basic Linear index creation and search", async () => {
         expect(result2).toStrictEqual([
             {
                 id: 7,
-                key: undefined,
+                key: {},
                 score: 1.0265843206468688,
                 refs: [
                     {
@@ -54,7 +54,7 @@ describe("basic Linear index creation and search", async () => {
             },
             {
                 id: 9,
-                key: undefined,
+                key: {},
                 score: 0.8623308293433698,
                 refs: [
                     {
@@ -75,7 +75,7 @@ describe("basic Linear index creation and search", async () => {
             },
             {
                 id: 6,
-                key: undefined,
+                key: {},
                 score: 0.016519747688570303,
                 refs: [
                     {
@@ -95,7 +95,7 @@ describe("basic Linear index creation and search", async () => {
         expect(result3).toStrictEqual([
             {
                 id: 7,
-                key: undefined,
+                key: {},
                 score: 0.5903498583015899,
                 refs: [
                     {
@@ -116,7 +116,7 @@ describe("basic Linear index creation and search", async () => {
             },
             {
                 id: 9,
-                key: undefined,
+                key: {},
                 score: 0.4958938809733356,
                 refs: [
                     {
@@ -148,7 +148,7 @@ describe("basic Linear index with array of strings.", async () => {
         expect(result1).toStrictEqual([
             {
                 id: 1,
-                key: undefined,
+                key: {},
                 score: 2.0986122886681096,
                 refs: [
                     {
@@ -201,7 +201,7 @@ describe("index with search_targets", async () => {
         expect(result2).toStrictEqual([
             {
                 id: 7,
-                key: undefined,
+                key: {},
                 score: 0.550993201081484,
                 refs: [
                     {
@@ -215,7 +215,7 @@ describe("index with search_targets", async () => {
             },
             {
                 id: 9,
-                key: undefined,
+                key: {},
                 score: 0.4407945608651872,
                 refs: [
                     {
@@ -244,7 +244,7 @@ describe("index to object, stringify, json, re-create index.", async () => {
         expect(result1).toStrictEqual([
             {
                 id: 2,
-                key: undefined,
+                key: {},
                 score: 0.13830942998767318,
                 refs: [
                     {
@@ -269,7 +269,7 @@ describe("fuzzy search, distance 2.", async () => {
         expect(result1).toStrictEqual([
             {
                 id: 2,
-                key: undefined,
+                key: {},
                 score: 0.03995605755199447,
                 refs: [
                     {
@@ -289,7 +289,7 @@ describe("fuzzy search, distance 2.", async () => {
         expect(result2).toStrictEqual([
             {
                 id: 7,
-                key: undefined,
+                key: {},
                 score: 1.0265843206468688,
                 refs: [
                     {
@@ -310,7 +310,7 @@ describe("fuzzy search, distance 2.", async () => {
             },
             {
                 id: 9,
-                key: undefined,
+                key: {},
                 score: 0.8623308293433698,
                 refs: [
                     {
@@ -331,7 +331,7 @@ describe("fuzzy search, distance 2.", async () => {
             },
             {
                 id: 6,
-                key: undefined,
+                key: {},
                 score: 0.016519747688570303,
                 refs: [
                     {
@@ -356,7 +356,7 @@ describe("fuzzy search, distance 0.", async () => {
         expect(result2).toStrictEqual([
             {
                 id: 7,
-                key: undefined,
+                key: {},
                 score: 1.1806997166031798,
                 refs: [
                     {
@@ -377,7 +377,7 @@ describe("fuzzy search, distance 0.", async () => {
             },
             {
                 id: 9,
-                key: undefined,
+                key: {},
                 score: 0.9917877619466712,
                 refs: [
                     {
@@ -409,7 +409,7 @@ describe("exact search, distance 2.", async () => {
         expect(result2).toStrictEqual([
             {
                 id: 7,
-                key: undefined,
+                key: {},
                 score: 1.1806997166031798,
                 refs: [
                     {
@@ -430,7 +430,7 @@ describe("exact search, distance 2.", async () => {
             },
             {
                 id: 9,
-                key: undefined,
+                key: {},
                 score: 0.9917877619466712,
                 refs: [
                     {
@@ -462,7 +462,7 @@ describe("and search", async () => {
         expect(result2).toStrictEqual([
             {
                 id: 7,
-                key: undefined,
+                key: {},
                 score: 1.3036927715248263,
                 refs: [
                     {
@@ -501,7 +501,7 @@ describe("not search", async () => {
         expect(result2).toStrictEqual([
             {
                 id: 6,
-                key: undefined,
+                key: {},
                 score: 0.06416459750140764,
                 refs: [
                     {
@@ -572,7 +572,7 @@ describe("from: search", async () => {
         expect(result1).toStrictEqual([
             {
                 id: 2,
-                key: undefined,
+                key: {},
                 score: 0.8154493476356564,
                 refs: [
                     {
@@ -597,7 +597,7 @@ describe("from: weight: search", async () => {
         expect(result1).toStrictEqual([
             {
                 id: 2,
-                key: undefined,
+                key: {},
                 score: 0.8154493476356564 * 2.5,
                 refs: [
                     {
@@ -635,7 +635,7 @@ describe("Hybrid bigram inverted index creation and search", async () => {
         expect(result1).toStrictEqual([
             {
                 id: 2,
-                key: undefined,
+                key: {},
                 score: 1,
                 refs: [
                     {
@@ -653,7 +653,7 @@ describe("Hybrid bigram inverted index creation and search", async () => {
         expect(result2).toStrictEqual([
             {
                 id: 2,
-                key: undefined,
+                key: {},
                 score: 1,
                 refs: [
                     {
@@ -676,7 +676,7 @@ describe("Hybrid bigram inverted index creation and search", async () => {
         expect(result4).toStrictEqual([
             {
                 id: 7,
-                key: undefined,
+                key: {},
                 score: 2,
                 refs: [
                     {
@@ -693,7 +693,7 @@ describe("Hybrid bigram inverted index creation and search", async () => {
             },
             {
                 id: 9,
-                key: undefined,
+                key: {},
                 score: 2,
                 refs: [
                     {
@@ -716,7 +716,7 @@ describe("Hybrid bigram inverted index creation and search", async () => {
         expect(result5).toStrictEqual([
             {
                 id: 7,
-                key: undefined,
+                key: {},
                 score: 4,
                 refs: [
                     {
@@ -754,7 +754,7 @@ describe("Hybrid bigram inverted index fuzzy search", async () => {
         expect(result1).toStrictEqual([
             {
                 id: 7,
-                key: undefined,
+                key: {},
                 score: 2,
                 refs: [
                     {
@@ -771,7 +771,7 @@ describe("Hybrid bigram inverted index fuzzy search", async () => {
             },
             {
                 id: 6,
-                key: undefined,
+                key: {},
                 score: 1,
                 refs: [
                     {
@@ -789,7 +789,7 @@ describe("Hybrid bigram inverted index fuzzy search", async () => {
         expect(result2).toStrictEqual([
             {
                 id: 7,
-                key: undefined,
+                key: {},
                 score: 3,
                 refs: [
                     {
@@ -817,7 +817,7 @@ describe("Hybrid bigram inverted index fuzzy search", async () => {
         expect(result3).toStrictEqual([
             {
                 id: 7,
-                key: undefined,
+                key: {},
                 score: 2,
                 refs: [
                     {
@@ -845,7 +845,7 @@ describe("Hybrid bigram inverted index fuzzy search", async () => {
         expect(result5).toStrictEqual([
             {
                 id: 7,
-                key: undefined,
+                key: {},
                 score: 1,
                 refs: [
                     {
@@ -868,7 +868,7 @@ describe("Hybrid bigram inverted index fuzzy search", async () => {
         expect(result7).toStrictEqual([
             {
                 id: 7,
-                key: undefined,
+                key: {},
                 score: 2,
                 refs: [
                     {
@@ -896,7 +896,7 @@ describe("Hybrid bigram inverted index fuzzy search, with alphabet and kanji", a
         expect(result1).toStrictEqual([
             {
                 id: 7,
-                key: undefined,
+                key: {},
                 score: 5,
                 refs: [
                     {
@@ -934,7 +934,7 @@ describe("Hybrid bigram inverted index fuzzy search, with alphabet and kanji", a
         expect(result2).toStrictEqual([
             {
                 id: 7,
-                key: undefined,
+                key: {},
                 score: 4,
                 refs: [
                     {

@@ -46,6 +46,9 @@ unisearch.js performs search by following two steps: index creation and search u
 The type of function to create an index is shown below.
 
 ```
+export type Path = string;
+export type FieldName = string;
+
 export function createIndex(
     index_class: IndexClass,
     contents: unknown[],
@@ -191,13 +194,18 @@ Search results are returned as an array of SearchResult type.
 ```
 export type SearchResult = {
     id: number;
-    key: string | null;
+    key: Record<string, unknown>;
     score: number;
     refs: Reference[];
 };
 ```
 
-The id field returns the array index of the matched sentences. The key field is set to the field specified during indexing. The score is set to a value based on the TF-IDF, which is the sum of the TF-IDFs of the individual search words, multiplied by 1/x for additional edit distance value x.
+The id field returns the array index of the matched sentences. 
+
+The key field contains the object with the specified field set at the time the index is created.
+For example, if [“slug”, “data.title”] is specified as key_fileds during indexing, key will be an object with a structure like { slug: “slug of search results”, data: { title: “title of search results” } }.
+
+The score is set to a value based on the TF-IDF, which is the sum of the TF-IDFs of the individual search words, multiplied by 1/x for additional edit distance value x.
 
 The refs field is set to an array of information about the matches in the search.
 

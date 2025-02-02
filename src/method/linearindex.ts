@@ -131,7 +131,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             const size = cref.end - cref.start + 1;
             const r = result.get(cref.id) || {
                 id: cref.id,
-                key: this.index_entry.key[cref.id],
+                key: this.index_entry.key[cref.id] || {},
                 score: 0,
                 refs: [],
             };

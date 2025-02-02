@@ -81,7 +81,7 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
 
             for (const [term, plist, distance] of res) {
                 for (const [id, tf] of plist) {
-                    const r = results.get(id) || { id: id, key: this.index_entry.key[id], score: 0, refs: [] };
+                    const r = results.get(id) || { id: id, key: this.index_entry.key[id] || {}, score: 0, refs: [] };
                     r.refs.push({ token: term, path: path, distance: distance });
                     r.score += tf;
                     results.set(id, r);
