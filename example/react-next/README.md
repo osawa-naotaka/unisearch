@@ -36,6 +36,13 @@ import { GPULinearIndex, UniSearchError, createIndex, indexToObject } from "unis
 export const dynamic = "force-static";
 export const revalidate = false;
 
+export type SearchKey = {
+    slug: string;
+    data: {
+      title: string;
+    }
+};
+
 export async function GET(request: Request) {
     const allPosts = await getAllPosts();
     const index = createIndex(GPULinearIndex, allPosts, { key_fields: ["data.title", "slug"], search_targets: ["data.title", "content"] });
@@ -63,6 +70,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { UniSearchError, createIndexFromObject, search } from "unisearch.js";
 import type { SearchResult, UniSearchIndex } from "unisearch.js";
+import type { SearchKey } from "@/app/searchindex.json/route.ts";
 
 export default function Index() {
     const INDEX_STATE = {
@@ -77,7 +85,6 @@ export default function Index() {
     const [index, setIndex] = useState<UniSearchIndex | null>(null);
 
     const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const start = performance.now();
         if (index_state === INDEX_STATE.FETCHING) return;
         if (index_state !== INDEX_STATE.INITIALIZED) {
             setIndexState(INDEX_STATE.FETCHING);
@@ -95,13 +102,11 @@ export default function Index() {
 
             setResults(await execSearch(newIndex, e.target.value));
             setIndexState(INDEX_STATE.INITIALIZED);
-            console.log(`search time: ${performance.now() - start}ms`);
             return;
         }
 
         if (!index) return;
         setResults(await execSearch(index, e.target.value));
-        console.log(`search time: ${performance.now() - start}ms`);
     };
 
     return (
@@ -112,15 +117,22 @@ export default function Index() {
             </div>
             <h2>results</h2>
             <ul>
+                {index_state === INDEX_STATE.FETCHING && (<li>loading search index...</li>) }
                 {results.length > 0 &&
-                    results.map((r) => (
-                        <li key={r.key.slug as string}>
-                            <Link href={`/posts/${r.key.slug as string}`}>
-                                <h3>{r.key["data.title"] as string}</h3>
-                            </Link>
-                            <p>{r.refs[0].wordaround}</p>
-                        </li>
-                    ))}
+                    results.map((r) => {
+                        const post = r.key as SearchKey; // ad-hock solution. you might as well use zod or something like that to validate the key.
+                        if(!post.data.title || !post.slug) throw new Error("title or slug is not found in the search result.");
+
+                        return (
+                            <li key={post.slug}>
+                                <Link href={`/posts/${post.slug}`}>
+                                    <h3>{post.data.title}</h3>
+                                </Link>
+                                <p>{r.refs[0].wordaround}</p>
+                            </li>
+                        );
+                    })
+                }
             </ul>
         </section>
     );
@@ -142,5 +154,6 @@ After the index is fetched, it is converted to UniSearchIndex object by 'const i
 Then, the search results are fetched by 'const results = await search(index, search_keyword)'.
 
 Results are sorted by score, and you can use SearchResult type to render search results.
-In this example, results[x].key["data.title"] and results[x].key.slug are used to link to the post page. These information is indexed because key_fields is specified when creating index.
+In this example, results[x].key.data.title and results[x].key.slug are used to link to the post page.
+These information is indexed because key_fields is specified when creating index.
 In addition, results[x].refs[0].wordaround is used to show the mached part of the text content.
