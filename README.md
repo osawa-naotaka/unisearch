@@ -436,7 +436,7 @@ For optimal performance, select the index type that best fits your application�
 
 ### LinearIndex
 
-The `LinearIndex` utilizes a straightforward exact match search algorithm. Rather than implementing a custom search mechanism, it simply leverages JavaScript’s built-in `String.prototype.indexOf()`. Due to optimizations in JavaScript engines like V8, this approach achieves high-speed performance even for full-text searches. However, as the number of documents grows, performance may degrade. At such a scale, the index size can reach hundreds of megabytes, making full-text search on a static site impractical.
+The `LinearIndex` utilizes a straightforward exact match search algorithm. Rather than implementing a custom search mechanism, it simply leverages JavaScript’s built-in `String.prototype.indexOf()`. Due to optimizations in JavaScript engines like V8, this approach achieves high-speed performance even for full-text searches. However, as the number of documents grows, performance may degrade. At such a scale, the index size can reach tens of megabytes, making full-text search on a static site impractical.
 
 For fuzzy search, the `bitap` algorithm is employed, which runs approximately 50 times slower than `indexOf()`. An attempt was made to implement `bitap` in Rust-WASM, but the performance was significantly slower than the JavaScript version, leading to its exclusion. The search process segments characters into graphemes using `Intl.Segmenter()`, ensuring correct edit distance calculations even for complex characters like kanji variants, emojis, and national flags. However, due to the need to maintain a separate index for grapheme units, memory usage is effectively doubled.
 
@@ -462,7 +462,7 @@ For inverted indexes, stopwords and stemming are not utilized to maintain neutra
 For `HybridBigramInvertedIndex`, additional preprocessing steps are performed:
 - Symbols and punctuation are removed and used as delimiters
 - Tokenization by whitespace
-- Classification of languages that require segmentation (e.g., Japanese) versus those that do not (e.g., English)
+- Classification of languages that hard to segment into words (e.g., Japanese) versus those that do not (e.g., English)
 
 As a result, standalone symbols cannot be searched, and URLs are tokenized into components. Ideally, a universal language-agnostic tokenization mechanism would be available, but existing solutions remain incomplete. `Intl.Segmenter()` provides partial support for languages like Japanese and Chinese, and future improvements are anticipated.
 
