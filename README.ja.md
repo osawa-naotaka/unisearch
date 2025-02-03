@@ -1,9 +1,9 @@
 [README.md in English](https://github.com/osawa-naotaka/staticseek)
 
-# staticseek.js: 静的サイト向けの軽量で高速な全文検索エンジン
+# staticseek: 静的サイト向けの軽量で高速な全文検索エンジン
 
 ## 概要
-staticseek.jsは、静的ウェブサイト向けに特化して設計されたクライアントサイドの全文検索エンジンです。文字列または文字列配列を含むJavaScriptオブジェクトの配列を検索できます。記事をJavaScriptオブジェクトに変換することで、サーバーサイドの実装なしに静的サイトで全文検索機能を実装できます。
+staticseekは、静的ウェブサイト向けに特化して設計されたクライアントサイドの全文検索エンジンです。文字列または文字列配列を含むJavaScriptオブジェクトの配列を検索できます。記事をJavaScriptオブジェクトに変換することで、サーバーサイドの実装なしに静的サイトで全文検索機能を実装できます。
 
 ## 主な機能
 - シンプルで直感的なAPI
@@ -22,7 +22,7 @@ staticseek.jsは、静的ウェブサイト向けに特化して設計された�
 一般的な使用方法は以下の通りです。
 
 ```javascript
-import { LinearIndex, createIndex, search, StaticSeekError } from "staticseek.js";
+import { LinearIndex, createIndex, search, StaticSeekError } from "staticseek";
 
 // インデックスを作成
 const index = createIndex(LinearIndex, array_of_articles);
@@ -35,7 +35,7 @@ const result = await search(index, "検索語");
 WebGPUを使い検索を高速化するには、以下のようにします。
 
 ```javascript
-import { GPULinearIndex, createIndex, search, StaticSeekError } from "staticseek.js";
+import { GPULinearIndex, createIndex, search, StaticSeekError } from "staticseek";
 
 const index = createIndex(GPULinearIndex, array_of_articles);
 if(index instanceof StaticSeekError) throw index;
@@ -100,7 +100,7 @@ const result = await search(index, "検索語");
 
 ## 検索インデックスの作成
 
-staticseek.jsは、インデックス作成と検索実行の2つのフェーズで動作します。インデックスはページが読み込まれるときに1回作成され、後続のすべての検索で再利用されます。
+staticseekは、インデックス作成と検索実行の2つのフェーズで動作します。インデックスはページが読み込まれるときに1回作成され、後続のすべての検索で再利用されます。
 
 ### インデックス作成
 
@@ -223,7 +223,7 @@ async function search(index: StaticSeekIndex, query: string): Promise<SearchResu
 ### クエリ構文
 
 #### あいまい検索
-デフォルトでは、staticseek.jsは編集距離が1のあいまい検索を実行します。
+デフォルトでは、staticseekは編集距離が1のあいまい検索を実行します。
 つまり、検索語あたり1文字のエラーを許容します。この許容範囲は、次の2つの方法で調整できます。
 
 個々の検索では、クエリで編集距離を指定します。
@@ -321,7 +321,7 @@ export type Reference = {
 
 ### 重要な注意事項
 
-- **バージョンの互換性**: インデックス生成と検索実行を通して、staticseek.jsのバージョンが一致していることを確認してください
+- **バージョンの互換性**: インデックス生成と検索実行を通して、staticseekのバージョンが一致していることを確認してください
 - **パフォーマンス**: インデックス生成には、100記事（約3MBのテキスト）で約500msかかります。
 - **セキュリティ**: インデックス化されたコンテンツに機密情報（個人名、住所）を含めることは避けてください。
 - **最適化**: SSGでインデックスを事前に生成すると、クライアント側の処理が減少し、ロード時間が短縮されます。
@@ -334,7 +334,7 @@ export type Reference = {
 ### GPULinearIndex
 
 ```javascript
-import { GPULinearIndex, createIndex, search, StaticSeekError } from "staticseek.js";
+import { GPULinearIndex, createIndex, search, StaticSeekError } from "staticseek";
 
 const index = createIndex(GPULinearIndex, array_of_articles);
 ```
@@ -346,7 +346,7 @@ const index = createIndex(GPULinearIndex, array_of_articles);
 ### HybridBigramInvertedIndex
 
 ```javascript
-import { HybridBigramInvertedIndex, createIndex, search, StaticSeekError } from "staticseek.js";
+import { HybridBigramInvertedIndex, createIndex, search, StaticSeekError } from "staticseek";
 
 const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
 ```

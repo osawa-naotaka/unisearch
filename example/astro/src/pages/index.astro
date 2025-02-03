@@ -13,8 +13,8 @@ import Html from "../layout/html.astro";
 </Html>
 
 <script>
-import { createIndexFromObject, search, StaticSeekError } from "staticseek.js";
-import type { SearchResult, StaticSeekIndex } from "staticseek.js";
+import { createIndexFromObject, search, StaticSeekError } from "staticseek";
+import type { SearchResult, StaticSeekIndex } from "staticseek";
 import type { SearchKey } from "./searchindex.json.ts";
 
 function generateSearchFunction(result_element: HTMLElement) {

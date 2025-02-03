@@ -1,9 +1,9 @@
 [README.md in Japanese](https://github.com/osawa-naotaka/staticseek/blob/main/README.ja.md)
 
-# staticseek.js: A Lightweight, Fast Full-text Search Engine for Static Sites
+# staticseek: A Lightweight, Fast Full-text Search Engine for Static Sites
 
 ## Overview
-staticseek.js is a client-side full-text search engine designed specifically for static websites. It enables searching through arrays of JavaScript objects containing strings or string arrays. By converting your articles into JavaScript objects, you can implement full-text search functionality on static sites without any server-side implementation.
+staticseek is a client-side full-text search engine designed specifically for static websites. It enables searching through arrays of JavaScript objects containing strings or string arrays. By converting your articles into JavaScript objects, you can implement full-text search functionality on static sites without any server-side implementation.
 
 ## Key Features
 - Simple and intuitive API
@@ -20,7 +20,7 @@ staticseek.js is a client-side full-text search engine designed specifically for
 ## Quick Start
 
 ```javascript
-import { LinearIndex, createIndex, search, StaticSeekError } from "staticseek.js";
+import { LinearIndex, createIndex, search, StaticSeekError } from "staticseek";
 
 // Create an index
 const index = createIndex(LinearIndex, array_of_articles);
@@ -33,7 +33,7 @@ const result = await search(index, "search word");
 For WebGPU-accelerated searching:
 
 ```javascript
-import { GPULinearIndex, createIndex, search, StaticSeekError } from "staticseek.js";
+import { GPULinearIndex, createIndex, search, StaticSeekError } from "staticseek";
 
 const index = createIndex(GPULinearIndex, array_of_articles);
 if(index instanceof StaticSeekError) throw index;
@@ -98,7 +98,7 @@ Example implementations are available for:
 
 ## Creating Search Indices
 
-staticseek.js operates in two phases: index creation and search execution. The index is created once when the page loads and is reused for all subsequent searches.
+staticseek operates in two phases: index creation and search execution. The index is created once when the page loads and is reused for all subsequent searches.
 
 ### Basic Index Creation
 
@@ -220,7 +220,7 @@ async function search(index: StaticSeekIndex, query: string): Promise<SearchResu
 ### Query Syntax
 
 #### Fuzzy Search
-By default, staticseek.js performs fuzzy search with an edit distance of 1,
+By default, staticseek performs fuzzy search with an edit distance of 1,
 meaning it tolerates one character error per search term. You can adjust this tolerance in two ways:
 
 For individual searches, specify the edit distance in the query:
@@ -318,7 +318,7 @@ export type Reference = {
 
 ### Important Notes
 
-- **Version Compatibility**: Ensure matching staticseek.js versions between index generation and usage
+- **Version Compatibility**: Ensure matching staticseek versions between index generation and usage
 - **Performance**: Index generation takes ~500ms for 100 articles (~3MB of text)
 - **Security**: Avoid including sensitive information (personal names, addresses) in indexed content
 - **Optimization**: Pre-generating indices with SSG reduces client-side processing and improves load times
@@ -332,7 +332,7 @@ The full-text search functionality provided by `LinearIndex` is sufficient for m
 ### GPU Linear Index
 
 ```javascript
-import { GPULinearIndex, createIndex, search, StaticSeekError } from "staticseek.js";
+import { GPULinearIndex, createIndex, search, StaticSeekError } from "staticseek";
 
 const index = createIndex(GPULinearIndex, array_of_articles);
 ```
@@ -344,7 +344,7 @@ If a GPU is not available in the execution environment, `GPULinearIndex` will au
 ### Hybrid Bigram Inverted Index
 
 ```javascript
-import { HybridBigramInvertedIndex, createIndex, search, StaticSeekError } from "staticseek.js";
+import { HybridBigramInvertedIndex, createIndex, search, StaticSeekError } from "staticseek";
 
 const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
 ```

@@ -1,4 +1,4 @@
-# staticseek.js example (Astro)
+# staticseek example (Astro)
 
 This example is deployed on [https://staticseek-astro.pages.dev/](https://staticseek-astro.pages.dev/).
 
@@ -23,7 +23,7 @@ npm run build
 (upload "dist" directory to your http server)
 ```
 
-## How to use staticseek.js with Astro.js
+## How to use staticseek with Astro.js
 
 ### 1. Create index to static file
 
@@ -31,7 +31,7 @@ At first, you need to create index. In this example, src/pages/searchindex.json.
 
 ```ts
 import { getCollection } from "astro:content";
-import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek.js";
+import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek";
 
 export type SearchKey = {
     id: string;
@@ -81,8 +81,8 @@ import Html from "../layout/html.astro";
 </Html>
 
 <script>
-import { createIndexFromObject, search, StaticSeekError } from "staticseek.js";
-import type { SearchResult, StaticSeekIndex } from "staticseek.js";
+import { createIndexFromObject, search, StaticSeekError } from "staticseek";
+import type { SearchResult, StaticSeekIndex } from "staticseek";
 import type { SearchKey } from "./searchindex.json.ts";
 
 function generateSearchFunction(result_element: HTMLElement) {

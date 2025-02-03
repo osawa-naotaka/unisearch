@@ -299,7 +299,7 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
             this.index_entry.toc,
             BinarySearchType.Exact,
         );
-        if (index === null) throw new StaticSeekError("staticseek.js: getReference internal error.");
+        if (index === null) throw new StaticSeekError("staticseek: getReference internal error.");
         const toc = this.index_entry.toc[index];
         return {
             id: toc.id,

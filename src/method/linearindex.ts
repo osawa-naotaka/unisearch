@@ -188,7 +188,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             this.index_entry.toc,
             BinarySearchType.Exact,
         );
-        if (index === null) throw new StaticSeekError("staticseek.js: getReference internal error.");
+        if (index === null) throw new StaticSeekError("staticseek: getReference internal error.");
         return this.index_entry.toc[index];
     }
 }

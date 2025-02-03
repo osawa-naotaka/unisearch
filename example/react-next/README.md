@@ -1,4 +1,4 @@
-# staticseek.js example (React + Next.js)
+# staticseek example (React + Next.js)
 
 This example is deployed on [https://staticseek-react-next.pages.dev/](https://staticseek-react-next.pages.dev/).
 
@@ -23,7 +23,7 @@ npm run build
 (upload "out" directory to your http server)
 ```
 
-## How to use staticseek.js with Next.js
+## How to use staticseek with Next.js
 
 ### 1. Create index to static file
 
@@ -31,7 +31,7 @@ At first, you need to create index. In this example, src/app/searchindex.json/ro
 
 ```ts
 import { getAllPosts } from "@/lib/posts";
-import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek.js";
+import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek";
 
 export const dynamic = "force-static";
 export const revalidate = false;
@@ -68,8 +68,8 @@ Next, you need to create search page. src/app/page.tsx is used for this purpose.
 
 import Link from "next/link";
 import { useState } from "react";
-import { StaticSeekError, createIndexFromObject, search } from "staticseek.js";
-import type { SearchResult, StaticSeekIndex } from "staticseek.js";
+import { StaticSeekError, createIndexFromObject, search } from "staticseek";
+import type { SearchResult, StaticSeekIndex } from "staticseek";
 import type { SearchKey } from "@/app/searchindex.json/route.ts";
 
 export default function Index() {

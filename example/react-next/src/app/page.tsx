@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { StaticSeekError, createIndexFromObject, search } from "staticseek.js";
-import type { SearchResult, StaticSeekIndex } from "staticseek.js";
+import { StaticSeekError, createIndexFromObject, search } from "staticseek";
+import type { SearchResult, StaticSeekIndex } from "staticseek";
 import type { SearchKey } from "@/app/searchindex.json/route.ts";
 
 export default function Index() {

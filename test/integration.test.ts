@@ -1,8 +1,8 @@
 import { test, expect, describe } from "vitest";
 import { array_of_articles } from "@test/array_of_articles.js";
-import { LinearIndex, createIndex, search, StaticSeekError, HybridBigramInvertedIndex } from "@dist/staticseek.js";
-import type { StaticSeekIndex } from "@dist/staticseek.js";
-import { createIndexFromObject, indexToObject } from "@dist/staticseek.js";
+import { LinearIndex, createIndex, search, StaticSeekError, HybridBigramInvertedIndex } from "@dist/staticseek";
+import type { StaticSeekIndex } from "@dist/staticseek";
+import { createIndexFromObject, indexToObject } from "@dist/staticseek";
 
 describe("basic Linear index creation and search", async () => {
     const index: StaticSeekIndex | StaticSeekError  = createIndex(LinearIndex, array_of_articles);

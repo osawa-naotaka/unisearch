@@ -1,6 +1,6 @@
 import { getCollection } from "astro:content";
-import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek.js";
-import type { IndexClass } from "staticseek.js";
+import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek";
+import type { IndexClass } from "staticseek";
 
 export type SearchKey = {
     id: string;

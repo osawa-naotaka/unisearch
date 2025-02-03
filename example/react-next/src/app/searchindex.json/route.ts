@@ -1,6 +1,6 @@
 import { getAllPosts } from "@/lib/posts";
-import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek.js";
-import type { IndexClass } from "staticseek.js";
+import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek";
+import type { IndexClass } from "staticseek";
 
 export const dynamic = "force-static";
 export const revalidate = false;

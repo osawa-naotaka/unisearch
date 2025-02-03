@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [2.0.0] - 2025-02-03
 ### Changed
-- rename unisearch.js to staticseek.js
+- rename unisearch.js to staticseek
 
 ## [1.3.0] - 2025-02-01
 ### Changed
