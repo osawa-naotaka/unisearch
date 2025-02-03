@@ -1,5 +1,5 @@
 {
-    "name": "staticseek.js",
+    "name": "staticseek",
     "version": "2.0.0",
     "description": "Lightweight and reasonably fast full-text search engine for static sites",
     "main": "dist/staticseek.js",
