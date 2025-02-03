@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.0.1] - 2025-02-04
+### Fixed
+- fix bug that query with a single character of '"' results in error.
+
 ## [2.0.0] - 2025-02-03
 ### Changed
 - rename unisearch.js to staticseek
@@ -31,11 +35,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [1.2.3] - 2025-01-22
 ### Added
-- export type StaticSeekIndex and StaticSeekIndexObject.
+- export type UniSearchIndex and UniSearchIndexObject.
 
 ### Changed
-- return type of createIndex and createIndexFromObject is now StaticSeekIndex | StaticSeekError.
-- return type of indexToObject is now StaticSeekIndexObject.
+- return type of createIndex and createIndexFromObject is now UniSearchIndex | UniSearchError.
+- return type of indexToObject is now UniSearchIndexObject.
 - update README due to the change of return type of createIndex, createIndexFromObject, and indexToObject.
 
 ### Fixed
@@ -96,7 +100,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - search frontend, google-like syntax
 - sorting search result based on TF-IDF
 
-[Unreleased]: https://github.com/osawa-naotaka/staticseek/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/osawa-naotaka/staticseek/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/osawa-naotaka/staticseek/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/osawa-naotaka/staticseek/compare/v1.3.0...v2.0.0
 [1.3.0]: https://github.com/osawa-naotaka/staticseek/compare/v1.2.4...v1.3.0
 [1.2.4]: https://github.com/osawa-naotaka/staticseek/compare/v1.2.3...v1.2.4

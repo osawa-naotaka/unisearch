@@ -164,17 +164,25 @@ if (!text || !result) throw new Error("Search input or result container not foun
 
 const search_function = generateSearchFunction(result);
 
-text?.addEventListener('input', async () => {
-    if (text.value) {
-        const search_results = await search_function(text.value);
+text?.addEventListener('input', async () =>
+{
+	const start = performance.now();
+	const search_results = await search_function(text.value);
 
-        if (search_results && search_results.length !== 0) {
-            result.innerText = "";
-            generateResultHTMLElement(search_results).map((e) => result.appendChild(e));
-        } else if (search_results !== null) {
-            result.innerText = "No results found";
-        }
-    }
+	if(text.value.length === 0) {
+		result.innerText = "";
+		return;
+	} else {
+		if(search_results) {
+			result.innerText = "";
+			if(search_results.length === 0) {
+				result.innerText = "No results found.";
+			} else {
+				generateResultHTMLElement(search_results).map((e) => result.appendChild(e));
+			}
+		}
+		console.log(`search time: ${performance.now() - start}ms`);
+	}
 });
 </script>
 ```

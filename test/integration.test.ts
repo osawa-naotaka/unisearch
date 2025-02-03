@@ -139,6 +139,42 @@ describe("basic Linear index creation and search", async () => {
     );
 });
 
+describe("basic corner case of double quotation.", async () => {
+    const index: StaticSeekIndex | StaticSeekError  = createIndex(LinearIndex, array_of_articles);
+
+    if(index instanceof StaticSeekError) throw index;
+
+    const result3 = await search(index, " ");
+    test("no match for space string", () => 
+        expect(result3).toStrictEqual([])
+    );
+
+    const result4 = await search(index, '');
+    test("no match for null string", () => 
+        expect(result4).toStrictEqual([])
+    );
+
+    const result5 = await search(index, '"');
+    test("no match for exact null string", () => 
+        expect(result5).toStrictEqual([])
+    );
+
+    const result6 = await search(index, '""');
+    test("no match for exact null string 2", () => 
+        expect(result6).toStrictEqual([])
+    );
+
+    const result7 = await search(index, '"""');
+    test("no match for exact null string 3", () => 
+        expect(result7).toStrictEqual([])
+    );
+
+    const result8 = await search(index, '"" "');
+    test("no match for exact null string 4", () => 
+        expect(result8).toStrictEqual([])
+    );
+});
+
 describe("basic Linear index with array of strings.", async () => {
     const index = createIndex(LinearIndex, ["typescript", "javascript", "static", "型", "ライブラリ", "フロントエンド"]);
 

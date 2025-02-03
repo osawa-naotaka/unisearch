@@ -41,9 +41,14 @@ export default function Index() {
 
             setIndex(newIndex);
 
-            setResults(await execSearch(newIndex, e.target.value));
-            setIndexState(INDEX_STATE.INITIALIZED);
+            const results = await search(newIndex, e.target.value);
+            if (results instanceof StaticSeekError) {
+                console.error(results);
+                return;
+            }
+            setResults(results);
             console.log(`search time: ${performance.now() - start}ms`);
+            setIndexState(INDEX_STATE.INITIALIZED);
             return;
         }
 
@@ -66,7 +71,8 @@ export default function Index() {
             <h2>results</h2>
             <ul>
                 {index_state === INDEX_STATE.FETCHING && <li>loading search index...</li>}
-                {results.length > 0 &&
+                {results.length === 0 && <li>No results found.</li>}
+                {
                     results.map((r) => {
                         const post = r.key as SearchKey; // ad-hock solution. you might as well use zod or something like that to validate the key.
                         if (!post.data.title || !post.slug) throw new Error("title or slug is not found in the search result.");
@@ -79,7 +85,8 @@ export default function Index() {
                                 <p>{r.refs[0].wordaround}</p>
                             </li>
                         );
-                    })}
+                    })
+                }
             </ul>
         </section>
     );

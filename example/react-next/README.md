@@ -114,9 +114,14 @@ export default function Index() {
 
             setIndex(newIndex);
 
-            setResults(await execSearch(newIndex, e.target.value));
-            setIndexState(INDEX_STATE.INITIALIZED);
+            const results = await search(newIndex, e.target.value);
+            if (results instanceof StaticSeekError) {
+                console.error(results);
+                return;
+            }
+            setResults(results);
             console.log(`search time: ${performance.now() - start}ms`);
+            setIndexState(INDEX_STATE.INITIALIZED);
             return;
         }
 

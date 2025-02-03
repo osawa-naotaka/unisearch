@@ -97,14 +97,19 @@ const search_function = generateSearchFunction(result);
 text?.addEventListener('input', async () =>
 {
 	const start = performance.now();
-	if(text.value) {
-		const search_results = await search_function(text.value);
+	const search_results = await search_function(text.value);
 
-		if(search_results && search_results.length !== 0) {
+	if(text.value.length === 0) {
+		result.innerText = "";
+		return;
+	} else {
+		if(search_results) {
 			result.innerText = "";
-			generateResultHTMLElement(search_results).map((e) => result.appendChild(e));
-		} else if(search_results !== null) {
-			result.innerText = "not found";
+			if(search_results.length === 0) {
+				result.innerText = "No results found.";
+			} else {
+				generateResultHTMLElement(search_results).map((e) => result.appendChild(e));
+			}
 		}
 		console.log(`search time: ${performance.now() - start}ms`);
 	}

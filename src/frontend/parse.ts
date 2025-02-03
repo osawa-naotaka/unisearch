@@ -182,7 +182,7 @@ export const fuzzy: Parser<ASTNode> = map(diff(nstr, str("OR")), (x) => ({ type:
 
 const dquote: Parser<Char> = map(char('"'), () => "");
 
-export const exact: Parser<ASTNode> = map(cat(dquote, rep(diff(escgetc, or(char('"')))), or(dquote, eos)), (x) => ({
+export const exact: Parser<ASTNode> = map(cat(dquote, rep(diff(escgetc, or(char('"'))), 1), or(dquote, eos)), (x) => ({
     type: "exact",
     str: x[1].join(""),
 }));
