@@ -8,8 +8,8 @@ export const revalidate = false;
 export type SearchKey = {
     slug: string;
     data: {
-      title: string;
-    }
+        title: string;
+    };
 };
 
 export async function GET(request: Request) {

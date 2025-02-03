@@ -201,6 +201,11 @@ describe("staticseek query parser", () => {
         .toStrictEqual({val: {type: 'exact', str: "bcd acc"}, rest: []})
     );
 
+    test("exact 5", () =>
+        expect(exact([...'"']))
+        .toStrictEqual(null)
+    );
+
     test("exact null", () =>
         expect(exact([]))
         .toStrictEqual(null)

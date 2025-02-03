@@ -5,8 +5,8 @@ import type { IndexClass } from "staticseek";
 export type SearchKey = {
     id: string;
     data: {
-      title: string;
-    }
+        title: string;
+    };
 };
 
 export async function GET() {
