@@ -1,4 +1,4 @@
-import { UniSearchError } from "@src/frontend/base";
+import { StaticSeekError } from "@src/frontend/base";
 import { pipe } from "@src/util/algorithm";
 
 export const normalizeJapanese = (input: string) =>
@@ -61,9 +61,9 @@ const nonSpaceSeparatedRanges = [
 ];
 
 export function isNonSpaceSeparatedChar(char: string): boolean {
-    if (char.length === 0) throw new UniSearchError("unisearch: internal error on isNonSpaceSeparatedChar 1.");
+    if (char.length === 0) throw new StaticSeekError("staticseek: internal error on isNonSpaceSeparatedChar 1.");
     const codePoint = Array.from(char)[0].codePointAt(0);
-    if (codePoint === undefined) throw new UniSearchError("unisearch: internal error on isNonSpaceSeparatedChar 2.");
+    if (codePoint === undefined) throw new StaticSeekError("staticseek: internal error on isNonSpaceSeparatedChar 2.");
 
     return nonSpaceSeparatedRanges.some(([start, end]) => codePoint >= start && codePoint <= end);
 }

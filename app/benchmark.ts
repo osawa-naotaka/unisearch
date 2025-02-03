@@ -1,7 +1,7 @@
 import type { WikipediaArticle } from "@ref/bench/benchmark_common";
 import { calculateGzipedJsonSize, calculateJsonSize } from "@ref/util";
-import { createIndex, search, indexToObject, createIndexFromObject, UniSearchError, LinearIndex, GPULinearIndex, HybridBigramInvertedIndex } from "@dist/unisearch";
-import type { IndexClass } from "@dist/unisearch";
+import { createIndex, search, indexToObject, createIndexFromObject, StaticSeekError, LinearIndex, GPULinearIndex, HybridBigramInvertedIndex } from "@dist/staticseek";
+import type { IndexClass } from "@dist/staticseek";
 export type BenchmarkResult = {
     type: string;
     indexing_time: number;
@@ -36,7 +36,7 @@ export async function execBenchmark(
         const index_start = performance.now();
         const index = createIndex(index_class, articles, option);
         const index_end = performance.now();
-        if (index instanceof UniSearchError) throw index;
+        if (index instanceof StaticSeekError) throw index;
         const indexing_time = index_end - index_start;
         console.log(`indexing time: ${indexing_time} ms`);
         benchmark_results.indexing_time += indexing_time;
@@ -45,7 +45,7 @@ export async function execBenchmark(
         const reindex_start = performance.now();
         const reindex = createIndexFromObject(index_entry);
         const reindex_end = performance.now();
-        if (reindex instanceof UniSearchError) throw reindex;
+        if (reindex instanceof StaticSeekError) throw reindex;
         const reindexing_time = reindex_end - reindex_start;
         console.log(`reindexing time: ${reindexing_time} ms`);
         benchmark_results.reindexing_time += reindexing_time;

@@ -148,7 +148,7 @@ describe("parser elements", () => {
 
 });
 
-describe("unisearch query parser", () => {
+describe("staticseek query parser", () => {
     test("escgetc 1", () =>
         expect(escgetc([..."bcdaaa"]))
         .toStrictEqual({val: "b", rest: [..."cdaaa"]})

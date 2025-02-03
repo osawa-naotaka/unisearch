@@ -1,6 +1,6 @@
-# unisearch.js example (Astro)
+# staticseek example (Astro)
 
-This example is deployed on [https://unisearch-astro.pages.dev/](https://unisearch-astro.pages.dev/).
+This example is deployed on [https://staticseek-astro.pages.dev/](https://staticseek-astro.pages.dev/).
 
 ## Getting Started
 
@@ -23,7 +23,7 @@ npm run build
 (upload "dist" directory to your http server)
 ```
 
-## How to use unisearch.js with Astro.js
+## How to use staticseek with Astro.js
 
 ### 1. Create index to static file
 
@@ -31,7 +31,7 @@ At first, you need to create index. In this example, src/pages/searchindex.json.
 
 ```ts
 import { getCollection } from "astro:content";
-import { GPULinearIndex, UniSearchError, createIndex, indexToObject } from "unisearch.js";
+import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek";
 
 export type SearchKey = {
     id: string;
@@ -46,7 +46,7 @@ export async function GET() {
         search_targets: ["body", "data.title"],
         key_fields: ["data.title", "id"],
     });
-    if (linear_index instanceof UniSearchError) {
+    if (linear_index instanceof StaticSeekError) {
         return new Response(null, { status: 500, statusText: linear_index.message });
     }
 
@@ -81,8 +81,8 @@ import Html from "../layout/html.astro";
 </Html>
 
 <script>
-import { createIndexFromObject, search, UniSearchError } from "unisearch.js";
-import type { SearchResult, UniSearchIndex } from "unisearch.js";
+import { createIndexFromObject, search, StaticSeekError } from "staticseek";
+import type { SearchResult, StaticSeekIndex } from "staticseek";
 import type { SearchKey } from "./searchindex.json.ts";
 
 function generateSearchFunction(result_element: HTMLElement) {
@@ -94,7 +94,7 @@ function generateSearchFunction(result_element: HTMLElement) {
 	type STATE = typeof STATE[keyof typeof STATE];
 
 	let state : number = STATE.NOT_INITIALIZED;
-	let index: UniSearchIndex;
+	let index: StaticSeekIndex;
 
 	return async (search_text: string) : Promise<SearchResult[] | null> => {
 		if(state !== STATE.INITIALIZED) {
@@ -102,15 +102,15 @@ function generateSearchFunction(result_element: HTMLElement) {
 			state = STATE.FETCHING;
 			result_element.innerText = "loading search index...";
 			const response = await fetch("/searchindex.json");
-			const unisearch_index = createIndexFromObject(await response.json());
-			if(unisearch_index instanceof UniSearchError) throw unisearch_index;
-			index = unisearch_index;
+			const staticseek_index = createIndexFromObject(await response.json());
+			if(staticseek_index instanceof StaticSeekError) throw staticseek_index;
+			index = staticseek_index;
 			result_element.innerText = "";
 			state = STATE.INITIALIZED;
 		}
 
 		const query_results = await search(index, search_text);
-		if(query_results instanceof UniSearchError) {
+		if(query_results instanceof StaticSeekError) {
 			throw query_results;
 		}
 
@@ -145,9 +145,9 @@ Search results are rendered when the search text is changed.
 
 When the first search is executed, index is fetched from /searchindex.json, 'const index_tmp = await fetch("/searchindex.json")'.
 
-After the index is fetched, it is converted to UniSearchIndex object by 'const unisearch_index = createIndexFromObject(await response.json())'.
+After the index is fetched, it is converted to StaticSeekIndex object by 'const staticseek_index = createIndexFromObject(await response.json())'.
 
-Then, the search results are fetched by 'const query_results = await search(unisearch_index, search_text)'.
+Then, the search results are fetched by 'const query_results = await search(staticseek_index, search_text)'.
 
 Results are sorted by score, and you can use SearchResult type to render search results.
 In this example, results[x].key.data.title and results[x].key.id are used to link to the post page.

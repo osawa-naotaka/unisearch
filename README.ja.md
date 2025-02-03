@@ -1,9 +1,9 @@
-[README.md in English](https://github.com/osawa-naotaka/unisearch)
+[README.md in English](https://github.com/osawa-naotaka/staticseek)
 
-# unisearch.js: 静的サイト向けの軽量で高速な全文検索エンジン
+# staticseek: 静的サイト向けの軽量で高速な全文検索エンジン
 
 ## 概要
-unisearch.jsは、静的ウェブサイト向けに特化して設計されたクライアントサイドの全文検索エンジンです。文字列または文字列配列を含むJavaScriptオブジェクトの配列を検索できます。記事をJavaScriptオブジェクトに変換することで、サーバーサイドの実装なしに静的サイトで全文検索機能を実装できます。
+staticseekは、静的ウェブサイト向けに特化して設計されたクライアントサイドの全文検索エンジンです。文字列または文字列配列を含むJavaScriptオブジェクトの配列を検索できます。記事をJavaScriptオブジェクトに変換することで、サーバーサイドの実装なしに静的サイトで全文検索機能を実装できます。
 
 ## 主な機能
 - シンプルで直感的なAPI
@@ -22,11 +22,11 @@ unisearch.jsは、静的ウェブサイト向けに特化して設計された�
 一般的な使用方法は以下の通りです。
 
 ```javascript
-import { LinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
+import { LinearIndex, createIndex, search, StaticSeekError } from "staticseek";
 
 // インデックスを作成
 const index = createIndex(LinearIndex, array_of_articles);
-if(index instanceof UniSearchError) throw index;
+if(index instanceof StaticSeekError) throw index;
 
 // 検索を実行
 const result = await search(index, "検索語");
@@ -35,10 +35,10 @@ const result = await search(index, "検索語");
 WebGPUを使い検索を高速化するには、以下のようにします。
 
 ```javascript
-import { GPULinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
+import { GPULinearIndex, createIndex, search, StaticSeekError } from "staticseek";
 
 const index = createIndex(GPULinearIndex, array_of_articles);
-if(index instanceof UniSearchError) throw index;
+if(index instanceof StaticSeekError) throw index;
 
 const result = await search(index, "検索語");
 ```
@@ -89,8 +89,8 @@ const result = await search(index, "検索語");
 ## 静的サイトジェネレーター(SSG)との統合
 
 次の実装例が利用可能です。
-- [ReactとNext.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/react-next)
-- [Astro.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/astro)
+- [ReactとNext.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/react-next)
+- [Astro.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/astro)
 
 ## 制限事項
 
@@ -100,7 +100,7 @@ const result = await search(index, "検索語");
 
 ## 検索インデックスの作成
 
-unisearch.jsは、インデックス作成と検索実行の2つのフェーズで動作します。インデックスはページが読み込まれるときに1回作成され、後続のすべての検索で再利用されます。
+staticseekは、インデックス作成と検索実行の2つのフェーズで動作します。インデックスはページが読み込まれるときに1回作成され、後続のすべての検索で再利用されます。
 
 ### インデックス作成
 
@@ -112,7 +112,7 @@ function createIndex(
     index_class: IndexClass,
     contents: unknown[],
     env: SearchEnv = {},
-): UniSearchIndex | UniSearchError;
+): StaticSeekIndex | StaticSeekError;
 
 type SearchEnv = {
     field_names?: Record<FieldName, Path>;
@@ -141,8 +141,8 @@ type SearchEnv = {
   - `weight`: スコアリングのデフォルトの重み
   - `distance`: あいまい検索のデフォルトの編集距離
 
-この関数は、`UniSearchIndex`オブジェクトまたは`UniSearchError`を返します。
-envやcontentsが正しく設定されていない場合はUniSearchErrorを返します。
+この関数は、`StaticSeekIndex`オブジェクトまたは`StaticSeekError`を返します。
+envやcontentsが正しく設定されていない場合はStaticSeekErrorを返します。
 
 ### 検索結果の設定
 
@@ -195,20 +195,20 @@ const index = createIndex(LinearIndex, array_of_articles, {
 
 1. インデックスをシリアライズ可能なオブジェクトに変換します。
 ```javascript
-function indexToObject(index: UniSearchIndex): UniSearchIndexObject
+function indexToObject(index: StaticSeekIndex): StaticSeekIndexObject
 
 const index = createIndex(LinearIndex, array_of_articles);
-if(index instanceof UniSearchError) throw index;
+if(index instanceof StaticSeekError) throw index;
 const json = JSON.stringify(indexToObject(index));
 ```
 
 2. クライアントでインデックスをロードして再構築します。
 ```javascript
-function createIndexFromObject(index: UniSearchIndexObject): UniSearchIndex | UniSearchError;
+function createIndexFromObject(index: StaticSeekIndexObject): StaticSeekIndex | StaticSeekError;
 
 const resp = await fetch(index_url);
 const re_index = createIndexFromObject(resp.json());
-if(re_index instanceof UniSearchError) throw re_index;
+if(re_index instanceof StaticSeekError) throw re_index;
 const result = await search(re_index, "検索語");
 ```
 
@@ -217,13 +217,13 @@ const result = await search(re_index, "検索語");
 インデックスが作成されると、同じインデックスを使用して複数の検索を実行できます。
 
 ```typescript
-async function search(index: UniSearchIndex, query: string): Promise<SearchResult[] | UniSearchError>
+async function search(index: StaticSeekIndex, query: string): Promise<SearchResult[] | StaticSeekError>
 ```
 
 ### クエリ構文
 
 #### あいまい検索
-デフォルトでは、unisearch.jsは編集距離が1のあいまい検索を実行します。
+デフォルトでは、staticseekは編集距離が1のあいまい検索を実行します。
 つまり、検索語あたり1文字のエラーを許容します。この許容範囲は、次の2つの方法で調整できます。
 
 個々の検索では、クエリで編集距離を指定します。
@@ -321,7 +321,7 @@ export type Reference = {
 
 ### 重要な注意事項
 
-- **バージョンの互換性**: インデックス生成と検索実行を通して、unisearch.jsのバージョンが一致していることを確認してください
+- **バージョンの互換性**: インデックス生成と検索実行を通して、staticseekのバージョンが一致していることを確認してください
 - **パフォーマンス**: インデックス生成には、100記事（約3MBのテキスト）で約500msかかります。
 - **セキュリティ**: インデックス化されたコンテンツに機密情報（個人名、住所）を含めることは避けてください。
 - **最適化**: SSGでインデックスを事前に生成すると、クライアント側の処理が減少し、ロード時間が短縮されます。
@@ -334,7 +334,7 @@ export type Reference = {
 ### GPULinearIndex
 
 ```javascript
-import { GPULinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
+import { GPULinearIndex, createIndex, search, StaticSeekError } from "staticseek";
 
 const index = createIndex(GPULinearIndex, array_of_articles);
 ```
@@ -346,7 +346,7 @@ const index = createIndex(GPULinearIndex, array_of_articles);
 ### HybridBigramInvertedIndex
 
 ```javascript
-import { HybridBigramInvertedIndex, createIndex, search, UniSearchError } from "unisearch.js";
+import { HybridBigramInvertedIndex, createIndex, search, StaticSeekError } from "staticseek";
 
 const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
 ```

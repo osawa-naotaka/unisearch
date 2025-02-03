@@ -1,13 +1,13 @@
 import { test, expect, describe } from "vitest";
 import { array_of_articles } from "@test/array_of_articles.js";
-import { LinearIndex, createIndex, search, UniSearchError, HybridBigramInvertedIndex } from "@dist/unisearch.js";
-import type { UniSearchIndex } from "@dist/unisearch.js";
-import { createIndexFromObject, indexToObject } from "@dist/unisearch.js";
+import { LinearIndex, createIndex, search, StaticSeekError, HybridBigramInvertedIndex } from "@dist/staticseek";
+import type { StaticSeekIndex } from "@dist/staticseek";
+import { createIndexFromObject, indexToObject } from "@dist/staticseek";
 
 describe("basic Linear index creation and search", async () => {
-    const index: UniSearchIndex | UniSearchError  = createIndex(LinearIndex, array_of_articles);
+    const index: StaticSeekIndex | StaticSeekError  = createIndex(LinearIndex, array_of_articles);
 
-    if(index instanceof UniSearchError) throw index;
+    if(index instanceof StaticSeekError) throw index;
     const result1 = await search(index, "maintainability");
     test("matches single english article", () => 
         expect(result1).toStrictEqual([
@@ -142,7 +142,7 @@ describe("basic Linear index creation and search", async () => {
 describe("basic Linear index with array of strings.", async () => {
     const index = createIndex(LinearIndex, ["typescript", "javascript", "static", "型", "ライブラリ", "フロントエンド"]);
 
-    if(index instanceof UniSearchError) throw index;
+    if(index instanceof StaticSeekError) throw index;
     const result1 = await search(index, "javascript");
     test("matches single english word", () => 
         expect(result1).toStrictEqual([
@@ -166,7 +166,7 @@ describe("basic Linear index with array of strings.", async () => {
 
 describe("index with key_field", async () => {
     const index = createIndex(LinearIndex, array_of_articles, {key_fields: ['slug', 'data.title']})
-    if(index instanceof UniSearchError) throw index;
+    if(index instanceof StaticSeekError) throw index;
     const result1 = await search(index, "maintainability");
     test("matches single english article", () => 
         expect(result1).toStrictEqual([
@@ -190,7 +190,7 @@ describe("index with key_field", async () => {
 
 describe("index with search_targets", async () => {
     const index = createIndex(LinearIndex, array_of_articles, {search_targets: ['data.title','data.description','data.tags']});
-    if(index instanceof UniSearchError) throw index;
+    if(index instanceof StaticSeekError) throw index;
     const result1 = await search(index, "maintainability");
     test("no match", () => 
         expect(result1).toStrictEqual([])
@@ -233,11 +233,11 @@ describe("index with search_targets", async () => {
 
 describe("index to object, stringify, json, re-create index.", async () => {
     const index = createIndex(LinearIndex, array_of_articles);
-    if(index instanceof UniSearchError) throw index;
+    if(index instanceof StaticSeekError) throw index;
 
     const json = JSON.stringify(indexToObject(index));
     const re_index = createIndexFromObject(JSON.parse(json));
-    if(re_index instanceof UniSearchError) throw re_index;
+    if(re_index instanceof StaticSeekError) throw re_index;
 
     const result1 = await search(re_index, "maintainability");
     test("matches single english article", () => 
@@ -262,7 +262,7 @@ describe("index to object, stringify, json, re-create index.", async () => {
 
 describe("fuzzy search, distance 2.", async () => {
     const index = createIndex(LinearIndex, array_of_articles, {distance: 2});
-    if(index instanceof UniSearchError) throw index;
+    if(index instanceof StaticSeekError) throw index;
 
     const result1 = await search(index, "maintaibility");
     test("matches single english article, distance=2", () => 
@@ -349,7 +349,7 @@ describe("fuzzy search, distance 2.", async () => {
 
 describe("fuzzy search, distance 0.", async () => {
     const index = createIndex(LinearIndex, array_of_articles, {distance: 0});
-    if(index instanceof UniSearchError) throw index;
+    if(index instanceof StaticSeekError) throw index;
 
     const result2 = await search(index, "概要");
     test("matches multiple japanese articles", () => 
@@ -402,7 +402,7 @@ describe("fuzzy search, distance 0.", async () => {
 
 describe("exact search, distance 2.", async () => {
     const index = createIndex(LinearIndex, array_of_articles, {distance: 2});
-    if(index instanceof UniSearchError) throw index;
+    if(index instanceof StaticSeekError) throw index;
 
     const result2 = await search(index, '"概要"');
     test("matches multiple japanese articles", () => 
@@ -455,7 +455,7 @@ describe("exact search, distance 2.", async () => {
 
 describe("and search", async () => {
     const index = createIndex(LinearIndex, array_of_articles);
-    if(index instanceof UniSearchError) throw index;
+    if(index instanceof StaticSeekError) throw index;
 
     const result2 = await search(index, "概要 ユーザーインターフェース");
     test("matches single japanese article", () => 
@@ -494,7 +494,7 @@ describe("and search", async () => {
 
 describe("not search", async () => {
     const index = createIndex(LinearIndex, array_of_articles);
-    if(index instanceof UniSearchError) throw index;
+    if(index instanceof StaticSeekError) throw index;
 
     const result2 = await search(index, "概要 react -スケーラブル");
     test("matches single japanese article", () => 
@@ -526,7 +526,7 @@ describe("not search", async () => {
 
 describe("or search", async () => {
     const index = createIndex(LinearIndex, array_of_articles, {key_fields: ["slug"]});
-    if(index instanceof UniSearchError) throw index;
+    if(index instanceof StaticSeekError) throw index;
 
     const result2 = await search(index, 'デザイン OR インタラクション');
     test("matches multiple japanese articles", () => 
@@ -565,7 +565,7 @@ describe("or search", async () => {
 
 describe("from: search", async () => {
     const index = createIndex(LinearIndex, array_of_articles, { field_names: { link: "slug" } });
-    if(index instanceof UniSearchError) throw index;
+    if(index instanceof StaticSeekError) throw index;
 
     const result1 = await search(index, "from:link guide");
     test("matches single english article", () => 
@@ -590,7 +590,7 @@ describe("from: search", async () => {
 
 describe("from: weight: search", async () => {
     const index = createIndex(LinearIndex, array_of_articles);
-    if(index instanceof UniSearchError) throw index;
+    if(index instanceof StaticSeekError) throw index;
 
     const result1 = await search(index, "from:slug weight:2.5 guide");
     test("matches single english article", () => 
@@ -615,7 +615,7 @@ describe("from: weight: search", async () => {
 
 describe("long query search", async () => {
     const index = createIndex(LinearIndex, array_of_articles);
-    if(index instanceof UniSearchError) throw index;
+    if(index instanceof StaticSeekError) throw index;
 
     const keyword = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
     console.log(keyword.length);
@@ -628,7 +628,7 @@ describe("long query search", async () => {
 
 describe("Hybrid bigram inverted index creation and search", async () => {
     const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
-    if(index instanceof UniSearchError) throw index;
+    if(index instanceof StaticSeekError) throw index;
 
     const result1 = await search(index, "maintainability");
     test("matches single english article", () => 
@@ -747,7 +747,7 @@ describe("Hybrid bigram inverted index creation and search", async () => {
 
 describe("Hybrid bigram inverted index fuzzy search", async () => {
     const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
-    if(index instanceof UniSearchError) throw index;
+    if(index instanceof StaticSeekError) throw index;
 
     const result1 = await search(index, "再用可能");
     test("matches multiple japanese articles, one letter deletion, one or two bigrams not matched", () => 
@@ -889,7 +889,7 @@ describe("Hybrid bigram inverted index fuzzy search", async () => {
 
 describe("Hybrid bigram inverted index fuzzy search, with alphabet and kanji", async () => {
     const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
-    if(index instanceof UniSearchError) throw index;
+    if(index instanceof StaticSeekError) throw index;
 
     const result1 = await search(index, "再利用可能 j");
     test("matches single japanese article, with alphabet and kanji", () => 

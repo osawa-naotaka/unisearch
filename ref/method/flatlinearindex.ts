@@ -1,5 +1,5 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
-import { UniSearchError } from "@src/frontend/base";
+import { StaticSeekError } from "@src/frontend/base";
 import bitap_dist1 from "@ref/method/wgsl/bitap_dist1.wgsl?raw";
 import {
     BinarySearchType,
@@ -299,7 +299,7 @@ export class FlatLinearIndex implements SearchIndex<FlatLinearIndexEntry> {
             this.index_entry.toc,
             BinarySearchType.Exact,
         );
-        if (index === null) throw new UniSearchError("unisearch.js: getReference internal error.");
+        if (index === null) throw new StaticSeekError("staticseek: getReference internal error.");
         const toc = this.index_entry.toc[index];
         return {
             id: toc.id,

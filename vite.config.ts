@@ -7,7 +7,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: './src/main.ts',
-      fileName: 'unisearch',
+      fileName: 'staticseek',
       formats: ['es'],
     },
     outDir: './dist',

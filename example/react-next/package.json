@@ -15,7 +15,7 @@
         "next-mdx-remote": "^5.0.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
-        "unisearch.js": "^1.3.0"
+        "staticseek": "^2.0.0"
     },
     "devDependencies": {
         "@biomejs/biome": "1.9.4",

@@ -5,7 +5,7 @@ edition = "2021"
 authors = ["osawa naotaka <ohsawa.naotaka@gmail.com>"]
 description = "bitap searcher"
 license = "MIT"
-repository = "https://github.com/osawa-naotaka/unisearch"
+repository = "https://github.com/osawa-naotaka/staticseek"
 
 
 [lib]

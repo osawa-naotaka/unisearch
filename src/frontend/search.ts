@@ -1,20 +1,20 @@
-import type { SearchEnv, SearchIndex, SearchResult, UniIndex } from "@src/frontend/base";
-import { UniSearchError } from "@src/frontend/base";
+import type { SearchEnv, SearchIndex, SearchResult, StaticIndex } from "@src/frontend/base";
+import { StaticSeekError } from "@src/frontend/base";
 import type { ASTNode } from "@src/frontend/parse";
 import { expr } from "@src/frontend/parse";
 import { defaultNormalizer, splitBySpace } from "@src/util/preprocess";
 
 export async function search<T>(
-    index: UniIndex<SearchIndex<T>>,
+    index: StaticIndex<SearchIndex<T>>,
     query: string,
-): Promise<SearchResult[] | UniSearchError> {
+): Promise<SearchResult[] | StaticSeekError> {
     try {
         const ast = expr([...normalizeQuery(query)]);
         if (ast === null) return [];
         const r = await evalQuery(index.index_entry, index.env)(ast.val);
         return r.type === "excludes" ? [] : r.results.sort((a, b) => b.score - a.score);
     } catch (e) {
-        if (e instanceof UniSearchError) return e;
+        if (e instanceof StaticSeekError) return e;
         throw e;
     }
 }
