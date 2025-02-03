@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { UniSearchError, createIndexFromObject, search } from "unisearch.js";
-import type { SearchResult, UniSearchIndex } from "unisearch.js";
+import { StaticSeekError, createIndexFromObject, search } from "staticseek.js";
+import type { SearchResult, StaticSeekIndex } from "staticseek.js";
 import type { SearchKey } from "@/app/searchindex.json/route.ts";
 
 export default function Index() {
@@ -16,7 +16,7 @@ export default function Index() {
 
     const [results, setResults] = useState<SearchResult[]>([]);
     const [index_state, setIndexState] = useState<INDEX_STATE>(INDEX_STATE.NOT_INITIALIZED);
-    const [index, setIndex] = useState<UniSearchIndex | null>(null);
+    const [index, setIndex] = useState<StaticSeekIndex | null>(null);
 
     const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const start = performance.now();
@@ -28,7 +28,7 @@ export default function Index() {
             const response_json = await response.json();
             const newIndex = createIndexFromObject(response_json);
 
-            if (newIndex instanceof UniSearchError) {
+            if (newIndex instanceof StaticSeekError) {
                 console.error(newIndex);
                 return;
             }
@@ -75,7 +75,7 @@ export default function Index() {
     );
 }
 
-async function execSearch(index: UniSearchIndex, searchText: string): Promise<SearchResult[]> {
+async function execSearch(index: StaticSeekIndex, searchText: string): Promise<SearchResult[]> {
     const results = await search(index, searchText);
-    return results instanceof UniSearchError ? [] : results;
+    return results instanceof StaticSeekError ? [] : results;
 }

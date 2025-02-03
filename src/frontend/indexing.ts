@@ -1,5 +1,5 @@
-import type { SearchEnv, SearchIndex, UniIndex } from "@src/frontend/base";
-import { type Path, UniSearchError, Version } from "@src/frontend/base";
+import type { SearchEnv, SearchIndex, StaticIndex } from "@src/frontend/base";
+import { type Path, StaticSeekError, Version } from "@src/frontend/base";
 import { IndexTypes } from "@src/frontend/indextypes";
 import { defaultNormalizer } from "@src/util/preprocess";
 import { extractStringsAll, getValueByPath, setObject } from "@src/util/traverser";
@@ -11,10 +11,10 @@ export function createIndex<T>(
     index_class: IndexClass,
     contents: unknown[],
     env: SearchEnv = {},
-): UniIndex<SearchIndex<T>> | UniSearchError {
+): StaticIndex<SearchIndex<T>> | StaticSeekError {
     try {
-        if (!Array.isArray(contents)) throw new UniSearchError("unisearch: contents must be array.");
-        if (contents.length === 0) throw new UniSearchError("unisearch: contents must not be empty.");
+        if (!Array.isArray(contents)) throw new StaticSeekError("staticseek: contents must be array.");
+        if (contents.length === 0) throw new StaticSeekError("staticseek: contents must not be empty.");
 
         // indexing for search
         const search_index = new index_class();
@@ -31,7 +31,7 @@ export function createIndex<T>(
                     } else if (Array.isArray(obj)) {
                         search_index.setToIndex(id, path, defaultNormalizer(obj.join(" ")));
                     } else {
-                        throw new UniSearchError(`unisearch: ${path} is not string or array of string.`);
+                        throw new StaticSeekError(`staticseek: ${path} is not string or array of string.`);
                     }
                 }
             } else {
@@ -81,18 +81,18 @@ export function createIndex<T>(
                 };
             }
         }
-        throw new UniSearchError("unisearch: index class not found.");
+        throw new StaticSeekError("staticseek: index class not found.");
     } catch (e) {
-        if (e instanceof UniSearchError) {
+        if (e instanceof StaticSeekError) {
             return e;
         }
         throw e;
     }
 }
 
-export function createIndexFromObject<T>(index: UniIndex<T>): UniIndex<SearchIndex<T>> | UniSearchError {
+export function createIndexFromObject<T>(index: StaticIndex<T>): StaticIndex<SearchIndex<T>> | StaticSeekError {
     if (index.version !== Version)
-        return new UniSearchError(
+        return new StaticSeekError(
             `Older versions of the index are used. Please rebuild the index with version ${Version}.`,
         );
     return {
@@ -103,7 +103,7 @@ export function createIndexFromObject<T>(index: UniIndex<T>): UniIndex<SearchInd
     };
 }
 
-export function indexToObject<T>(index: UniIndex<SearchIndex<T>>): UniIndex<T> {
+export function indexToObject<T>(index: StaticIndex<SearchIndex<T>>): StaticIndex<T> {
     return {
         version: index.version,
         type: index.type,

@@ -1,5 +1,5 @@
 // version
-export const Version = "1.2.3";
+export const Version = "2.0.0";
 
 // types
 
@@ -9,10 +9,10 @@ export type FieldName = string;
 export type FieldNameMap = Record<FieldName, Path>;
 
 // error class
-export class UniSearchError extends Error {}
+export class StaticSeekError extends Error {}
 
 // index
-export type UniIndex<T> = {
+export type StaticIndex<T> = {
     version: string;
     type: string;
     env: SearchEnv;
@@ -52,5 +52,5 @@ export interface SearchIndex<T> {
     search(env: SearchEnv, keyword: string): Promise<SearchResult[]>;
 }
 
-export type UniSearchIndex = UniIndex<SearchIndex<unknown>>;
-export type UniSearchIndexObject = UniIndex<unknown>;
+export type StaticSeekIndex = StaticIndex<SearchIndex<unknown>>;
+export type StaticSeekIndexObject = StaticIndex<unknown>;

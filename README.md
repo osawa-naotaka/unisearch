@@ -1,9 +1,9 @@
-[README.md in Japanese](https://github.com/osawa-naotaka/unisearch/blob/main/README.ja.md)
+[README.md in Japanese](https://github.com/osawa-naotaka/staticseek/blob/main/README.ja.md)
 
-# unisearch.js: A Lightweight, Fast Full-text Search Engine for Static Sites
+# staticseek.js: A Lightweight, Fast Full-text Search Engine for Static Sites
 
 ## Overview
-unisearch.js is a client-side full-text search engine designed specifically for static websites. It enables searching through arrays of JavaScript objects containing strings or string arrays. By converting your articles into JavaScript objects, you can implement full-text search functionality on static sites without any server-side implementation.
+staticseek.js is a client-side full-text search engine designed specifically for static websites. It enables searching through arrays of JavaScript objects containing strings or string arrays. By converting your articles into JavaScript objects, you can implement full-text search functionality on static sites without any server-side implementation.
 
 ## Key Features
 - Simple and intuitive API
@@ -20,11 +20,11 @@ unisearch.js is a client-side full-text search engine designed specifically for 
 ## Quick Start
 
 ```javascript
-import { LinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
+import { LinearIndex, createIndex, search, StaticSeekError } from "staticseek.js";
 
 // Create an index
 const index = createIndex(LinearIndex, array_of_articles);
-if(index instanceof UniSearchError) throw index;
+if(index instanceof StaticSeekError) throw index;
 
 // Perform a search
 const result = await search(index, "search word");
@@ -33,10 +33,10 @@ const result = await search(index, "search word");
 For WebGPU-accelerated searching:
 
 ```javascript
-import { GPULinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
+import { GPULinearIndex, createIndex, search, StaticSeekError } from "staticseek.js";
 
 const index = createIndex(GPULinearIndex, array_of_articles);
-if(index instanceof UniSearchError) throw index;
+if(index instanceof StaticSeekError) throw index;
 
 const result = await search(index, "search word");
 ```
@@ -87,8 +87,8 @@ For detailed benchmarks across different hardware configurations and index types
 ## Integration with Static Site Generators
 
 Example implementations are available for:
-- [React and Next.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/react-next)
-- [Astro.js](https://github.com/osawa-naotaka/unisearch/tree/main/example/astro)
+- [React and Next.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/react-next)
+- [Astro.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/astro)
 
 ## Limitations
 
@@ -98,7 +98,7 @@ Example implementations are available for:
 
 ## Creating Search Indices
 
-unisearch.js operates in two phases: index creation and search execution. The index is created once when the page loads and is reused for all subsequent searches.
+staticseek.js operates in two phases: index creation and search execution. The index is created once when the page loads and is reused for all subsequent searches.
 
 ### Basic Index Creation
 
@@ -110,7 +110,7 @@ function createIndex(
     index_class: IndexClass,
     contents: unknown[],
     env: SearchEnv = {},
-): UniSearchIndex | UniSearchError;
+): StaticSeekIndex | StaticSeekError;
 
 type SearchEnv = {
     field_names?: Record<FieldName, Path>;
@@ -139,7 +139,7 @@ type SearchEnv = {
   - `weight`: Default weight for scoring
   - `distance`: Default edit distance for fuzzy search
 
-The function returns either a `UniSearchIndex` object or `UniSearchError` if validation fails.
+The function returns either a `StaticSeekIndex` object or `StaticSeekError` if validation fails.
 
 ### Configuring Search Results
 
@@ -192,20 +192,20 @@ For static sites, you can pre-generate indices during build time to optimize pag
 
 1. Convert index to a serializable object:
 ```javascript
-function indexToObject(index: UniSearchIndex): UniSearchIndexObject
+function indexToObject(index: StaticSeekIndex): StaticSeekIndexObject
 
 const index = createIndex(LinearIndex, array_of_articles);
-if(index instanceof UniSearchError) throw index;
+if(index instanceof StaticSeekError) throw index;
 const json = JSON.stringify(indexToObject(index));
 ```
 
 2. Load and reconstruct index on the client:
 ```javascript
-function createIndexFromObject(index: UniSearchIndexObject): UniSearchIndex | UniSearchError;
+function createIndexFromObject(index: StaticSeekIndexObject): StaticSeekIndex | StaticSeekError;
 
 const resp = await fetch(index_url);
 const re_index = createIndexFromObject(resp.json());
-if(re_index instanceof UniSearchError) throw re_index;
+if(re_index instanceof StaticSeekError) throw re_index;
 const result = await search(re_index, "search word");
 ```
 
@@ -214,13 +214,13 @@ const result = await search(re_index, "search word");
 Once an index is created, you can perform multiple searches using the same index:
 
 ```typescript
-async function search(index: UniSearchIndex, query: string): Promise<SearchResult[] | UniSearchError>
+async function search(index: StaticSeekIndex, query: string): Promise<SearchResult[] | StaticSeekError>
 ```
 
 ### Query Syntax
 
 #### Fuzzy Search
-By default, unisearch.js performs fuzzy search with an edit distance of 1,
+By default, staticseek.js performs fuzzy search with an edit distance of 1,
 meaning it tolerates one character error per search term. You can adjust this tolerance in two ways:
 
 For individual searches, specify the edit distance in the query:
@@ -318,7 +318,7 @@ export type Reference = {
 
 ### Important Notes
 
-- **Version Compatibility**: Ensure matching unisearch.js versions between index generation and usage
+- **Version Compatibility**: Ensure matching staticseek.js versions between index generation and usage
 - **Performance**: Index generation takes ~500ms for 100 articles (~3MB of text)
 - **Security**: Avoid including sensitive information (personal names, addresses) in indexed content
 - **Optimization**: Pre-generating indices with SSG reduces client-side processing and improves load times
@@ -332,7 +332,7 @@ The full-text search functionality provided by `LinearIndex` is sufficient for m
 ### GPU Linear Index
 
 ```javascript
-import { GPULinearIndex, createIndex, search, UniSearchError } from "unisearch.js";
+import { GPULinearIndex, createIndex, search, StaticSeekError } from "staticseek.js";
 
 const index = createIndex(GPULinearIndex, array_of_articles);
 ```
@@ -344,7 +344,7 @@ If a GPU is not available in the execution environment, `GPULinearIndex` will au
 ### Hybrid Bigram Inverted Index
 
 ```javascript
-import { HybridBigramInvertedIndex, createIndex, search, UniSearchError } from "unisearch.js";
+import { HybridBigramInvertedIndex, createIndex, search, StaticSeekError } from "staticseek.js";
 
 const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
 ```

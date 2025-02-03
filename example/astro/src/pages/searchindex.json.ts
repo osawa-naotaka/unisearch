@@ -1,6 +1,6 @@
 import { getCollection } from "astro:content";
-import { GPULinearIndex, UniSearchError, createIndex, indexToObject } from "unisearch.js";
-import type { IndexClass } from "unisearch.js";
+import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek.js";
+import type { IndexClass } from "staticseek.js";
 
 export type SearchKey = {
     id: string;
@@ -16,7 +16,7 @@ export async function GET() {
         search_targets: ["body", "data.title"],
         key_fields: ["data.title", "id"],
     });
-    if (linear_index instanceof UniSearchError) {
+    if (linear_index instanceof StaticSeekError) {
         return new Response(null, { status: 500, statusText: linear_index.message });
     }
 

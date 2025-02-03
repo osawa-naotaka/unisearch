@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { UniSearchError } from "@src/frontend/base";
+import { StaticSeekError } from "@src/frontend/base";
 import { createIndex } from "@src/frontend/indexing";
 import { LinearIndex } from "@src/method/linearindex";
 import { search } from "@src/frontend/search";
@@ -12,7 +12,7 @@ describe("search test", async () => {
     ];
 
     const index = createIndex(LinearIndex, contents, { key_fields: ["title"] });
-    if(index instanceof UniSearchError) {
+    if(index instanceof StaticSeekError) {
         throw index;
     }
 

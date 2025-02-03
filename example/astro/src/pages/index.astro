@@ -13,8 +13,8 @@ import Html from "../layout/html.astro";
 </Html>
 
 <script>
-import { createIndexFromObject, search, UniSearchError } from "unisearch.js";
-import type { SearchResult, UniSearchIndex } from "unisearch.js";
+import { createIndexFromObject, search, StaticSeekError } from "staticseek.js";
+import type { SearchResult, StaticSeekIndex } from "staticseek.js";
 import type { SearchKey } from "./searchindex.json.ts";
 
 function generateSearchFunction(result_element: HTMLElement) {
@@ -26,7 +26,7 @@ function generateSearchFunction(result_element: HTMLElement) {
 	type STATE = typeof STATE[keyof typeof STATE];
 
 	let state : number = STATE.NOT_INITIALIZED;
-	let index: UniSearchIndex;
+	let index: StaticSeekIndex;
 
 	return async (search_text: string) : Promise<SearchResult[] | null> => {
 		if(state !== STATE.INITIALIZED) {
@@ -34,15 +34,15 @@ function generateSearchFunction(result_element: HTMLElement) {
 			state = STATE.FETCHING;
 			result_element.innerText = "loading search index...";
 			const response = await fetch("/searchindex.json");
-			const unisearch_index = createIndexFromObject(await response.json());
-			if(unisearch_index instanceof UniSearchError) throw unisearch_index;
-			index = unisearch_index;
+			const staticseek_index = createIndexFromObject(await response.json());
+			if(staticseek_index instanceof StaticSeekError) throw staticseek_index;
+			index = staticseek_index;
 			result_element.innerText = "";
 			state = STATE.INITIALIZED;
 		}
 
 		const query_results = await search(index, search_text);
-		if(query_results instanceof UniSearchError) {
+		if(query_results instanceof StaticSeekError) {
 			throw query_results;
 		}
 

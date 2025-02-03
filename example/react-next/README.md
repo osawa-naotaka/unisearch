@@ -1,6 +1,6 @@
-# unisearch.js example (React + Next.js)
+# staticseek.js example (React + Next.js)
 
-This example is deployed on [https://unisearch-react-next.pages.dev/](https://unisearch-react-next.pages.dev/).
+This example is deployed on [https://staticseek-react-next.pages.dev/](https://staticseek-react-next.pages.dev/).
 
 ## Getting Started
 
@@ -23,7 +23,7 @@ npm run build
 (upload "out" directory to your http server)
 ```
 
-## How to use unisearch.js with Next.js
+## How to use staticseek.js with Next.js
 
 ### 1. Create index to static file
 
@@ -31,7 +31,7 @@ At first, you need to create index. In this example, src/app/searchindex.json/ro
 
 ```ts
 import { getAllPosts } from "@/lib/posts";
-import { GPULinearIndex, UniSearchError, createIndex, indexToObject } from "unisearch.js";
+import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek.js";
 
 export const dynamic = "force-static";
 export const revalidate = false;
@@ -46,7 +46,7 @@ export type SearchKey = {
 export async function GET(request: Request) {
     const allPosts = await getAllPosts();
     const index = createIndex(GPULinearIndex, allPosts, { key_fields: ["data.title", "slug"], search_targets: ["data.title", "content"] });
-    if (index instanceof UniSearchError) {
+    if (index instanceof StaticSeekError) {
         return new Response(index.message, { status: 500 });
     }
     return Response.json(indexToObject(index));
@@ -68,8 +68,8 @@ Next, you need to create search page. src/app/page.tsx is used for this purpose.
 
 import Link from "next/link";
 import { useState } from "react";
-import { UniSearchError, createIndexFromObject, search } from "unisearch.js";
-import type { SearchResult, UniSearchIndex } from "unisearch.js";
+import { StaticSeekError, createIndexFromObject, search } from "staticseek.js";
+import type { SearchResult, StaticSeekIndex } from "staticseek.js";
 import type { SearchKey } from "@/app/searchindex.json/route.ts";
 
 export default function Index() {
@@ -82,7 +82,7 @@ export default function Index() {
 
     const [results, setResults] = useState<SearchResult[]>([]);
     const [index_state, setIndexState] = useState<INDEX_STATE>(INDEX_STATE.NOT_INITIALIZED);
-    const [index, setIndex] = useState<UniSearchIndex | null>(null);
+    const [index, setIndex] = useState<StaticSeekIndex | null>(null);
 
     const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (index_state === INDEX_STATE.FETCHING) return;
@@ -93,7 +93,7 @@ export default function Index() {
             const response_json = await response.json();
             const newIndex = createIndexFromObject(response_json);
 
-            if (newIndex instanceof UniSearchError) {
+            if (newIndex instanceof StaticSeekError) {
                 console.error(newIndex);
                 return;
             }
@@ -138,9 +138,9 @@ export default function Index() {
     );
 }
 
-async function execSearch(index: UniSearchIndex, searchText: string): Promise<SearchResult[]> {
+async function execSearch(index: StaticSeekIndex, searchText: string): Promise<SearchResult[]> {
     const results = await search(index, searchText);
-    return results instanceof UniSearchError ? [] : results;
+    return results instanceof StaticSeekError ? [] : results;
 }
 ```
 
@@ -149,7 +149,7 @@ Search results are rendered via useState hook of "results" state.
 
 When the first search is executed, index is fetched from /searchindex.json, 'const response = await fetch("/searchindex.json")'.
 
-After the index is fetched, it is converted to UniSearchIndex object by 'const index = createIndexFromObject(response.json())'.
+After the index is fetched, it is converted to StaticSeekIndex object by 'const index = createIndexFromObject(response.json())'.
 
 Then, the search results are fetched by 'const results = await search(index, search_keyword)'.
 

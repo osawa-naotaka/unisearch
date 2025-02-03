@@ -6,8 +6,8 @@ import { LinearIndex } from "@ref/method/linearindex";
 import { LinearIndexString } from "@ref/method/linearindexstring";
 import { GPULinearIndex } from "@ref/method/gpulinearindex";
 import { HybridBigramInvertedIndex } from "@ref/method/indextypes";
-import { UniSearchError } from "@src/main";
-import { createIndex } from "@src/frontend/indexing";
+import { StaticSeekError } from "@src/main";
+import { createIndex } from "@ref/method/indexing";
 import { search } from "@src/frontend/search";
 import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
@@ -40,7 +40,7 @@ export async function execBenchmark(
         const index_start = performance.now();
         const index = createIndex(index_class, articles, option);
         const index_end = performance.now();
-        if (index instanceof UniSearchError) throw index;
+        if (index instanceof StaticSeekError) throw index;
         const indexing_time = index_end - index_start;
         console.log(`indexing time: ${indexing_time} ms`);
         benchmark_results.indexing_time += indexing_time;
@@ -49,7 +49,7 @@ export async function execBenchmark(
         const reindex_start = performance.now();
         const reindex = createIndexFromObject(index_entry);
         const reindex_end = performance.now();
-        if (reindex instanceof UniSearchError) throw reindex;
+        if (reindex instanceof StaticSeekError) throw reindex;
         const reindexing_time = reindex_end - reindex_start;
         console.log(`reindexing time: ${reindexing_time} ms`);
         benchmark_results.reindexing_time += reindexing_time;
