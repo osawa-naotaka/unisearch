@@ -32,10 +32,21 @@ function generateSearchFunction(result_element: HTMLElement) {
 		if(state !== STATE.INITIALIZED) {
 			if(state === STATE.FETCHING) return null;
 			state = STATE.FETCHING;
-			result_element.innerText = "loading search index...";
+			result_element.innerText = "Loading search index...";
 			const response = await fetch("/searchindex.json");
+			if(!response.ok) {
+				console.error("fail to fetch index: " + response.statusText);
+				result_element.innerText = "";
+				state = STATE.NOT_INITIALIZED;
+				return null;
+			}
 			const staticseek_index = createIndexFromObject(await response.json());
-			if(staticseek_index instanceof StaticSeekError) throw staticseek_index;
+			if(staticseek_index instanceof StaticSeekError) {
+				console.error(staticseek_index);
+				result_element.innerText = "";
+				state = STATE.NOT_INITIALIZED;
+				return null;
+			}
 			index = staticseek_index;
 			result_element.innerText = "";
 			state = STATE.INITIALIZED;
@@ -43,7 +54,8 @@ function generateSearchFunction(result_element: HTMLElement) {
 
 		const query_results = await search(index, search_text);
 		if(query_results instanceof StaticSeekError) {
-			throw query_results;
+			console.error(query_results);
+			return null;
 		}
 
 		return query_results;
