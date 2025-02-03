@@ -72,21 +72,19 @@ export default function Index() {
             <ul>
                 {index_state === INDEX_STATE.FETCHING && <li>loading search index...</li>}
                 {results.length === 0 && <li>No results found.</li>}
-                {
-                    results.map((r) => {
-                        const post = r.key as SearchKey; // ad-hock solution. you might as well use zod or something like that to validate the key.
-                        if (!post.data.title || !post.slug) throw new Error("title or slug is not found in the search result.");
+                {results.map((r) => {
+                    const post = r.key as SearchKey; // ad-hock solution. you might as well use zod or something like that to validate the key.
+                    if (!post.data.title || !post.slug) throw new Error("title or slug is not found in the search result.");
 
-                        return (
-                            <li key={post.slug}>
-                                <Link href={`/posts/${post.slug}`}>
-                                    <h3>{post.data.title}</h3>
-                                </Link>
-                                <p>{r.refs[0].wordaround}</p>
-                            </li>
-                        );
-                    })
-                }
+                    return (
+                        <li key={post.slug}>
+                            <Link href={`/posts/${post.slug}`}>
+                                <h3>{post.data.title}</h3>
+                            </Link>
+                            <p>{r.refs[0].wordaround}</p>
+                        </li>
+                    );
+                })}
             </ul>
         </section>
     );
