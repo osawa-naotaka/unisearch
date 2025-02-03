@@ -33,6 +33,13 @@ At first, you need to create index. In this example, src/pages/searchindex.json.
 import { getCollection } from "astro:content";
 import { GPULinearIndex, UniSearchError, createIndex, indexToObject } from "unisearch.js";
 
+export type SearchKey = {
+    id: string;
+    data: {
+      title: string;
+    }
+};
+
 export async function GET() {
     const posts = (await getCollection("posts"));
     const linear_index = createIndex(GPULinearIndex, posts, {
@@ -76,8 +83,9 @@ import Html from "../layout/html.astro";
 <script>
 import { createIndexFromObject, search, UniSearchError } from "unisearch.js";
 import type { SearchResult, UniSearchIndex } from "unisearch.js";
+import type { SearchKey } from "./searchindex.json.ts";
 
-function generateSearchFunction() {
+function generateSearchFunction(result_element: HTMLElement) {
 	const STATE = {
 		NOT_INITIALIZED: 0,
 		FETCHING: 1,
@@ -88,14 +96,16 @@ function generateSearchFunction() {
 	let state : number = STATE.NOT_INITIALIZED;
 	let index: UniSearchIndex;
 
-	return async (search_text: string) : Promise<SearchResult[]> => {
+	return async (search_text: string) : Promise<SearchResult[] | null> => {
 		if(state !== STATE.INITIALIZED) {
-			if(state === STATE.FETCHING) return [];
+			if(state === STATE.FETCHING) return null;
 			state = STATE.FETCHING;
+			result_element.innerText = "loading search index...";
 			const response = await fetch("/searchindex.json");
 			const unisearch_index = createIndexFromObject(await response.json());
 			if(unisearch_index instanceof UniSearchError) throw unisearch_index;
 			index = unisearch_index;
+			result_element.innerText = "";
 			state = STATE.INITIALIZED;
 		}
 
@@ -112,18 +122,17 @@ const text   = document.querySelector<HTMLInputElement>('.search');
 const result = document.querySelector<HTMLElement>('.search-result');
 if(!text || !result) throw new Error("text or result is not found");
 
-const search_function = generateSearchFunction();
+const search_function = generateSearchFunction(result);
 
 text?.addEventListener('input', async () =>
 {
-	result.innerText = "";
 	if(text.value) {
 		const search_results = await search_function(text.value);
 
-		console.log(search_results);
 		if(search_results && search_results.length !== 0) {
+			result.innerText = "";
 			generateResultHTMLElement(search_results).map((e) => result.appendChild(e));
-		} else {
+		} else if(search_results !== null) {
 			result.innerText = "not found";
 		}
 	}
@@ -141,5 +150,6 @@ After the index is fetched, it is converted to UniSearchIndex object by 'const u
 Then, the search results are fetched by 'const query_results = await search(unisearch_index, search_text)'.
 
 Results are sorted by score, and you can use SearchResult type to render search results.
-In this example, results[x].key["data.title"] and results[x].key.id are used to link to the post page. These information is indexed because key_fields is specified when creating index.
+In this example, results[x].key.data.title and results[x].key.id are used to link to the post page.
+These information is indexed because key_fields is specified when creating index.
 In addition, results[x].refs[0].wordaround is used to show the mached part of the text content.
