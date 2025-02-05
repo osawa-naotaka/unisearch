@@ -90,8 +90,3 @@ export default function Index() {
         </section>
     );
 }
-
-async function execSearch(index: StaticSeekIndex, searchText: string): Promise<SearchResult[]> {
-    const results = await search(index, searchText);
-    return results instanceof StaticSeekError ? [] : results;
-}
