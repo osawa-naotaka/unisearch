@@ -29,6 +29,7 @@ function generateSearchFunction(result_element: HTMLElement) {
 	let index: StaticSeekIndex;
 
 	return async (search_text: string) : Promise<SearchResult[] | null> => {
+		const start = performance.now();
 		if(state !== STATE.INITIALIZED) {
 			if(state === STATE.FETCHING) return null;
 			state = STATE.FETCHING;
@@ -40,7 +41,8 @@ function generateSearchFunction(result_element: HTMLElement) {
 				state = STATE.NOT_INITIALIZED;
 				return null;
 			}
-			const staticseek_index = createIndexFromObject(await response.json());
+			const response_json = await response.json()
+			const staticseek_index = createIndexFromObject(response_json);
 			if(staticseek_index instanceof StaticSeekError) {
 				console.error(staticseek_index);
 				result_element.innerText = "";
@@ -50,6 +52,16 @@ function generateSearchFunction(result_element: HTMLElement) {
 			index = staticseek_index;
 			result_element.innerText = "";
 			state = STATE.INITIALIZED;
+
+			const query_results = await search(index, search_text);
+			if(query_results instanceof StaticSeekError) {
+				console.error(query_results);
+				return null;
+			}
+
+			console.log(`search time: ${performance.now() - start}ms`);
+            console.log(`index size: ${new Blob([JSON.stringify(response_json)]).size} byte.`);
+			return query_results;
 		}
 
 		const query_results = await search(index, search_text);
@@ -58,6 +70,7 @@ function generateSearchFunction(result_element: HTMLElement) {
 			return null;
 		}
 
+		console.log(`search time: ${performance.now() - start}ms`);
 		return query_results;
 	};
 }
@@ -96,7 +109,6 @@ const search_function = generateSearchFunction(result);
 
 text?.addEventListener('input', async () =>
 {
-	const start = performance.now();
 	const search_results = await search_function(text.value);
 
 	if(text.value.length === 0) {
@@ -111,7 +123,6 @@ text?.addEventListener('input', async () =>
 				generateResultHTMLElement(search_results).map((e) => result.appendChild(e));
 			}
 		}
-		console.log(`search time: ${performance.now() - start}ms`);
 	}
 });
 </script>
