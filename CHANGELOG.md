@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.1.0] - 2025-02-06
+### Changed
+- disable fuzzy search for queries of 2 characters or less
+
 ## [2.0.1] - 2025-02-04
 ### Fixed
 - fix bug that query with a single character of '"' results in error.
@@ -100,7 +104,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - search frontend, google-like syntax
 - sorting search result based on TF-IDF
 
-[Unreleased]: https://github.com/osawa-naotaka/staticseek/compare/v2.0.1...HEAD
+[Unreleased]: https://github.com/osawa-naotaka/staticseek/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/osawa-naotaka/staticseek/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/osawa-naotaka/staticseek/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/osawa-naotaka/staticseek/compare/v1.3.0...v2.0.0
 [1.3.0]: https://github.com/osawa-naotaka/staticseek/compare/v1.2.4...v1.3.0
