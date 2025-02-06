@@ -367,65 +367,80 @@ Despite these drawbacks, `HybridBigramInvertedIndex` ensures ultra-fast search p
 
 The following benchmarks were conducted using an **Intel Core i5 13400F** and **NVIDIA GeForce RTX 4070**. The index size is represented in bytes, while all other metrics are measured in milliseconds (ms).
 
-#### Exact Match Search
-| index size | Linear | GPU | Hybrid |
+#### Exact Match Search (English)
+| index size | Linear | GPU | Inverted |
 | ---------- | ------ | --- | ------ |
-| 537613     | 0.42 | 0.43 | 0.06 |
-| 829107     | 0.61 | 0.65 | 0.05 |
-| 1712278    | 1.23 | 1.23 | 0.06 |
-| 3001203    | 2.09 | 2.12 | 0.07 |
-| 3747673    | 2.65 | 2.79 | 0.07 |
+| 537,613     | 0.42 | 0.43 | 0.06 |
+| 829,107     | 0.61 | 0.65 | 0.05 |
+| 1,712,278    | 1.23 | 1.23 | 0.06 |
+| 3,001,203    | 2.09 | 2.12 | 0.07 |
+| 3,747,673    | 2.65 | 2.79 | 0.07 |
 
 
-#### Fuzzy Search
-| index size | Linear | GPU | Hybrid(en) |
+#### Fuzzy Search (English)
+| index size | Linear | GPU | Inverted(en) |
 | ---------- | ------ | --- | ---------- |
-| 537613     | 11.34 | 6.33 | 8.987 |
-| 829107     | 17.48 | 5.80 | 11.91 |
-| 1712278    | 35.87 | 7.34 | 20.30 |
-| 3001203    | 63.07 | 5.41 | 28.88 |
-| 3747673    | 79.59 | 4.72 | 34.16 |
+| 537,613     | 11.34 | 6.33 | 8.987 |
+| 829,107     | 17.48 | 5.80 | 11.91 |
+| 1,712,278    | 35.87 | 7.34 | 20.30 |
+| 3,001,203    | 63.07 | 5.41 | 28.88 |
+| 3,747,673    | 79.59 | 4.72 | 34.16 |
 
-#### Index Creation
-| index size | Linear | GPU | Hybrid |
+
+#### Fuzzy Search (Japanese)
+| index size | Linear | GPU | Inverted(ja) |
+| ---------- | ------ | --- | ---------- |
+| 475,576 | 3.36 | 4.34 | 0.24 |
+| 789,021 | 5.28 | 5.39 | 0.25 |
+| 1,305,328 | 8.91 | 6.38 | 0.44 |
+| 2,394,217 | 16.26 | 6.67 | 0.72 |
+| 3,020,497 | 20.58 | 5.87 | 0.87 |
+
+
+#### Index Creation (English)
+| index size | Linear | GPU | Inverted |
 | ---------- | ------ | --- | ------ |
-| 537613  | 41.00 | 37.84 | 615.16 |
-| 829107  | 92.58 | 65.46 | 911.46 |
-| 1712278 | 174.20 | 135.62 | 1776.32 |
-| 3001203 | 300.00 | 244.24 | 3093.08 |
-| 3747673 | 402.60 | 332.36 | 3884.30 |
+| 537,613  | 41.00 | 37.84 | 615.16 |
+| 829,107  | 92.58 | 65.46 | 911.46 |
+| 1,712,278 | 174.20 | 135.62 | 1,776.32 |
+| 3,001,203 | 300.00 | 244.24 | 3,093.08 |
+| 3,747,673 | 402.60 | 332.36 | 3,884.30 |
 
 
 ### Benchmark on Intel N100
 
 A second benchmark was conducted using an **Intel N100** CPU to evaluate performance on lower-power devices.
 
-#### Exact Match Search
-| index size |	Linear|	GPU	| Inverted |
-| ---------- | ------ | --- | -------- |
-| 475576     | 0.2984 | 0.405 | 0.2912   |
-| 789021     | 0.4336 | 0.5104 | 0.3136   |
-| 1305328    | 0.6962 | 0.5976 | 0.4366   |
-| 2394217    | 0.955  | 0.9446 | 0.3536   |
-| 3020497    | 1.0758 | 1.0874 | 0.4388   |
-
-#### Fuzzy Search
+#### Exact Match Search (English)
 | index size | Linear | GPU | Inverted |
-| ---------- | ------ | --- | -------- |
-| 475576     | 6.5576 | 8.6892 | 0.3864   |
-| 789021     | 11.3006 | 9.6058 | 0.413    |
-| 1305328    | 17.8096 | 13.2846 | 0.6518   |
-| 2394217    | 31.8176 | 18.4438 | 0.7692   |
-| 3020497    | 40.6314 | 22.5536 | 1.0842   |
+|------------|------------|---------------|---------------------------|
+| 537,613     | 0.95       | 1.13          | 0.16                      |
+| 829,107     | 1.41       | 1.37          | 0.38                      |
+| 1,712,278    | 2.40       | 2.44          | 0.45                      |
+| 3,001,203    | 4.27       | 4.66          | 0.36                      |
+| 3,747,673    | 5.65       | 5.61          | 0.48                      |
 
-#### Index Creation
+#### Fuzzy Search (English)
+| index size | Linear | GPU | Inverted(en) |
+|------------|------------|---------------|---------------------------|
+| 537,613     | 24.88      | 19.87         | 25.32                     |
+| 829,107     | 38.41      | 27.30         | 34.03                     |
+| 1,712,278    | 80.11      | 47.30         | 57.65                     |
+| 3,001,203    | 136.12     | 80.38         | 81.72                     |
+| 3,747,673    | 169.76     | 98.79         | 94.07                     |
+
+### Fuzzy Search Time (Japanese)
+
+
+#### Index Creation (English)
 | index size | Linear | GPU | Inverted |
-| ---------- | ------ | --- | -------- |
-| 475576     | 62.5   | 63.98 | 1076.14  |
-| 789021     | 108.82 | 131.28 | 1725.02 |
-| 1305328    | 189.16 | 203.3 | 2809.88 |
-| 2394217    | 332    | 333.74 | 5114.64 |
-| 3020497    | 433.86 | 426.08 | 6377.6  |
+|------------|------------|---------------|---------------------------|
+| 537,613     | 129.58     | 134.28        | 1,745.26                   |
+| 829,107     | 277.14     | 202.52        | 2,686.46                   |
+| 171,2278    | 554.86     | 430.62        | 5,394.28                   |
+| 3,001,203    | 919.74     | 798.84        | 9,138.56                   |
+| 3,747,673    | 1,082.72    | 981.74        | 11,505.46                   |
+
 
 
 These benchmarks illustrate the performance trade-offs among the different index types. While `HybridBigramInvertedIndex` is significantly faster, it comes at the cost of higher indexing time and reduced search accuracy. Meanwhile, `GPULinearIndex` provides a substantial speed boost while maintaining accuracy, making it a viable option for environments with GPU support.
