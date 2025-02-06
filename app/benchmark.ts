@@ -102,15 +102,16 @@ export async function benchmarkMethod(keywords: string[], articles: WikipediaArt
 
 // benchmark body
 const run_nums = [100];
+const run_keywords = 100;
 // const run_nums = [10, 20, 40, 80, 100];
-const keywords_ja = getAllKeywords(wikipedia_ja_keyword).slice(0, 100);
+const keywords_ja = getAllKeywords(wikipedia_ja_keyword).slice(0, run_keywords);
 const benchmark_results_all_ja: BechmarkResultAll[] = []
 
 for(const num of run_nums) {
     benchmark_results_all_ja.push(await benchmarkMethod(keywords_ja, wikipedia_ja_extracted_1000.slice(0, num)));
 }
 
-const keywords_en = getAllKeywords(wikipedia_en_keyword).slice(0, 100);
+const keywords_en = getAllKeywords(wikipedia_en_keyword).slice(0, run_keywords);
 const benchmark_results_all_en: BechmarkResultAll[] = []
 
 for(const num of run_nums) {
