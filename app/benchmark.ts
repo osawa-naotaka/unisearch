@@ -4,7 +4,7 @@ import { createIndex, search, indexToObject, createIndexFromObject, StaticSeekEr
 import type { IndexClass } from "@src/main";
 import { getAllKeywords } from "@ref/bench/benchmark_common";
 import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
-import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
+import { wikipedia_ja_keyword_long } from "@test/wikipedia_ja_keyword_long";
 import { wikipedia_en_extracted_1000 } from "@test/wikipedia_en_extracted_1000";
 import { wikipedia_en_keyword } from "@test/wikipedia_en_keyword";
 
@@ -116,7 +116,7 @@ const run_nums = [10, 20, 40, 80, 100];
 const run_keywords = 100;
 const num_trials = 5;
 
-const keywords_ja = getAllKeywords(wikipedia_ja_keyword).slice(0, run_keywords);
+const keywords_ja = getAllKeywords(wikipedia_ja_keyword_long).slice(0, run_keywords);
 const benchmark_results_all_ja: BechmarkResultAll[] = []
 
 for(const num of run_nums) {
