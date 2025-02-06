@@ -1,7 +1,14 @@
 import type { WikipediaArticle } from "@ref/bench/benchmark_common";
 import { calculateGzipedJsonSize, calculateJsonSize } from "@ref/util";
-import { createIndex, search, indexToObject, createIndexFromObject, StaticSeekError, LinearIndex, GPULinearIndex, HybridBigramInvertedIndex } from "@dist/staticseek";
-import type { IndexClass } from "@dist/staticseek";
+import { createIndex, search, indexToObject, createIndexFromObject, StaticSeekError, LinearIndex, GPULinearIndex, HybridBigramInvertedIndex } from "@src/main";
+import type { IndexClass } from "@src/main";
+import { getAllKeywords } from "@ref/bench/benchmark_common";
+import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
+import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
+import { wikipedia_en_extracted_1000 } from "@test/wikipedia_en_extracted_1000";
+import { wikipedia_en_keyword } from "@test/wikipedia_en_keyword";
+
+
 export type BenchmarkResult = {
     type: string;
     indexing_time: number;
@@ -30,7 +37,7 @@ export async function execBenchmark(
         gziped_index_size: 0,
     };
 
-    const num_trials = 5;
+    const num_trials = 1;
     for (let i = 0; i < num_trials; i++) {
         console.log(`${index_class.name} benchmark`);
         const index_start = performance.now();
@@ -55,24 +62,18 @@ export async function execBenchmark(
         benchmark_results.gziped_index_size += gzipped_index_size;
 
         const exact_search_start = performance.now();
-        const exact_search_results = [];
-        for (const keyword of keywords) {
-            exact_search_results.push(await search(reindex, `"${keyword}"`));
-        }
+        const exact_search_results = await Promise.all(keywords.map(async (k) => await search(reindex, `"${k}"`)))
         const exact_search_end = performance.now();
 
-        const exact_search_time = (exact_search_end - exact_search_start) / keywords.length;
+        const exact_search_time = (exact_search_end - exact_search_start) / exact_search_results.length;
         console.log(`exact search time: ${exact_search_time} ms/query`);
         benchmark_results.exact_search_time += exact_search_time;
 
         const fuzzy_search_start = performance.now();
-        const fuzzy_search_results = [];
-        for (const keyword of keywords) {
-            fuzzy_search_results.push(await search(reindex, keyword));
-        }
+        const fuzzy_search_results = await Promise.all(keywords.map(async (k) => await search(reindex, k)))
         const fuzzy_search_end = performance.now();
 
-        const fuzzy_search_time = (fuzzy_search_end - fuzzy_search_start) / keywords.length;
+        const fuzzy_search_time = (fuzzy_search_end - fuzzy_search_start) / fuzzy_search_results.length;
         console.log(`fuzzy search time: ${fuzzy_search_time} ms/query`);
         benchmark_results.fuzzy_search_time += fuzzy_search_time;
     }
@@ -96,3 +97,27 @@ export async function benchmarkMethod(keywords: string[], articles: WikipediaArt
     result.results.push(await execBenchmark(HybridBigramInvertedIndex, {}, articles, keywords));
     return result;
 }
+
+
+
+// benchmark body
+const run_nums = [100];
+// const run_nums = [10, 20, 40, 80, 100];
+const keywords_ja = getAllKeywords(wikipedia_ja_keyword).slice(0, 100);
+const benchmark_results_all_ja: BechmarkResultAll[] = []
+
+for(const num of run_nums) {
+    benchmark_results_all_ja.push(await benchmarkMethod(keywords_ja, wikipedia_ja_extracted_1000.slice(0, num)));
+}
+
+const keywords_en = getAllKeywords(wikipedia_en_keyword).slice(0, 100);
+const benchmark_results_all_en: BechmarkResultAll[] = []
+
+for(const num of run_nums) {
+    benchmark_results_all_en.push(await benchmarkMethod(keywords_en, wikipedia_en_extracted_1000.slice(0, num)));
+}
+
+console.log("Japanese results.")
+console.log(benchmark_results_all_ja);
+console.log("English results.")
+console.log(benchmark_results_all_en);
