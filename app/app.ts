@@ -19,7 +19,7 @@ input.addEventListener("input", async () => {
     const res = await search(index, input.value);
     if(res instanceof StaticSeekError) throw res;
     console.log(`search time: ${performance.now() - search_start} ms.`);
-    result.innerHTML = res.map((r) => `<li>${r.key["title"]}</li>`).join("\n");
+    result.innerHTML = res.map((r) => `<li><div>${r.key["title"]}</div><p>${r.refs[0].wordaround}</p></li>`).join("\n");
 });
 
 button.addEventListener("click", async () => {
