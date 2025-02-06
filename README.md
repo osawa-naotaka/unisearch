@@ -41,6 +41,17 @@ if(index instanceof StaticSeekError) throw index;
 const result = await search(index, "search word");
 ```
 
+If you experience performance issues, try disabling fuzzy search.
+
+```javascript
+import { LinearIndex, createIndex, search, StaticSeekError } from "staticseek";
+
+const index = createIndex(LinearIndex, array_of_articles, { distance: 0 });
+if(index instanceof StaticSeekError) throw index;
+
+const result = await search(index, "search word");
+```
+
 ## Search Features
 
 ### Query Syntax
@@ -62,27 +73,28 @@ const result = await search(index, "search word");
 
 2. **GPULinearIndex**
    - WebGPU-accelerated fuzzy search
-   - ~2x faster for larger datasets
+   - 2-10x faster for larger datasets
    - Gracefully falls back to LinearIndex when WebGPU is unavailable
 
 3. **HybridBigramInvertedIndex**
-   - 10-100x faster search performance
-   - Ideal for larger datasets
+   - ~10x faster search performance
+   - Ideal for larger datasets in CKJ-like language
    - Trade-offs:
      - Slower index generation
+     - Slower fuzzy serch speed in English-like language
      - Higher false positive rate
-     - Less precise fuzzy search for CJK languages
+     - Less precise fuzzy search for CJK-like languages
      - Limited result metadata
 
 ## Performance
 
 Search performance for a 3MB dataset (approximately 100 articles):
 
-- Exact Match: < 1ms
-- Fuzzy Search: < 50ms
-- Index Generation: ~500ms, or ~5sec for optimized index
+- Exact Match: < 5ms
+- Fuzzy Search: < 150ms
+- Index Generation: ~1sec, or ~10sec for optimized index
 
-For detailed benchmarks across different hardware configurations and index types, see the Benchmarks section below.
+For detailed benchmarks across different hardware configurations and index types, see the [Benchmarks section](#Benchmark) below.
 
 ## Integration with Static Site Generators
 
@@ -126,7 +138,7 @@ type SearchEnv = {
 - `index_class`: Specifies the search algorithm implementation
   - `LinearIndex`: Standard implementation (default choice)
   - `GPULinearIndex`: WebGPU-accelerated implementation
-  - `HybridBigramInvertedIndex`: High-performance implementation for larger datasets
+  - `HybridBigramInvertedIndex`: High-performance implementation for larger datasets in CJK-like language
 
 - `contents`: Array of JavaScript objects to be indexed
   - Supports string fields and string array fields
@@ -349,85 +361,111 @@ import { HybridBigramInvertedIndex, createIndex, search, StaticSeekError } from 
 const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
 ```
 
-The `HybridBigramInvertedIndex` offers an impressive 10-100x search speed improvement compared to `LinearIndex`. The API usage remains the same, making integration seamless.
+The `HybridBigramInvertedIndex` offers an 10x search speed improvement compared to `LinearIndex` except for fuzzy serch in English. The API usage remains the same, making integration seamless.
 
 However, this increased speed comes at a cost, introducing several trade-offs:
 
-1. **Longer Indexing Time**: Index creation is significantly slower, taking approximately 3-6 seconds for 100 articles. It is essential to generate the index in advance, such as during a static site generation (SSG) build process.
+1. **Longer Indexing Time**: Index creation is significantly slower, taking approximately 10 seconds for 100 articles. It is essential to generate the index in advance, such as during a static site generation (SSG) build process.
 2. **Higher Search Noise**: False positives (irrelevant results appearing in search results) become more frequent.
 3. **Reduced Accuracy for CJK Languages**: Fuzzy searches in languages such as Chinese, Japanese, and Korean may produce noisier results, matching unintended terms.
 4. **Limited Result Metadata**: Some search result details, such as exact match position (`pos`) and surrounding text (`wordaround`), are unavailable.
 5. **Incomplete TF-IDF Scoring**: Currently, only term frequency (TF) is calculated, leading to less refined ranking.
 
-Despite these drawbacks, `HybridBigramInvertedIndex` ensures ultra-fast search performance across all devices, delivering a smooth user experience. If prioritizing responsiveness is critical, this index type is a strong choice.
+Despite these drawbacks, `HybridBigramInvertedIndex` ensures fast search performance across all devices, delivering a smooth user experience except for fuzzy serch in English. If prioritizing responsiveness is critical, this index type is a good choice.
 
 ## Benchmark
 
 ### Benchmark on Intel Core i5 13400F and NVIDIA GeForce RTX 4070
 
-The following benchmarks were conducted using an **Intel Core i5 13400F** and **NVIDIA GeForce RTX 4070**. The index size is represented in bytes, while all other metrics are measured in milliseconds (ms).
+The following benchmarks were conducted using an **Intel Core i5 13400F** and **NVIDIA GeForce RTX 4070**. The index size is represented in kilobytes, while all other metrics are measured in milliseconds (ms).
 
-#### Exact Match Search
-| index size | Linear | GPU | Inverted |
-| ---------- | ------ | --- | -------- |
-| 475576     | 0.1084 | 0.1146 | 0.0784   |
-| 789021     | 0.1498 | 0.1548 | 0.0824   |
-| 1305328    | 0.2194 | 0.2264 | 0.0958   |
-| 2394217    | 0.3442 | 0.3618 | 0.1254   |
-| 3020497    | 0.4134 | 0.435  | 0.0984   |
+#### Exact Search Time (ms) (English)
 
-#### Fuzzy Search
-| index size | Linear | GPU | Inverted |
-| ---------- | ------ | --- | -------- |
-| 475576     | 2.7128 | 4.594 | 0.1128   |
-| 789021     | 4.5344 | 5.684 | 0.1182   |
-| 1305328    | 7.4618 | 7.0552 | 0.1472   |
-| 2394217    | 13.6572  | 8.6452   | 0.1968   |
-| 3020497    | 17.2486  | 9.038    | 0.226    |
+| Index Size | Linear | GPU | Inverted |
+|----------------|------------|---------------|--------------|
+| 537        | 0.43       | 0.43          | 0.06         |
+| 829        | 0.65       | 0.67          | 0.07         |
+| 1,712       | 1.25       | 1.28          | 0.07         |
+| 3,001       | 2.11       | 2.13          | 0.08         |
+| 3,747       | 2.67       | 2.65          | 0.07         |
 
-#### Index Creation
-| index size | Linear | GPU | Inverted |
-| ---------- | ------ | --- | -------- |
-| 475576     | 20.04  | 20.04 | 373.48   |
-| 789021     | 30.36  | 36.04 | 626.14   |
-| 1305328    | 72.3   | 60.86 | 1009.88  |
-| 2394217    | 123.36 | 126.12 | 1782.74  |
-| 3020497    | 158.4  | 159.84 | 2361.58  |
+#### Fuzzy Search Time (ms) (English)
+
+| Index Size | Linear | GPU | Inverted |
+|----------------|------------|---------------|--------------|
+| 537        | 11.43      | 6.81          | 8.94         |
+| 829        | 17.52      | 6.26          | 11.99        |
+| 1,712       | 36.17      | 7.23          | 20.70        |
+| 3,001       | 63.67      | 7.64          | 29.72        |
+| 3,747       | 80.29      | 5.44          | 34.10        |
+
+#### Fuzzy Search Time (ms) (Japanese)
+
+| Index Size | Linear | GPU | Inverted |
+|----------------|------------|---------------|--------------|
+| 475        | 3.20       | 4.27          | 0.23         |
+| 789        | 5.40       | 5.83          | 0.24         |
+| 1,305       | 8.83       | 6.33          | 0.45         |
+| 2,394       | 16.31      | 6.97          | 0.74         |
+| 3,020       | 20.63      | 7.60          | 0.83         |
+
+#### Indexing Time (ms) (English)
+
+| Index Size | Linear | GPU | Inverted |
+|----------------|------------|---------------|--------------|
+| 537        | 38      | 38         | 620       |
+| 829        | 111     | 67         | 924       |
+| 1,712       | 171     | 138        | 1,823      |
+| 3,001       | 314     | 254        | 3,103      |
+| 3,747       | 411     | 323        | 3,790      |
 
 
 ### Benchmark on Intel N100
 
 A second benchmark was conducted using an **Intel N100** CPU to evaluate performance on lower-power devices.
 
-#### Exact Match Search
-| index size |	Linear|	GPU	| Inverted |
-| ---------- | ------ | --- | -------- |
-| 475576     | 0.2984 | 0.405 | 0.2912   |
-| 789021     | 0.4336 | 0.5104 | 0.3136   |
-| 1305328    | 0.6962 | 0.5976 | 0.4366   |
-| 2394217    | 0.955  | 0.9446 | 0.3536   |
-| 3020497    | 1.0758 | 1.0874 | 0.4388   |
+#### Exact Search Time (ms) (English)
 
-#### Fuzzy Search
-| index size | Linear | GPU | Inverted |
-| ---------- | ------ | --- | -------- |
-| 475576     | 6.5576 | 8.6892 | 0.3864   |
-| 789021     | 11.3006 | 9.6058 | 0.413    |
-| 1305328    | 17.8096 | 13.2846 | 0.6518   |
-| 2394217    | 31.8176 | 18.4438 | 0.7692   |
-| 3020497    | 40.6314 | 22.5536 | 1.0842   |
+| Index Size | Linear | GPU | Inverted |
+|----------------|------------|---------------|--------------|
+| 537        | 0.93       | 1.10          | 0.24         |
+| 829        | 1.52       | 1.48          | 0.28         |
+| 1,712       | 2.70       | 2.62          | 0.29         |
+| 3,001       | 4.33       | 4.36          | 0.34         |
+| 3,747       | 4.94       | 5.21          | 0.40         |
 
-#### Index Creation
-| index size | Linear | GPU | Inverted |
-| ---------- | ------ | --- | -------- |
-| 475576     | 62.5   | 63.98 | 1076.14  |
-| 789021     | 108.82 | 131.28 | 1725.02 |
-| 1305328    | 189.16 | 203.3 | 2809.88 |
-| 2394217    | 332    | 333.74 | 5114.64 |
-| 3020497    | 433.86 | 426.08 | 6377.6  |
+#### Fuzzy Search Time (ms) (English)
+
+| Index Size | Linear | GPU | Inverted |
+|----------------|------------|---------------|--------------|
+| 537        | 22.30      | 19.70         | 22.32        |
+| 829        | 34.62      | 27.10         | 29.41        |
+| 1,712       | 69.59      | 48.57         | 48.40        |
+| 3,001       | 121.36     | 80.13         | 70.00        |
+| 3,747       | 154.69     | 98.16         | 80.46        |
+
+#### Fuzzy Search Time (ms) (Japanese)
+| Index Size | Linear | GPU | Inverted |
+|----------------|------------|---------------|--------------|
+| 476           | 7.21       | 8.74          | 0.70        |
+| 789           | 11.37      | 10.77         | 0.75        |
+| 1,305          | 18.47      | 14.81         | 1.26        |
+| 2,394          | 34.18      | 22.23         | 2.22        |
+| 3,020          | 42.81      | 25.96         | 2.24        |
+
+#### Indexing Time (ms) (English)
+
+| Index Size | Linear | GPU | Inverted |
+|----------------|------------|---------------|--------------|
+| 537        | 120     | 155        | 1,652      |
+| 829        | 249     | 201        | 2,249      |
+| 1,712       | 467     | 379        | 4,256      |
+| 3,001       | 733     | 743        | 7,315      |
+| 3,747       | 965     | 938        | 9,214      |
 
 
-These benchmarks illustrate the performance trade-offs among the different index types. While `HybridBigramInvertedIndex` is significantly faster, it comes at the cost of higher indexing time and reduced search accuracy. Meanwhile, `GPULinearIndex` provides a substantial speed boost while maintaining accuracy, making it a viable option for environments with GPU support.
+
+These benchmarks illustrate the performance trade-offs among the different index types. While `HybridBigramInvertedIndex` is faster except for fuzzy serch in English, it comes at the cost of higher indexing time and reduced search accuracy. Meanwhile, `GPULinearIndex` provides a substantial speed boost while maintaining accuracy, making it a viable option for environments with GPU support.
 
 For optimal performance, select the index type that best fits your application’s needs.
 

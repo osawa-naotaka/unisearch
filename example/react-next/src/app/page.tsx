@@ -48,6 +48,7 @@ export default function Index() {
             }
             setResults(results);
             console.log(`search time: ${performance.now() - start}ms`);
+            console.log(`index size: ${new Blob([JSON.stringify(response_json)]).size} byte.`);
             setIndexState(INDEX_STATE.INITIALIZED);
             return;
         }
@@ -88,9 +89,4 @@ export default function Index() {
             </ul>
         </section>
     );
-}
-
-async function execSearch(index: StaticSeekIndex, searchText: string): Promise<SearchResult[]> {
-    const results = await search(index, searchText);
-    return results instanceof StaticSeekError ? [] : results;
 }

@@ -28,61 +28,47 @@ describe("basic Linear index creation and search", async () => {
         ])
     );
 
-    const result2 = await search(index, "概要");
+    const result2 = await search(index, "概要を");
     test("matches multiple japanese articles, including fuzzy match", () => 
         expect(result2).toStrictEqual([
             {
                 id: 7,
                 key: {},
-                score: 1.0265843206468688,
+                score: 0.8855247874523849,
                 refs: [
                     {
-                        token: "概要",
+                        token: "概要を",
                         path: "slug",
                         pos: 5,
                         wordaround: "react概要",
-                        distance: 0,
+                        distance: 1,
                     },
                     {
-                        token: "概要",
+                        token: "概要を",
                         path: "data.title",
                         pos: 6,
                         wordaround: "reactの概要",
-                        distance: 0,
+                        distance: 1,
                     },
                 ],
             },
             {
                 id: 9,
                 key: {},
-                score: 0.8623308293433698,
+                score: 0.7438408214600034,
                 refs: [
                     {
-                        token: "概要",
+                        token: "概要を",
                         path: "slug",
                         pos: 6,
                         wordaround: "nodejs概要",
-                        distance: 0,
+                        distance: 1,
                     },
                     {
-                        token: "概要",
+                        token: "概要を",
                         path: "data.title",
                         pos: 8,
                         wordaround: "node.jsの概要",
-                        distance: 0,
-                    },
-                ],
-            },
-            {
-                id: 6,
-                key: {},
-                score: 0.016519747688570303,
-                refs: [
-                    {
-                        token: "概要",
-                        path: "content",
-                        pos: 20,
-                        wordaround: "javascriptはウェブ開発で非常に重要な役割を果たしています。ユーザーとのインタラクションを可能にし、リアルタイムな更新やアニメーションの",
                         distance: 1,
                     },
                 ],
@@ -321,12 +307,12 @@ describe("fuzzy search, distance 2.", async () => {
     );
 
     const result2 = await search(index, "概要");
-    test("matches multiple japanese articles, setting is distance=2, but distance is reduced to 1 due to keyword length", () => 
+    test("matches multiple japanese articles, setting is distance=2, but distance is reduced to 0 due to keyword length", () => 
         expect(result2).toStrictEqual([
             {
                 id: 7,
                 key: {},
-                score: 1.0265843206468688,
+                score: 1.1806997166031798,
                 refs: [
                     {
                         token: "概要",
@@ -347,7 +333,7 @@ describe("fuzzy search, distance 2.", async () => {
             {
                 id: 9,
                 key: {},
-                score: 0.8623308293433698,
+                score: 0.9917877619466712,
                 refs: [
                     {
                         token: "概要",
@@ -362,20 +348,6 @@ describe("fuzzy search, distance 2.", async () => {
                         pos: 8,
                         wordaround: "node.jsの概要",
                         distance: 0,
-                    },
-                ],
-            },
-            {
-                id: 6,
-                key: {},
-                score: 0.016519747688570303,
-                refs: [
-                    {
-                        token: "概要",
-                        path: "content",
-                        pos: 20,
-                        wordaround: "javascriptはウェブ開発で非常に重要な役割を果たしています。ユーザーとのインタラクションを可能にし、リアルタイムな更新やアニメーションの",
-                        distance: 1,
                     },
                 ],
             },
@@ -499,7 +471,7 @@ describe("and search", async () => {
             {
                 id: 7,
                 key: {},
-                score: 1.3036927715248263,
+                score: 1.4578081674811374,
                 refs: [
                     {
                         token: "概要",
@@ -532,20 +504,20 @@ describe("not search", async () => {
     const index = createIndex(LinearIndex, array_of_articles);
     if(index instanceof StaticSeekError) throw index;
 
-    const result2 = await search(index, "概要 react -スケーラブル");
+    const result2 = await search(index, "重要 react -スケーラブル");
     test("matches single japanese article", () => 
         expect(result2).toStrictEqual([
             {
                 id: 6,
                 key: {},
-                score: 0.06416459750140764,
+                score: 0.09263515864790804,
                 refs: [
                     {
-                        token: "概要",
+                        token: "重要",
                         path: "content",
                         pos: 20,
                         wordaround: "javascriptはウェブ開発で非常に重要な役割を果たしています。ユーザーとのインタラクションを可能にし、リアルタイムな更新やアニメーションの",
-                        distance: 1,
+                        distance: 0,
                     },
                     {
                         token: "react",
@@ -654,7 +626,6 @@ describe("long query search", async () => {
     if(index instanceof StaticSeekError) throw index;
 
     const keyword = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-    console.log(keyword.length);
     const result1 = await search(index, keyword);
     test("no match", () => 
         expect(result1).toStrictEqual([])
