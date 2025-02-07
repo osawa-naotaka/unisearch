@@ -379,52 +379,60 @@ Despite these drawbacks, `HybridBigramInvertedIndex` ensures fast search perform
 
 The following benchmarks were conducted using an **Intel Core i5 13400F** and **NVIDIA GeForce RTX 4070**. The index size is represented in kilobytes, while all other metrics are measured in milliseconds (ms).
 
-#### Exact Search Time (ms) (English)
+
+#### **Exact Search Time (ms) (English)**  
 
 | Index Size | Linear | GPU | Inverted |
-|----------------|------------|---------------|--------------|
-| 537        | 0.43       | 0.43          | 0.06         |
-| 829        | 0.65       | 0.67          | 0.07         |
-| 1,712       | 1.25       | 1.28          | 0.07         |
-| 3,001       | 2.11       | 2.13          | 0.08         |
-| 3,747       | 2.67       | 2.65          | 0.07         |
+|---------------|-------------|---------------|--------------|
+| 538 | 0.44 | 0.43 | 0.05 |
+| 829 | 0.64 | 0.65 | 0.06 |
+| 1,712 | 1.25 | 1.24 | 0.06 |
+| 3,001 | 2.11 | 2.12 | 0.08 |
+| 3,748 | 2.58 | 2.64 | 0.07 |
 
-#### Fuzzy Search Time (ms) (English)
+---
 
-| Index Size | Linear | GPU | Inverted |
-|----------------|------------|---------------|--------------|
-| 537        | 11.43      | 6.81          | 8.94         |
-| 829        | 17.52      | 6.26          | 11.99        |
-| 1,712       | 36.17      | 7.23          | 20.70        |
-| 3,001       | 63.67      | 7.64          | 29.72        |
-| 3,747       | 80.29      | 5.44          | 34.10        |
-
-#### Fuzzy Search Time (ms) (Japanese)
+#### **Fuzzy Search Time (ms) (English)**  
 
 | Index Size | Linear | GPU | Inverted |
-|----------------|------------|---------------|--------------|
-| 475        | 3.20       | 4.27          | 0.23         |
-| 789        | 5.40       | 5.83          | 0.24         |
-| 1,305       | 8.83       | 6.33          | 0.45         |
-| 2,394       | 16.31      | 6.97          | 0.74         |
-| 3,020       | 20.63      | 7.60          | 0.83         |
+|---------------|-------------|---------------|--------------|
+| 538 | 11.48 | 5.01 | 9.25 |
+| 829 | 17.65 | 5.71 | 12.09 |
+| 1,712 | 35.94 | 6.44 | 20.95 |
+| 3,001 | 63.10 | 7.87 | 29.48 |
+| 3,748 | 78.77 | 8.36 | 34.47 |
 
-#### Indexing Time (ms) (English)
+---
+
+### **Fuzzy Search Time (ms) (Japanese)**
 
 | Index Size | Linear | GPU | Inverted |
-|----------------|------------|---------------|--------------|
-| 537        | 38      | 38         | 620       |
-| 829        | 111     | 67         | 924       |
-| 1,712       | 171     | 138        | 1,823      |
-| 3,001       | 314     | 254        | 3,103      |
-| 3,747       | 411     | 323        | 3,790      |
+|---------------|------------|---------------|--------------|
+| 475        | 3.18       | 4.33          | 0.26         |
+| 789        | 5.34       | 4.46          | 0.29         |
+| 1,305      | 8.88       | 4.65          | 0.53         |
+| 2,394      | 16.36      | 4.36          | 0.82         |
+| 3,020      | 20.53      | 5.93          | 1.00         |
+
+---
+
+#### **Indexing Time (ms) (English)**
+
+| Index Size | Linear | GPU | Inverted |
+|---------------|-------------|---------------|--------------|
+| 538 | 41.06 | 37.16 | 648 |
+| 829 | 94.16 | 66.10 | 981 |
+| 1,712 | 170.86 | 137.94 | 1,901 |
+| 3,001 | 292.28 | 247.78 | 3,268 |
+| 3,748 | 394.30 | 329.54 | 4,060 |
+
 
 
 ### Benchmark on Intel N100
 
 A second benchmark was conducted using an **Intel N100** CPU to evaluate performance on lower-power devices.
 
-#### Exact Search Time (ms) (English)
+#### **Exact Search Time (ms) (English)**
 
 | Index Size | Linear | GPU | Inverted |
 |----------------|------------|---------------|--------------|
@@ -434,7 +442,9 @@ A second benchmark was conducted using an **Intel N100** CPU to evaluate perform
 | 3,001       | 4.56       | 4.66          | 0.21         |
 | 3,747       | 5.60       | 5.84          | 0.28         |
 
-#### Fuzzy Search Time (ms) (Englilsh)
+---
+
+#### **Fuzzy Search Time (ms) (Englilsh)**
 
 | Index Size | Linear | GPU | Inverted |
 |----------------|------------|---------------|--------------|
@@ -444,7 +454,11 @@ A second benchmark was conducted using an **Intel N100** CPU to evaluate perform
 | 3,001       | 134.65     | 22.33         | 81.26        |
 | 3,747       | 170.01     | 25.82         | 93.87        |
 
-#### Fuzzy Search Time (ms) (Japanese)
+
+---
+
+
+#### **Fuzzy Search Time (ms) (Japanese)**
 
 | Index Size | Linear | GPU | Inverted |
 |----------------|------------|---------------|---------------|
@@ -454,7 +468,9 @@ A second benchmark was conducted using an **Intel N100** CPU to evaluate perform
 | 2,394         | 40.28      | 8.36          | 2.29          |
 | 3,020         | 47.71      | 9.31          | 2.64          |
 
-#### Indexing Time (ms) (English)
+---
+
+#### **Indexing Time (ms) (English)**
 
 | Index Size | Linear | GPULinear | Inverted |
 |----------------|------------|---------------|--------------|
