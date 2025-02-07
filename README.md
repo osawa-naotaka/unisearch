@@ -88,7 +88,7 @@ const result = await search(index, "search word");
 
 ## Performance
 
-Search performance for a 3MB dataset (approximately 100 articles):
+Search performance for a 4MB dataset (approximately 100 articles):
 
 - Exact Match: < 5ms
 - Fuzzy Search: < 150ms
@@ -331,7 +331,7 @@ export type Reference = {
 ### Important Notes
 
 - **Version Compatibility**: Ensure matching staticseek versions between index generation and usage
-- **Performance**: Index generation takes ~500ms for 100 articles (~3MB of text)
+- **Performance**: Index generation takes ~500ms for 100 articles (~4MB of text), or 10s for optimized index
 - **Security**: Avoid including sensitive information (personal names, addresses) in indexed content
 - **Optimization**: Pre-generating indices with SSG reduces client-side processing and improves load times
 - **Unicode Support**: All whitespace types (full-width, half-width, tabs, newlines, and others) are supported in queries
@@ -379,89 +379,106 @@ Despite these drawbacks, `HybridBigramInvertedIndex` ensures fast search perform
 
 The following benchmarks were conducted using an **Intel Core i5 13400F** and **NVIDIA GeForce RTX 4070**. The index size is represented in kilobytes, while all other metrics are measured in milliseconds (ms).
 
-#### Exact Search Time (ms) (English)
+
+#### **Exact Search Time (ms) (English)**  
 
 | Index Size | Linear | GPU | Inverted |
-|----------------|------------|---------------|--------------|
-| 537        | 0.43       | 0.43          | 0.06         |
-| 829        | 0.65       | 0.67          | 0.07         |
-| 1,712       | 1.25       | 1.28          | 0.07         |
-| 3,001       | 2.11       | 2.13          | 0.08         |
-| 3,747       | 2.67       | 2.65          | 0.07         |
+|---------------|-------------|---------------|--------------|
+| 538 | 0.44 | 0.43 | 0.05 |
+| 829 | 0.64 | 0.65 | 0.06 |
+| 1,712 | 1.25 | 1.24 | 0.06 |
+| 3,001 | 2.11 | 2.12 | 0.08 |
+| 3,748 | 2.58 | 2.64 | 0.07 |
 
-#### Fuzzy Search Time (ms) (English)
+---
 
-| Index Size | Linear | GPU | Inverted |
-|----------------|------------|---------------|--------------|
-| 537        | 11.43      | 6.81          | 8.94         |
-| 829        | 17.52      | 6.26          | 11.99        |
-| 1,712       | 36.17      | 7.23          | 20.70        |
-| 3,001       | 63.67      | 7.64          | 29.72        |
-| 3,747       | 80.29      | 5.44          | 34.10        |
-
-#### Fuzzy Search Time (ms) (Japanese)
+#### **Fuzzy Search Time (ms) (English)**  
 
 | Index Size | Linear | GPU | Inverted |
-|----------------|------------|---------------|--------------|
-| 475        | 3.20       | 4.27          | 0.23         |
-| 789        | 5.40       | 5.83          | 0.24         |
-| 1,305       | 8.83       | 6.33          | 0.45         |
-| 2,394       | 16.31      | 6.97          | 0.74         |
-| 3,020       | 20.63      | 7.60          | 0.83         |
+|---------------|-------------|---------------|--------------|
+| 538 | 11.48 | 5.01 | 9.25 |
+| 829 | 17.65 | 5.71 | 12.09 |
+| 1,712 | 35.94 | 6.44 | 20.95 |
+| 3,001 | 63.10 | 7.87 | 29.48 |
+| 3,748 | 78.77 | 8.36 | 34.47 |
 
-#### Indexing Time (ms) (English)
+---
+
+### **Fuzzy Search Time (ms) (Japanese)**
 
 | Index Size | Linear | GPU | Inverted |
-|----------------|------------|---------------|--------------|
-| 537        | 38      | 38         | 620       |
-| 829        | 111     | 67         | 924       |
-| 1,712       | 171     | 138        | 1,823      |
-| 3,001       | 314     | 254        | 3,103      |
-| 3,747       | 411     | 323        | 3,790      |
+|---------------|------------|---------------|--------------|
+| 475        | 3.18       | 4.33          | 0.26         |
+| 789        | 5.34       | 4.46          | 0.29         |
+| 1,305      | 8.88       | 4.65          | 0.53         |
+| 2,394      | 16.36      | 4.36          | 0.82         |
+| 3,020      | 20.53      | 5.93          | 1.00         |
+
+---
+
+#### **Indexing Time (ms) (English)**
+
+| Index Size | Linear | GPU | Inverted |
+|---------------|-------------|---------------|--------------|
+| 538 | 41.06 | 37.16 | 648 |
+| 829 | 94.16 | 66.10 | 981 |
+| 1,712 | 170.86 | 137.94 | 1,901 |
+| 3,001 | 292.28 | 247.78 | 3,268 |
+| 3,748 | 394.30 | 329.54 | 4,060 |
+
 
 
 ### Benchmark on Intel N100
 
 A second benchmark was conducted using an **Intel N100** CPU to evaluate performance on lower-power devices.
 
-#### Exact Search Time (ms) (English)
+#### **Exact Search Time (ms) (English)**
 
 | Index Size | Linear | GPU | Inverted |
 |----------------|------------|---------------|--------------|
-| 537        | 0.93       | 1.10          | 0.24         |
-| 829        | 1.52       | 1.48          | 0.28         |
-| 1,712       | 2.70       | 2.62          | 0.29         |
-| 3,001       | 4.33       | 4.36          | 0.34         |
-| 3,747       | 4.94       | 5.21          | 0.40         |
+| 538         | 1.09       | 1.15          | 0.33         |
+| 829         | 1.25       | 1.50          | 0.23         |
+| 1,712       | 2.77       | 2.84          | 0.22         |
+| 3,001       | 4.56       | 4.66          | 0.21         |
+| 3,747       | 5.60       | 5.84          | 0.28         |
 
-#### Fuzzy Search Time (ms) (English)
+---
 
-| Index Size | Linear | GPU | Inverted |
-|----------------|------------|---------------|--------------|
-| 537        | 22.30      | 19.70         | 22.32        |
-| 829        | 34.62      | 27.10         | 29.41        |
-| 1,712       | 69.59      | 48.57         | 48.40        |
-| 3,001       | 121.36     | 80.13         | 70.00        |
-| 3,747       | 154.69     | 98.16         | 80.46        |
-
-#### Fuzzy Search Time (ms) (Japanese)
-| Index Size | Linear | GPU | Inverted |
-|----------------|------------|---------------|--------------|
-| 476           | 7.21       | 8.74          | 0.70        |
-| 789           | 11.37      | 10.77         | 0.75        |
-| 1,305          | 18.47      | 14.81         | 1.26        |
-| 2,394          | 34.18      | 22.23         | 2.22        |
-| 3,020          | 42.81      | 25.96         | 2.24        |
-
-#### Indexing Time (ms) (English)
+#### **Fuzzy Search Time (ms) (Englilsh)**
 
 | Index Size | Linear | GPU | Inverted |
 |----------------|------------|---------------|--------------|
-| 537        | 120     | 155        | 1,652      |
-| 829        | 249     | 201        | 2,249      |
-| 1,712       | 467     | 379        | 4,256      |
-| 3,001       | 733     | 743        | 7,315      |
-| 3,747       | 965     | 938        | 9,214      |
+| 538         | 24.32      | 8.71          | 25.51        |
+| 829         | 38.53      | 10.34         | 33.65        |
+| 1,712       | 79.62      | 15.08         | 55.21        |
+| 3,001       | 134.65     | 22.33         | 81.26        |
+| 3,747       | 170.01     | 25.82         | 93.87        |
+
+
+---
+
+
+#### **Fuzzy Search Time (ms) (Japanese)**
+
+| Index Size | Linear | GPU | Inverted |
+|----------------|------------|---------------|---------------|
+| 476           | 7.77       | 8.37          | 0.89          |
+| 789           | 12.07      | 6.40          | 0.79          |
+| 1,305         | 20.56      | 7.53          | 1.59          |
+| 2,394         | 40.28      | 8.36          | 2.29          |
+| 3,020         | 47.71      | 9.31          | 2.64          |
+
+---
+
+#### **Indexing Time (ms) (English)**
+
+| Index Size | Linear | GPULinear | Inverted |
+|----------------|------------|---------------|--------------|
+| 538         | 140.90     | 125.52        | 1,763     |
+| 829         | 304.92     | 199.88        | 2,686     |
+| 1,712       | 573.24     | 427.04        | 5,210     |
+| 3,001       | 814.78     | 766.16        | 9,153     |
+| 3,747       | 1,120.48   | 927.54        | 11,237    |
 
 
 
