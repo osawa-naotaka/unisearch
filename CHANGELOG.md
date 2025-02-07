@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.1.1] - 2025-02-07
+### Fixed
+- fix bug that query history is not initialized in GPULinearIndex.
+
+### Changed
+- the wordaround of search result is extended to 200 characters
+
 ## [2.1.0] - 2025-02-06
 ### Changed
 - disable fuzzy search for queries of 2 characters or less
@@ -104,7 +111,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - search frontend, google-like syntax
 - sorting search result based on TF-IDF
 
-[Unreleased]: https://github.com/osawa-naotaka/staticseek/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/osawa-naotaka/staticseek/compare/v2.1.1...HEAD
+[2.1.1]: https://github.com/osawa-naotaka/staticseek/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/osawa-naotaka/staticseek/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/osawa-naotaka/staticseek/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/osawa-naotaka/staticseek/compare/v1.3.0...v2.0.0

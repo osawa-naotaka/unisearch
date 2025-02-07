@@ -141,8 +141,8 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
                 path: cref.path,
                 pos: find_pos,
                 wordaround: this.index_entry.content.slice(
-                    Math.max(pos[0] - 50, cref.start),
-                    Math.min(pos[0] + keyword.length + 50, cref.end + 1),
+                    Math.max(pos[0] - 100, cref.start),
+                    Math.min(pos[0] + keyword.length + 100, cref.end + 1),
                 ),
                 distance: pos[1],
             });

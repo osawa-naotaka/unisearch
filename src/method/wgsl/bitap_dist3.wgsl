@@ -1,9 +1,10 @@
 @group(0) @binding(0) var<storage, read> data: array<u32>;
 @group(0) @binding(1) var<storage, read_write> result: array<u32>;
 @group(0) @binding(2) var<storage, read_write> pointer: atomic<u32>;
-@group(0) @binding(3) var<uniform> end_mask: vec4u;
+@group(0) @binding(3) var<uniform> end_mask: u32;
 @group(0) @binding(4) var<storage, read> bitap_dict: array<u32>;
 @group(0) @binding(5) var<uniform> keyword_len: u32;
+@group(0) @binding(6) var<uniform> dict_size: u32;
 
 
 @compute @workgroup_size(256) fn cs(
@@ -11,6 +12,7 @@
 ) {
     const vec_zero = vec4u(0u, 0u, 0u, 0u);
     const vec_one  = vec4u(1u, 1u, 1u, 1u);
+    let end_mask_v = vec4u(end_mask, end_mask, end_mask, end_mask);
     var state = vec_zero;
 
     let end_pos = id.x + keyword_len + 3; // 3 means distance 3
@@ -18,7 +20,7 @@
     var tail_pos = 0u;
     for(var pos = id.x; pos < end_pos; pos++) {
         var mask = 0u;
-        for(var i = 0u; i < arrayLength(&bitap_dict); i += 2) {
+        for(var i = 0u; i < dict_size; i += 2) {
             mask = select(mask, bitap_dict[i + 1], bitap_dict[i] == data[pos]);
         }
 
@@ -40,7 +42,7 @@
         state[3] = next_state_candidate_mask[3] | replace_3 | insertion[2] | deletion[2];
 
         // mach check
-        let matches = (state & end_mask) != vec_zero;
+        let matches = (state & end_mask_v) != vec_zero;
         if(any(matches)) {
             let d = select(select(select(3u, 2u, matches[2]), 1u, matches[1]), 0u, matches[0]);
             if(d < dist) {
