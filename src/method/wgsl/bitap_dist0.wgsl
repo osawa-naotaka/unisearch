@@ -4,6 +4,7 @@
 @group(0) @binding(3) var<uniform> end_mask: u32;
 @group(0) @binding(4) var<storage, read> bitap_dict: array<u32>;
 @group(0) @binding(5) var<uniform> keyword_len: u32;
+@group(0) @binding(6) var<uniform> dict_size: u32;
 
 
 @compute @workgroup_size(256) fn cs(
@@ -13,7 +14,7 @@
     let end_pos = id.x + keyword_len;
     for(var pos = id.x; pos < end_pos; pos++) {
         var mask = 0u;
-        for(var i = 0u; i < arrayLength(&bitap_dict); i += 2) {
+        for(var i = 0u; i < dict_size; i += 2) {
             mask = select(mask, bitap_dict[i + 1], bitap_dict[i] == data[pos]);
         }
 

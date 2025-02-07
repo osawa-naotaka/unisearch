@@ -14,6 +14,7 @@ type GPUBuffers = {
     end_mask: GPUBuffer;
     bitap_dict: GPUBuffer;
     keyword_len: GPUBuffer;
+    dict_size: GPUBuffer;
     result_copy: GPUBuffer;
     pointer_copy: GPUBuffer;
 };
@@ -61,10 +62,10 @@ export class GPULinearIndex extends LinearIndex {
         });
     }
 
-    private gpuPipeline(device: GPUDevice, code: string): GPUComputePipeline {
+    private gpuPipeline(device: GPUDevice, code: string, layout: GPUPipelineLayout): GPUComputePipeline {
         const gpu_module = device.createShaderModule({ code: code });
         return device.createComputePipeline({
-            layout: "auto",
+            layout: layout,
             compute: {
                 module: gpu_module,
                 entryPoint: "cs",
@@ -84,6 +85,7 @@ export class GPULinearIndex extends LinearIndex {
             end_mask: this.gpuUniform(this.device, 4 * 4),
             bitap_dict: this.gpuStorageRead(this.device, 4 * 2 * 32),
             keyword_len: this.gpuUniform(this.device, 4),
+            dict_size: this.gpuUniform(this.device, 4),
             result_copy: this.gpuCopy(this.device, this.num_result * 4 * 2),
             pointer_copy: this.gpuCopy(this.device, 4),
         };
@@ -95,12 +97,21 @@ export class GPULinearIndex extends LinearIndex {
             this.mutex.release();
         }
 
-        this.gpu_pipeline[1] = this.gpuPipeline(this.device, bitap_dist1);
-        this.gpu_pipeline[2] = this.gpuPipeline(this.device, bitap_dist2);
-        this.gpu_pipeline[3] = this.gpuPipeline(this.device, bitap_dist3);
-
+        const bind_group_layout = this.device.createBindGroupLayout({
+            label: "bitap_bind_group_layout",
+            entries: [
+                { binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: "read-only-storage" } },
+                { binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: "storage" } },
+                { binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: "storage" } },
+                { binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: "uniform" } },
+                { binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: { type: "read-only-storage" } },
+                { binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: { type: "uniform" } },
+                { binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: { type: "uniform" } },
+            ],
+        });
         this.gpu_bind_group = this.device.createBindGroup({
-            layout: this.gpu_pipeline[1].getBindGroupLayout(0),
+            label: "bitap_bind_group",
+            layout: bind_group_layout,
             entries: [
                 { binding: 0, resource: { buffer: this.gpu_buffers.content } },
                 { binding: 1, resource: { buffer: this.gpu_buffers.result } },
@@ -108,8 +119,17 @@ export class GPULinearIndex extends LinearIndex {
                 { binding: 3, resource: { buffer: this.gpu_buffers.end_mask } },
                 { binding: 4, resource: { buffer: this.gpu_buffers.bitap_dict } },
                 { binding: 5, resource: { buffer: this.gpu_buffers.keyword_len } },
+                { binding: 6, resource: { buffer: this.gpu_buffers.dict_size } },
             ],
         });
+
+        const gpu_pipeline_layout = this.device.createPipelineLayout({
+            label: "bitap_pipeline_layout",
+            bindGroupLayouts: [bind_group_layout],
+        });
+        this.gpu_pipeline[1] = this.gpuPipeline(this.device, bitap_dist1, gpu_pipeline_layout);
+        this.gpu_pipeline[2] = this.gpuPipeline(this.device, bitap_dist2, gpu_pipeline_layout);
+        this.gpu_pipeline[3] = this.gpuPipeline(this.device, bitap_dist3, gpu_pipeline_layout);
     }
 
     public override async search(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
@@ -145,13 +165,10 @@ export class GPULinearIndex extends LinearIndex {
             }
             const bitap_dict = new Uint32Array(bitap_dict_tmp);
             device.queue.writeBuffer(gpu_buffers.bitap_dict, 0, bitap_dict);
+            device.queue.writeBuffer(gpu_buffers.dict_size, 0, new Uint32Array([bitap_dict.length]));
 
             device.queue.writeBuffer(gpu_buffers.pointer, 0, new Uint32Array([0]));
-            device.queue.writeBuffer(
-                gpu_buffers.end_mask,
-                0,
-                new Uint32Array(new Array(4).fill(1 << (grapheme.length - 1))),
-            );
+            device.queue.writeBuffer(gpu_buffers.end_mask, 0, new Uint32Array([1 << (grapheme.length - 1)]));
             device.queue.writeBuffer(gpu_buffers.keyword_len, 0, new Uint32Array([grapheme.length]));
 
             const pipeline = this.gpu_pipeline[env.distance || 1];
