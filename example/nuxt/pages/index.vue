@@ -2,6 +2,11 @@
 import type { SearchResult, StaticSeekIndex } from 'staticseek';
 import { StaticSeekError, createIndexFromObject, search } from 'staticseek';
 
+// ad-hock solution. you might as well use zod or something like that to validate the key.
+function typedKey(key: Record<string, unknown>) {
+    return key as { path: string, body: { data: { title: string } } };
+}
+
 const INDEX_STATE = {
     NOT_INITIALIZED: 0,
     FETCHING: 1,
@@ -76,11 +81,11 @@ const handleSearch = async (e: Event) => {
             <li v-if="index_state === INDEX_STATE.FETCHING">loading search index...</li>
             <li v-else-if="results.length === 0">No results found.</li>
             <template v-else>
-                <li v-for="r in results" :key="r.key.path as string">
-                    <NuxtLink :href="`${r.key.path as string}`" >
-                        <h3>{{ r.key.body.data.title as string }}</h3>
+                <li v-for="{refs, key} in results" :key="typedKey(key).path">
+                    <NuxtLink :href="typedKey(key).path" >
+                        <h3>{{ typedKey(key).body.data.title }}</h3>
                     </NuxtLink>
-                    <p>{{ r.refs[0].wordaround }}</p>
+                    <p>{{ refs[0].wordaround }}</p>
                 </li>
             </template>
         </ul>
