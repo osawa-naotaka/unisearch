@@ -65,23 +65,20 @@ const handleSearch = async (e: Event) => {
 
 <template>
     <section style="max-width: 720px; margin-inline: auto">
-        <header style="display: flex; justify-content: space-between; align-items: center;">
-            <h1><a href="/">Home</a></h1>
-            <h2><a href="/posts">Posts</a></h2>
-        </header>
+        <h1><NuxtLink to="/">Home</NuxtLink></h1>
 
         <div class="input-area">
             <div>search</div>
-            <input type="text" name="search" id="search" @input="handleSearch" />
+            <input type="text" name="search" id="search" @input="handleSearch" style="width: 100%"/>
         </div>
         <h2>results</h2>
         <ul>
             <li v-if="index_state === INDEX_STATE.FETCHING">loading search index...</li>
             <li v-else-if="results.length === 0">No results found.</li>
             <template v-else>
-                <li v-for="r in results" :key="r.key.slug as string">
-                    <NuxtLink :href="`/posts/${r.key.slug}`" >
-                        <h3>{{ (r.key.data as { "title": string }).title }}</h3>
+                <li v-for="r in results" :key="r.key.path as string">
+                    <NuxtLink :href="`${r.key.path as string}`" >
+                        <h3>{{ r.key.path as string }}</h3>
                     </NuxtLink>
                     <p>{{ r.refs[0].wordaround }}</p>
                 </li>

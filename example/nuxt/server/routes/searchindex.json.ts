@@ -1,13 +1,15 @@
 import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek";
 import type { IndexClass } from "staticseek";
-import { getAllPosts } from "../utils/posts";
+import matter from "gray-matter";
 
 export default defineEventHandler(async (event) => {
-    const posts = await getAllPosts();
+    const raw_posts = await queryCollection(event, "posts").all();
+    const posts = raw_posts.map((post) => ({ path: post.path, body: post.rawbody }));
+
     const index_class: IndexClass = GPULinearIndex;
     const index = createIndex(index_class, posts, { 
-        key_fields: ["data.title", "slug"], 
-        search_targets: ["data.title", "content"] 
+        key_fields: ["path"], 
+        search_targets: ["body"] 
     });
     
     if (index instanceof StaticSeekError) {

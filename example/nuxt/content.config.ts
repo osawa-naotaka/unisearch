@@ -7,6 +7,7 @@ export default defineContentConfig({
         source: '../../posts/*.md',
         schema: z.object({
           title: z.string(),
+          rawbody: z.string(),
         }),
       }),
     }
