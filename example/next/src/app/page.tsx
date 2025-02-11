@@ -1,18 +1,21 @@
 "use client";
 
-import { useState, lazy, Suspense, JSX } from "react";
-import Link from "next/link";
-import type { SearchResult } from "staticseek";
 import type { SearchKey } from "@/app/searchindex.json/route.ts";
+import Link from "next/link";
+import { lazy, useState } from "react";
+import type { JSX } from "react";
+import type { SearchResult } from "staticseek";
 
 const StaticSeek = lazy(() => import("@/app/StaticSeek"));
 
 function renderResult(result: SearchResult[]): JSX.Element {
     const lis = result.map((item) => {
-    const key = item.key as SearchKey;  // ad-hock solution. you might as well use zod or something like that to validate the key.
+        const key = item.key as SearchKey; // ad-hock solution. you might as well use zod or something like that to validate the key.
         return (
             <li key={key.slug}>
-                <Link href={`/posts/${key.slug as string}`}><h3>{key.data.title as string}</h3></Link>
+                <Link href={`/posts/${key.slug as string}`}>
+                    <h3>{key.data.title as string}</h3>
+                </Link>
                 <p>{item.refs[0].wordaround}</p>
             </li>
         );
@@ -21,9 +24,7 @@ function renderResult(result: SearchResult[]): JSX.Element {
     return (
         <>
             <h2>results</h2>
-            <ul>
-                {result.length > 0 ? lis : <li>No results found.</li>}
-            </ul>
+            <ul>{result.length > 0 ? lis : <li>No results found.</li>}</ul>
         </>
     );
 }
@@ -41,13 +42,9 @@ export default function Index() {
         <main>
             <div className="input-area">
                 <div>search</div>
-                <input type="text" name="search" id="search" placeholder="type your search query in English..." onChange={onChangeInput}/>
+                <input type="text" name="search" id="search" placeholder="type your search query in English..." onChange={onChangeInput} />
             </div>
-            {trigger &&
-                <Suspense fallback={<div>Loading...</div>}>
-                    <StaticSeek query={query} indexUrl="/searchindex.json" render={renderResult} />
-                </Suspense>
-            }
+            {trigger && <StaticSeek query={query} indexUrl="/searchindex.json" suspense={<div>Loading index...</div>} render={renderResult} />}
         </main>
     );
 }

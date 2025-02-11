@@ -1,24 +1,34 @@
-import { useState, useRef, useEffect, JSX } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { JSX } from "react";
 import { StaticSeekError, createIndexFromObject, search } from "staticseek";
 import type { SearchResult, StaticSeekIndex } from "staticseek";
 
-export default function StaticSeek({ query, indexUrl, render }: { query: string, indexUrl: string, render: (result: SearchResult[]) => JSX.Element }) {
+type StaticSeekProps = {
+    query: string;
+    indexUrl: string;
+    suspense: JSX.Element;
+    render: (result: SearchResult[]) => JSX.Element;
+};
+
+export default function StaticSeek({ query, indexUrl, suspense, render }: StaticSeekProps) {
     const index = useRef<StaticSeekIndex | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
     const [result, setResult] = useState<SearchResult[]>([]);
 
     const search_async = async () => {
-        if(index.current) {
+        if (index.current) {
             const start = performance.now();
             const result = await search(index.current, query);
-            if(result instanceof StaticSeekError){
+            if (result instanceof StaticSeekError) {
                 console.error(`fail to search: ${result.message}`);
-                return ;
+                return;
             }
             console.log(`search took ${performance.now() - start} ms`);
             setResult(result);
         }
     };
 
+    // biome-ignore lint: ignore dependencies
     useEffect(() => {
         const fetchIndex = async () => {
             const start = performance.now();
@@ -29,26 +39,28 @@ export default function StaticSeek({ query, indexUrl, render }: { query: string,
             }
             const response_json = await response.json();
             const newIndex = createIndexFromObject(response_json);
-            if(newIndex instanceof StaticSeekError){
+            if (newIndex instanceof StaticSeekError) {
                 console.error(`fail to create index: ${newIndex.message}`);
                 return;
             }
             console.log(`loading index took ${performance.now() - start} ms`);
             index.current = newIndex;
+            setLoading(false);
             search_async();
         };
 
-        if(index.current === null) {
+        if (index.current === null) {
             fetchIndex();
         }
 
-        return () => { };
+        return () => {};
     }, []);
 
+    // biome-ignore lint: include dependencies for search_async
     useEffect(() => {
         search_async();
-        return () => { };
+        return () => {};
     }, [index, query]);
 
-    return render(result);
+    return loading ? suspense : render(result);
 }
