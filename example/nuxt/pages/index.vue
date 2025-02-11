@@ -78,7 +78,7 @@ const handleSearch = async (e: Event) => {
             <template v-else>
                 <li v-for="r in results" :key="r.key.path as string">
                     <NuxtLink :href="`${r.key.path as string}`" >
-                        <h3>{{ r.key.path as string }}</h3>
+                        <h3>{{ r.key.body.data.title as string }}</h3>
                     </NuxtLink>
                     <p>{{ r.refs[0].wordaround }}</p>
                 </li>
