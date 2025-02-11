@@ -99,7 +99,7 @@ For detailed benchmarks across different hardware configurations and index types
 ## Integration with Static Site Generators
 
 Example implementations are available for:
-- [React and Next.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/react-next)
+- [Next.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/next)
 - [Astro.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/astro)
 
 ## Limitations

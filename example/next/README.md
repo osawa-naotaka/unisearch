@@ -1,6 +1,6 @@
-# StaticSeek Example (React + Next.js)
+# StaticSeek Example (Next.js)
 
-A working demo of this implementation is available at [staticseek-react-next.pages.dev](https://staticseek-react-next.pages.dev/).
+A working demo of this implementation is available at [staticseek-next.pages.dev](https://staticseek-next.pages.dev/).
 
 ## Getting Started
 

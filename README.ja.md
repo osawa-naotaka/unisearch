@@ -102,7 +102,7 @@ const result = await search(index, "search word");
 ## 静的サイトジェネレーター(SSG)との統合
 
 次の実装例が利用可能です。
-- [ReactとNext.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/react-next)
+- [Next.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/next)
 - [Astro.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/astro)
 
 ## 制限事項
