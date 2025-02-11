@@ -38,7 +38,7 @@ body {
     background-color: var(--color-background);
 }
 
-section,
+main,
 body > header {
     max-width: var(--content-width);
     box-sizing: content-box;
@@ -59,6 +59,7 @@ h2 {
 
 .input-area > input {
     flex-grow: 1;
+    padding-inline: 0.5rem;
 }
 
 p {

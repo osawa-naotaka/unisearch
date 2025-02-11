@@ -14,11 +14,11 @@ export default async function PostPage(props: Params) {
     const { content } = await compileMDX({ source: post.content, options: { mdxOptions: { format: "md" } } });
 
     return (
-        <section>
+        <main>
             <article>
                 <h2>{post.data.title as string}</h2>
                 {content}
             </article>
-        </section>
+        </main>
     );
 }
