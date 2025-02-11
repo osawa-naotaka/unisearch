@@ -1,12 +1,8 @@
 <script setup lang="ts">
 import { ContentRenderer } from '#components';
 
-
 const route = useRoute();
-const id = typeof route.params.id === 'string' ? route.params.id : route.params.id[0];
 const { data: post } = await useAsyncData(route.path, () => queryCollection('posts').path(route.path).first());
-
-
 </script>
 
 <template>
