@@ -32,6 +32,7 @@ First, create a static index file. The following example demonstrates how to set
 ```typescript
 import { getAllPosts } from "@/lib/posts";
 import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek";
+import type { IndexClass } from "staticseek";
 
 export const dynamic = "force-static";
 export const revalidate = false;
@@ -39,21 +40,17 @@ export const revalidate = false;
 export type SearchKey = {
     slug: string;
     data: {
-      title: string;
-    }
+        title: string;
+    };
 };
 
 export async function GET(request: Request) {
     const allPosts = await getAllPosts();
-    const index = createIndex(GPULinearIndex, allPosts, {
-        key_fields: ["data.title", "slug"],
-        search_targets: ["data.title", "content"]
-    });
-
+    const index_class: IndexClass = GPULinearIndex;
+    const index = createIndex(index_class, allPosts, { key_fields: ["data.title", "slug"], search_targets: ["data.title", "content"] });
     if (index instanceof StaticSeekError) {
         return new Response(index.message, { status: 500 });
     }
-    
     return Response.json(indexToObject(index));
 }
 ```
@@ -73,103 +70,53 @@ Create a search page component (e.g., in `src/app/page.tsx`):
 ```typescript
 "use client";
 
+import type { SearchKey } from "@/app/searchindex.json/route.ts";
 import Link from "next/link";
-import { useState } from "react";
-import { StaticSeekError, createIndexFromObject, search } from "staticseek";
-import type { SearchResult, StaticSeekIndex } from "staticseek";
-import type { SearchKey } from "@/app/searchindex.json/route";
+import { lazy, useState } from "react";
+import type { JSX } from "react";
+import type { SearchResult } from "staticseek";
 
-export default function Index() {
-    const INDEX_STATE = {
-        NOT_INITIALIZED: 0,
-        FETCHING: 1,
-        INITIALIZED: 2,
-    } as const;
-    type INDEX_STATE = (typeof INDEX_STATE)[keyof typeof INDEX_STATE];
+const StaticSeek = lazy(() => import("@/app/StaticSeek"));
 
-    const [results, setResults] = useState<SearchResult[]>([]);
-    const [index_state, setIndexState] = useState<INDEX_STATE>(INDEX_STATE.NOT_INITIALIZED);
-    const [index, setIndex] = useState<StaticSeekIndex | null>(null);
-
-    const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const start = performance.now();
-        if (index_state === INDEX_STATE.FETCHING) return;
-        if (index_state !== INDEX_STATE.INITIALIZED) {
-            setIndexState(INDEX_STATE.FETCHING);
-
-            const response = await fetch("/searchindex.json");
-            if (!response.ok) {
-                console.error(`fail to fetch index: ${response.statusText}`);
-                setIndexState(INDEX_STATE.NOT_INITIALIZED);
-                return;
-            }
-            const response_json = await response.json();
-            const newIndex = createIndexFromObject(response_json);
-
-            if (newIndex instanceof StaticSeekError) {
-                console.error(newIndex);
-                setIndexState(INDEX_STATE.NOT_INITIALIZED);
-                return;
-            }
-
-            setIndex(newIndex);
-
-            const results = await search(newIndex, e.target.value);
-            if (results instanceof StaticSeekError) {
-                console.error(results);
-                return;
-            }
-            setResults(results);
-            console.log(`search time: ${performance.now() - start}ms`);
-            setIndexState(INDEX_STATE.INITIALIZED);
-            return;
-        }
-
-        if (!index) return;
-        const results = await search(index, e.target.value);
-        if (results instanceof StaticSeekError) {
-            console.error(results);
-            return;
-        }
-        setResults(results);
-        console.log(`search time: ${performance.now() - start}ms`);
-    };
+function renderResult(result: SearchResult[]): JSX.Element {
+    const lis = result.map((item) => {
+        const key = item.key as SearchKey; // ad-hock solution. you might as well use zod or something like that to validate the key.
+        return (
+            <li key={key.slug}>
+                <Link href={`/posts/${key.slug as string}`}>
+                    <h3>{key.data.title as string}</h3>
+                </Link>
+                <p>{item.refs[0].wordaround}</p>
+            </li>
+        );
+    });
 
     return (
-        <section>
-            <div className="input-area">
-                <div>Search</div>
-                <input type="text" name="search" id="search" onChange={handleSearch} />
-            </div>
-            <h2>Results</h2>
-            <ul>
-                {index_state === INDEX_STATE.FETCHING && (
-                    <li>Loading search index...</li>
-                )}
-                {results.length > 0 &&
-                    results.map((r) => {
-                        const post = r.key as SearchKey; // Type assertion - consider using Zod or similar for validation
-                        if (!post.data.title || !post.slug) {
-                            throw new Error("Title or slug not found in search result.");
-                        }
-
-                        return (
-                            <li key={post.slug}>
-                                <Link href={`/posts/${post.slug}`}>
-                                    <h3>{post.data.title}</h3>
-                                </Link>
-                                <p>{r.refs[0].wordaround}</p>
-                            </li>
-                        );
-                    })}
-            </ul>
-        </section>
+        <>
+            <h2>results</h2>
+            <ul>{result.length > 0 ? lis : <li>No results found.</li>}</ul>
+        </>
     );
 }
 
-async function execSearch(index: StaticSeekIndex, searchText: string): Promise<SearchResult[]> {
-    const results = await search(index, searchText);
-    return results instanceof StaticSeekError ? [] : results;
+export default function Index() {
+    const [query, setQuery] = useState<string>("");
+    const [trigger, setTrigger] = useState<boolean>(false);
+
+    function onChangeInput(e: React.ChangeEvent<HTMLInputElement>) {
+        setQuery(e.target.value);
+        setTrigger(true);
+    }
+
+    return (
+        <main>
+            <div className="input-area">
+                <div>search</div>
+                <input type="text" name="search" id="search" placeholder="type your search query in English..." onChange={onChangeInput} />
+            </div>
+            {trigger && <StaticSeek query={query} indexUrl="/searchindex.json" suspense={<div>Loading index...</div>} render={renderResult} />}
+        </main>
+    );
 }
 ```
 
