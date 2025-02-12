@@ -19,6 +19,14 @@ staticseek is a client-side full-text search engine designed specifically for st
 
 ## Quick Start
 
+First, install staticseek in your environment:
+
+```shell
+npm install staticseek
+```
+
+Next, import staticseek into your project and perform indexing and searching:
+
 ```javascript
 import { LinearIndex, createIndex, search, StaticSeekError } from "staticseek";
 
