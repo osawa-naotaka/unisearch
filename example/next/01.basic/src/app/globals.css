@@ -59,25 +59,38 @@ main {
 
 footer {
     text-align: center;
-    padding: 1rem;
     position: fixed;
     bottom: 0;
     width: 100%;
+    color: var(--color-background);
+    background-color: var(--color-main);
 }
 
-ul {
+ol {
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 1rem;
+    flex-direction: column;
+    gap: 0.1rem;
 }
 
 li {
-    border-radius: 10px;
-    background-color: var(--color-main);
-    color: var(--color-background);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-li > div {
+ol > :first-child {
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--color-main);
+}
+
+li > .sentence {
     padding-inline: 1rem;
+}
+
+li > .score {
+    border-radius: 8px;
+    padding-inline: 0.5rem;
+    padding-block: 0.4rem;
+    background-color: var(--color-title-background);
+    line-height: 0.8;
 }

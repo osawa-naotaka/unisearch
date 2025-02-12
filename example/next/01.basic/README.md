@@ -44,6 +44,7 @@ const target = [
 ];
 
 export default function Index() {
+    const [query, setQuery] = useState("");
     const [result, setResult] = useState<SearchResult[]>([]);
     const index = useRef<StaticSeekIndex | null>(null);
 
@@ -57,28 +58,43 @@ export default function Index() {
     }, []);
 
     async function execSearch(e: React.ChangeEvent<HTMLInputElement>) {
-        if(index.current) {                
-            const result = await search(index.current, e.target.value);
-            if (result instanceof StaticSeekError) {
-                console.error(result);
+        setQuery(e.target.value);
+        if (index.current) {
+            const r = await search(index.current, e.target.value);
+            if (r instanceof StaticSeekError) {
+                console.error(r);
                 return;
             }
-            setResult(result);
+            setResult(r);
         }
     }
 
     return (
         <section>
             <div className="input-area">
-                <div>Search</div>
-                <input type="text" name="search" id="search" placeholder="Enter a keyword" onChange={execSearch} />
+                <div>search</div>
+                <input type="text" name="search" id="search" placeholder="Enter the following keywords" onChange={execSearch} />
             </div>
-            <ul>
-                {result.length === 0 ?  
-                    target.map((r, idx) => (<li key={idx}><div>{r}</div></li>)) :
-                    result.map((r) => (<li key={r.id}><div>{target[r.id]}</div></li>))
-                }
-            </ul>
+            <ol>
+                <li key="header">
+                    <div className="sentence">sentence</div>
+                    <div>score</div>
+                </li>
+                {result.length === 0 && query === ""
+                    ? target.map((r, idx) => (
+                          // biome-ignore lint: use index as key field.
+                          <li key={idx}>
+                              <div className="sentence">{r}</div>
+                              <div />
+                          </li>
+                      ))
+                    : result.map((r) => (
+                          <li key={r.id}>
+                              <div className="sentence">{target[r.id]}</div>
+                              <div className="score">{r.score.toFixed(4)}</div>
+                          </li>
+                      ))}
+            </ol>
         </section>
     );
 }
