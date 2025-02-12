@@ -111,7 +111,8 @@ const result = await search(index, "search word");
 - Next.js
   - [基本的な使用例](https://github.com/osawa-naotaka/staticseek/tree/main/example/next/01.basic)
   - [インデックス事前作成＆遅延読み込み](https://github.com/osawa-naotaka/staticseek/tree/main/example/next/02.preindexed)
-- [Astro.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/astro)
+- Astro.js
+  - [インデックス事前作成＆遅延読み込み](https://github.com/osawa-naotaka/staticseek/tree/main/example/astro/02.preindexed)
 - [Nuxt.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/nuxt)
 
 ## 制限事項
