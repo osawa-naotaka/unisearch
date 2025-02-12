@@ -8,7 +8,7 @@ import type { SearchResult } from "staticseek";
 
 const StaticSeek = lazy(() => import("@/app/StaticSeek"));
 
-function renderResult(result: SearchResult[]): JSX.Element {
+function StaticSeekResult(result: SearchResult[]): JSX.Element {
     const lis = result.map((item) => {
         const key = item.key as SearchKey; // ad-hock solution. you might as well use zod or something like that to validate the key.
         return (
@@ -44,7 +44,11 @@ export default function Index() {
                 <div>search</div>
                 <input type="text" name="search" id="search" placeholder="type your search query in English..." onChange={onChangeInput} />
             </div>
-            {trigger && <StaticSeek query={query} indexUrl="/searchindex.json" suspense={<div>Loading index...</div>} render={renderResult} />}
+            {trigger && (
+                <StaticSeek query={query} indexUrl="/searchindex.json" suspense={<div>Loading index...</div>}>
+                    {StaticSeekResult}
+                </StaticSeek>
+            )}
         </main>
     );
 }

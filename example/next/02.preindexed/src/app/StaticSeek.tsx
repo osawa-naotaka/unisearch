@@ -7,10 +7,10 @@ type StaticSeekProps = {
     query: string;
     indexUrl: string;
     suspense: JSX.Element;
-    render: (result: SearchResult[]) => JSX.Element;
+    children: (result: SearchResult[]) => JSX.Element;
 };
 
-export default function StaticSeek({ query, indexUrl, suspense, render }: StaticSeekProps) {
+export default function StaticSeek({ query, indexUrl, suspense, children }: StaticSeekProps) {
     const index = useRef<StaticSeekIndex | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [result, setResult] = useState<SearchResult[]>([]);
@@ -62,5 +62,5 @@ export default function StaticSeek({ query, indexUrl, suspense, render }: Static
         return () => {};
     }, [index, query]);
 
-    return loading ? suspense : render(result);
+    return loading ? suspense : children(result);
 }

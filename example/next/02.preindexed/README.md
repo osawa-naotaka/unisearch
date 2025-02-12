@@ -78,7 +78,7 @@ import type { SearchResult } from "staticseek";
 
 const StaticSeek = lazy(() => import("@/app/StaticSeek"));
 
-function renderResult(result: SearchResult[]): JSX.Element {
+function StaticSeekResult(result: SearchResult[]): JSX.Element {
     const lis = result.map((item) => {
         const key = item.key as SearchKey; // Ad-hoc solution; consider using Zod or a similar library for key validation.
         return (
@@ -114,7 +114,11 @@ export default function Index() {
                 <div>Search</div>
                 <input type="text" name="search" id="search" placeholder="Type your search query in English..." onChange={onChangeInput} />
             </div>
-            {trigger && <StaticSeek query={query} indexUrl="/searchindex.json" suspense={<div>Loading index...</div>} render={renderResult} />}
+            {trigger && (
+                <StaticSeek query={query} indexUrl="/searchindex.json" suspense={<div>Loading index...</div>}>
+                    {StaticSeekResult}
+                </StaticSeek>
+            )}
         </main>
     );
 }
@@ -125,7 +129,7 @@ The StaticSeek component handles index loading and search execution.
 - The `query` prop is passed to StaticSeek to perform searches.
 - The `indexUrl` prop points to the pre-generated search index JSON file.
 - The `suspense` prop defines the JSX element displayed while the index is loading.
-- The `render` prop specifies a function that converts `SearchResult[]` into JSX elements.
+- The children of StaticSeek specifies a function that converts `SearchResult[]` into JSX elements.
 
 Important implementation details:
 - Mark the component with `"use client"` to enable React hooks and client-side functionality.
@@ -149,10 +153,10 @@ type StaticSeekProps = {
     query: string;
     indexUrl: string;
     suspense: JSX.Element;
-    render: (result: SearchResult[]) => JSX.Element;
+    children: (result: SearchResult[]) => JSX.Element;
 };
 
-export default function StaticSeek({ query, indexUrl, suspense, render }: StaticSeekProps) {
+export default function StaticSeek({ query, indexUrl, suspense, children }: StaticSeekProps) {
     const index = useRef<StaticSeekIndex | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [result, setResult] = useState<SearchResult[]>([]);
@@ -190,16 +194,19 @@ export default function StaticSeek({ query, indexUrl, suspense, render }: Static
             search_async();
         };
 
-        if (!index.current) {
+        if (index.current === null) {
             fetchIndex();
         }
+
+        return () => {};
     }, []);
 
     useEffect(() => {
         search_async();
-    }, [query]);
+        return () => {};
+    }, [index, query]);
 
-    return loading ? suspense : render(result);
+    return loading ? suspense : children(result);
 }
 ```
 
