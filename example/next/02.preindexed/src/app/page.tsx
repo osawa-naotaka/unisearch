@@ -6,7 +6,7 @@ import { lazy, useState } from "react";
 import type { JSX } from "react";
 import type { SearchResult } from "staticseek";
 
-const StaticSeek = lazy(() => import("@/app/StaticSeek"));
+const StaticSeek = lazy(() => import("staticseek-react"));
 
 function StaticSeekResult(result: SearchResult[]): JSX.Element {
     const lis = result.map((item) => {

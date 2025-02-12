@@ -76,7 +76,7 @@ import { lazy, useState } from "react";
 import type { JSX } from "react";
 import type { SearchResult } from "staticseek";
 
-const StaticSeek = lazy(() => import("@/app/StaticSeek"));
+const StaticSeek = lazy(() => import("staticseek-react"));
 
 function StaticSeekResult(result: SearchResult[]): JSX.Element {
     const lis = result.map((item) => {
@@ -141,7 +141,7 @@ Important implementation details:
 
 ### 3. Index Loading and Search Execution
 
-Create a component at `src/app/StaticSeek.tsx` to load the search index and execute queries:
+The `StaticSearch` React component, provided by the npm package [staticseek-react](https://github.com/osawa-naotaka/staticseek-react), is responsible for loading the search index and executing queries. The complete implementation is shown below:
 
 ```typescript
 import { useEffect, useRef, useState } from "react";
@@ -163,32 +163,28 @@ export default function StaticSeek({ query, indexUrl, suspense, children }: Stat
 
     const search_async = async () => {
         if (index.current) {
-            const start = performance.now();
             const result = await search(index.current, query);
             if (result instanceof StaticSeekError) {
-                console.error(`Search failed: ${result.message}`);
+                console.error(`fail to search: ${result.message}`);
                 return;
             }
-            console.log(`Search took ${performance.now() - start} ms`);
             setResult(result);
         }
     };
 
     useEffect(() => {
         const fetchIndex = async () => {
-            const start = performance.now();
             const response = await fetch(indexUrl);
             if (!response.ok) {
-                console.error(`Failed to fetch index: ${response.statusText}`);
+                console.error(`fail to fetch index: ${response.statusText}`);
                 return;
             }
             const response_json = await response.json();
             const newIndex = createIndexFromObject(response_json);
             if (newIndex instanceof StaticSeekError) {
-                console.error(`Index creation failed: ${newIndex.message}`);
+                console.error(`fail to create index: ${newIndex.message}`);
                 return;
             }
-            console.log(`Index loading took ${performance.now() - start} ms`);
             index.current = newIndex;
             setLoading(false);
             search_async();
