@@ -19,7 +19,13 @@ staticseekは、静的ウェブサイト向けに特化して設計されたク�
 
 ## クイックスタート
 
-一般的な使用方法は以下の通りです。
+最初に、staticseekをインストールします。
+
+```shell
+npm install staticseek
+```
+
+次に、検索機能を使いたいプロジェクトにstaticseekをインポートし、インデックスの作成と検索を実行します。
 
 ```javascript
 import { LinearIndex, createIndex, search, StaticSeekError } from "staticseek";
@@ -102,8 +108,12 @@ const result = await search(index, "search word");
 ## 静的サイトジェネレーター(SSG)との統合
 
 次の実装例が利用可能です。
-- [ReactとNext.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/react-next)
-- [Astro.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/astro)
+- Next.js
+  - [基本的な使用例](https://github.com/osawa-naotaka/staticseek/tree/main/example/next/01.basic)
+  - [インデックス事前作成＆遅延読み込み](https://github.com/osawa-naotaka/staticseek/tree/main/example/next/02.preindexed)
+- Astro.js
+  - [インデックス事前作成＆遅延読み込み](https://github.com/osawa-naotaka/staticseek/tree/main/example/astro/02.preindexed)
+- [Nuxt.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/nuxt)
 
 ## 制限事項
 
@@ -352,7 +362,7 @@ import { GPULinearIndex, createIndex, search, StaticSeekError } from "staticseek
 const index = createIndex(GPULinearIndex, array_of_articles);
 ```
 
-`GPULinearIndex`を活用することで、あいまい検索をGPUにオフロードできるため、検索速度が向上します。この方法は、`LinearIndex`の2倍程度の検索速度を達成できます。使用法は`LinearIndex`と同じままであるため、実装を簡単に切り替えることができます。
+`GPULinearIndex`を活用することで、あいまい検索をGPUにオフロードできるため、検索速度が向上します。この方法は、`LinearIndex`の2倍から10倍程度の検索速度を達成できます。使用方法は`LinearIndex`と同じままであるため、実装を簡単に切り替えることができます。
 
 実行環境でGPUが利用できない場合、`GPULinearIndex`は自動的に`LinearIndex`にフォールバックし、さまざまなデバイス間での互換性を確保します。
 

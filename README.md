@@ -19,6 +19,14 @@ staticseek is a client-side full-text search engine designed specifically for st
 
 ## Quick Start
 
+First, install staticseek in your environment:
+
+```shell
+npm install staticseek
+```
+
+Next, import staticseek into your project and perform indexing and searching:
+
 ```javascript
 import { LinearIndex, createIndex, search, StaticSeekError } from "staticseek";
 
@@ -99,8 +107,12 @@ For detailed benchmarks across different hardware configurations and index types
 ## Integration with Static Site Generators
 
 Example implementations are available for:
-- [React and Next.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/react-next)
-- [Astro.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/astro)
+- Next.js
+  - [Basic Example](https://github.com/osawa-naotaka/staticseek/tree/main/example/next/01.basic)
+  - [Preindexed on-demand loading](https://github.com/osawa-naotaka/staticseek/tree/main/example/next/02.preindexed)
+- Astro.js
+  - [Preindexed on-demand loading](https://github.com/osawa-naotaka/staticseek/tree/main/example/astro/02.preindexed)
+- [Nuxt.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/nuxt)
 
 ## Limitations
 
