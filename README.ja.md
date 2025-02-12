@@ -102,8 +102,11 @@ const result = await search(index, "search word");
 ## 静的サイトジェネレーター(SSG)との統合
 
 次の実装例が利用可能です。
-- [Next.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/next)
+- Next.js
+  - [基本的な使用例](https://github.com/osawa-naotaka/staticseek/tree/main/example/next/01.basic)
+  - [インデックス事前作成＆遅延読み込み](https://github.com/osawa-naotaka/staticseek/tree/main/example/next/02.preindexed)
 - [Astro.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/astro)
+- [Nuxt.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/nuxt)
 
 ## 制限事項
 

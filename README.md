@@ -99,8 +99,11 @@ For detailed benchmarks across different hardware configurations and index types
 ## Integration with Static Site Generators
 
 Example implementations are available for:
-- [Next.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/next)
+- Next.js
+  - [Basic Example](https://github.com/osawa-naotaka/staticseek/tree/main/example/next/01.basic)
+  - [Preindexed on-demand loading](https://github.com/osawa-naotaka/staticseek/tree/main/example/next/02.preindexed)
 - [Astro.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/astro)
+- [Nuxt.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/nuxt)
 
 ## Limitations
 
