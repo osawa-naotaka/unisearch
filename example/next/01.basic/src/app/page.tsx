@@ -1,14 +1,30 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { LinearIndex, createIndex, search, StaticSeekError } from "staticseek";
+import { LinearIndex, StaticSeekError, createIndex, search } from "staticseek";
 import type { SearchResult, StaticSeekIndex } from "staticseek";
 
 const target = [
-    "apple", "bridge", "candle", "dragon", "eclipse",
-    "feather", "glacier", "horizon", "island", "jungle",
-    "knight", "lantern", "mountain", "nebula", "ocean",
-    "puzzle", "quartz", "raven", "spectrum", "tornado"
+    "apple",
+    "bridge",
+    "candle",
+    "dragon",
+    "eclipse",
+    "feather",
+    "glacier",
+    "horizon",
+    "island",
+    "jungle",
+    "knight",
+    "lantern",
+    "mountain",
+    "nebula",
+    "ocean",
+    "puzzle",
+    "quartz",
+    "raven",
+    "spectrum",
+    "tornado",
 ];
 
 export default function Index() {
@@ -25,7 +41,7 @@ export default function Index() {
     }, []);
 
     async function execSearch(e: React.ChangeEvent<HTMLInputElement>) {
-        if(index.current) {                
+        if (index.current) {
             const result = await search(index.current, e.target.value);
             if (result instanceof StaticSeekError) {
                 console.error(result);
@@ -42,10 +58,18 @@ export default function Index() {
                 <input type="text" name="search" id="search" placeholder="Enter the following keywords" onChange={execSearch} />
             </div>
             <ul>
-                {result.length === 0 ?  
-                    target.map((r, idx) => (<li key={idx}><div>{r}</div></li>)) :
-                    result.map((r) => (<li key={r.id}><div>{target[r.id]}</div></li>))
-                }
+                {result.length === 0
+                    ? target.map((r, idx) => (
+                          // biome-ignore lint: use index as key field.
+                          <li key={idx}>
+                              <div>{r}</div>
+                          </li>
+                      ))
+                    : result.map((r) => (
+                          <li key={r.id}>
+                              <div>{target[r.id]}</div>
+                          </li>
+                      ))}
             </ul>
         </section>
     );

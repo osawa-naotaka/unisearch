@@ -10,9 +10,7 @@
         "check-write": "biome check --write ./src"
     },
     "dependencies": {
-        "gray-matter": "^4.0.3",
         "next": "^15.1.6",
-        "next-mdx-remote": "^5.0.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "staticseek": "^2.1.1"

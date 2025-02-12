@@ -1,6 +1,6 @@
-# StaticSeek Example (Next.js)
+# StaticSeek Basic Example (Next.js)
 
-A working demo of this implementation is available at [staticseek-next.pages.dev](https://staticseek-next.pages.dev/).
+A working demo of this implementation is available at [staticseek-next-basic.pages.dev](https://staticseek-next-basic.pages.dev/).
 
 ## Getting Started
 
@@ -23,118 +23,78 @@ npm run build
 # Upload the generated "out" directory to your HTTP server
 ```
 
-## Integration Guide: StaticSeek with Next.js
+## Basic Usage of StaticSeek with Next.js
 
-### 1. Creating the Search Index
-
-First, create a static index file. The following example demonstrates how to set this up at `src/app/searchindex.json/route.ts`:
-
-```typescript
-import { getAllPosts } from "@/lib/posts";
-import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek";
-import type { IndexClass } from "staticseek";
-
-export const dynamic = "force-static";
-export const revalidate = false;
-
-export type SearchKey = {
-    slug: string;
-    data: {
-        title: string;
-    };
-};
-
-export async function GET(request: Request) {
-    const allPosts = await getAllPosts();
-    const index_class: IndexClass = GPULinearIndex;
-    const index = createIndex(index_class, allPosts, { key_fields: ["data.title", "slug"], search_targets: ["data.title", "content"] });
-    if (index instanceof StaticSeekError) {
-        return new Response(index.message, { status: 500 });
-    }
-    return Response.json(indexToObject(index));
-}
-```
-
-Key configuration points:
-- Set `dynamic = "force-static"` to ensure static file generation
-- Use `GPULinearIndex` for search functionality (other index types are available)
-- The `allPosts` variable contains an array of posts, each with title, slug, and content fields
-- Configure `key_fields` to specify which fields should be available in search results (title and slug in this example)
-- Use `search_targets` to define which fields should be searchable (title and content in this example)
-- Index is converted to JSON using `indexToObject` before being returned
-
-### 2. Implementing the Search Interface
-
-Create a search page component (e.g., in `src/app/page.tsx`):
+The following code (`src/app/page.tsx`) demonstrates the most basic usage of StaticSeek in a Single Page Application (SPA).
+This application extracts and displays matching keywords from a predefined array.
+For input queries of two or fewer characters, an exact match search is performed. For queries of three or more characters, a fuzzy search allowing one character mistake is executed.
 
 ```typescript
 "use client";
 
-import type { SearchKey } from "@/app/searchindex.json/route.ts";
-import Link from "next/link";
-import { lazy, useState } from "react";
-import type { JSX } from "react";
-import type { SearchResult } from "staticseek";
+import { useEffect, useRef, useState } from "react";
+import { LinearIndex, createIndex, search, StaticSeekError } from "staticseek";
+import type { SearchResult, StaticSeekIndex } from "staticseek";
 
-const StaticSeek = lazy(() => import("@/app/StaticSeek"));
-
-function renderResult(result: SearchResult[]): JSX.Element {
-    const lis = result.map((item) => {
-        const key = item.key as SearchKey; // ad-hock solution. you might as well use zod or something like that to validate the key.
-        return (
-            <li key={key.slug}>
-                <Link href={`/posts/${key.slug as string}`}>
-                    <h3>{key.data.title as string}</h3>
-                </Link>
-                <p>{item.refs[0].wordaround}</p>
-            </li>
-        );
-    });
-
-    return (
-        <>
-            <h2>results</h2>
-            <ul>{result.length > 0 ? lis : <li>No results found.</li>}</ul>
-        </>
-    );
-}
+const target = [
+    "apple", "bridge", "candle", "dragon", "eclipse",
+    "feather", "glacier", "horizon", "island", "jungle",
+    "knight", "lantern", "mountain", "nebula", "ocean",
+    "puzzle", "quartz", "raven", "spectrum", "tornado"
+];
 
 export default function Index() {
-    const [query, setQuery] = useState<string>("");
-    const [trigger, setTrigger] = useState<boolean>(false);
+    const [result, setResult] = useState<SearchResult[]>([]);
+    const index = useRef<StaticSeekIndex | null>(null);
 
-    function onChangeInput(e: React.ChangeEvent<HTMLInputElement>) {
-        setQuery(e.target.value);
-        setTrigger(true);
+    useEffect(() => {
+        const newIndex = createIndex(LinearIndex, target);
+        if (newIndex instanceof StaticSeekError) {
+            console.error(index);
+            return;
+        }
+        index.current = newIndex;
+    }, []);
+
+    async function execSearch(e: React.ChangeEvent<HTMLInputElement>) {
+        if(index.current) {                
+            const result = await search(index.current, e.target.value);
+            if (result instanceof StaticSeekError) {
+                console.error(result);
+                return;
+            }
+            setResult(result);
+        }
     }
 
     return (
-        <main>
+        <section>
             <div className="input-area">
-                <div>search</div>
-                <input type="text" name="search" id="search" placeholder="type your search query in English..." onChange={onChangeInput} />
+                <div>Search</div>
+                <input type="text" name="search" id="search" placeholder="Enter a keyword" onChange={execSearch} />
             </div>
-            {trigger && <StaticSeek query={query} indexUrl="/searchindex.json" suspense={<div>Loading index...</div>} render={renderResult} />}
-        </main>
+            <ul>
+                {result.length === 0 ?  
+                    target.map((r, idx) => (<li key={idx}><div>{r}</div></li>)) :
+                    result.map((r) => (<li key={r.id}><div>{target[r.id]}</div></li>))
+                }
+            </ul>
+        </section>
     );
 }
 ```
 
-Important implementation details:
-- Mark the component with `"use client"` to enable React hooks and client-side functionality
-- The search index is lazily loaded on the first search attempt to avoid unnecessary fetches
-- Index fetching process:
-  1. Fetch the index from `/searchindex.json` on first search
-  2. Convert the response to `StaticSeekIndex` using `createIndexFromObject`
-  3. Store the index in component state for subsequent searches
-- Search results are sorted by relevance score
-- Each result includes:
-  - The key fields specified during index creation (title and slug)
-  - Matched content context via `refs[*].wordaround`
-  - Link to the full post using the slug
-- Error handling is implemented for both index creation and search operations
+### Implementation Details
 
-The component manages three main states:
-- `results`: Array of search results
-- `index_state`: Tracks the loading state of the search index
-- `index`: Stores the initialized StaticSeekIndex object
+- The search index is created by passing the keyword array to `createIndex`.
+- Since index creation only needs to happen once per component lifecycle, it is executed inside a `useEffect` hook with an empty dependency array (`[]`).
+- The search index does not trigger re-renders, so it is stored in a `useRef` variable.
+- The search query is input via a text field (`input:text`), and searches are executed on each `onChange` event.
+- As the `search` function is asynchronous, the event handler is also an `async` function.
+- Search results are displayed using the `id` field from the `SearchResult` type, which corresponds to the index of the keyword in the original `target` array.
+
+### Additional Notes
+
+- The component is marked with `"use client"` to enable React hooks and client-side functionality.
+- Search results are sorted by relevance score.
+- Error handling is implemented for both index creation and search operations.
