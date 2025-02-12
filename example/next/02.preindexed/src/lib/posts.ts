@@ -9,7 +9,7 @@ export type Post = {
     content: string;
 };
 
-const postsDirectory = path.join(path.resolve(), "..", "posts");
+const postsDirectory = path.join(path.resolve(), "..", "..", "posts");
 
 export function getPostSlugs(): string[] {
     return fs
