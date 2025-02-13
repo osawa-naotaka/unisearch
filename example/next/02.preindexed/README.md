@@ -1,4 +1,4 @@
-# StaticSeek Preindexed On-Demand Loading Example (Next.js)
+# staticseek Preindexed On-Demand Loading Example (Next.js)
 
 A working demo of this implementation is available at [staticseek-next.pages.dev](https://staticseek-next.pages.dev/).
 
