@@ -4,11 +4,11 @@ import matter from "gray-matter";
 
 export default defineEventHandler(async (event) => {
     const raw_posts = await queryCollection(event, "posts").all();
-    const posts = raw_posts.map((post) => ({ path: post.path, body: matter(post.rawbody.replaceAll("\\n", "\n")) }));
+    const posts = raw_posts.map((post) => ({ id: post.id, body: matter(post.rawbody.replaceAll("\\n", "\n")) }));
 
     const index_class: IndexClass = GPULinearIndex;
     const index = createIndex(index_class, posts, { 
-        key_fields: ["path", "body.data.title"], 
+        key_fields: ["id", "body.data.title"], 
         search_targets: ["body.data.title", "body.content"] 
     });
     

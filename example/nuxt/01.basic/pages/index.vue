@@ -3,8 +3,8 @@ import { createIndex, LinearIndex, search, StaticSeekError } from 'staticseek'
 import { computedAsync } from '@vueuse/core';
 
 const query = ref('')
-const { data } = await useAsyncData('search', () => queryCollection('contents').first())
-const target = toValue(data.value) || ["hoge"];
+const { data } = await useAsyncData('search', () => queryCollection('contents').where('stem', '=', 'sentences').first())
+const target = toValue(data.value) || [];
 
 const index = createIndex(LinearIndex, target);
 if(index instanceof StaticSeekError) throw index;
