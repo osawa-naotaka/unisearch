@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { asyncComputed } from "@vueuse/core";
 import type { SearchResult, StaticSeekIndex } from "staticseek";
 import { StaticSeekError, createIndexFromObject, search } from "staticseek";
 
@@ -9,7 +8,7 @@ function typedKey(key: Record<string, unknown>) {
 }
 
 const { data } = await useFetch<StaticSeekIndex>("/searchindex.json");
-if(!data.value) {
+if (!data.value) {
     throw new Error("Failed to fetch search index.");
 }
 const newIndex = createIndexFromObject(data.value);
@@ -23,7 +22,7 @@ const results = ref<SearchResult[]>([]);
 
 async function handleInput(e: Event) {
     const target = e.target as HTMLInputElement;
-    if(!index) {
+    if (!index) {
         return [];
     }
     const searchResults = await search(index, target.value);
@@ -34,13 +33,10 @@ async function handleInput(e: Event) {
 
     results.value = searchResults;
 }
-
 </script>
 
 <template>
     <section>
-        <h1><NuxtLink to="/">Home</NuxtLink></h1>
-
         <div class="input-area">
             <div>search</div>
             <input type="text" name="search" id="search" @input="handleInput" />
@@ -59,3 +55,28 @@ async function handleInput(e: Event) {
         </ul>
     </section>
 </template>
+
+<style lang="css">
+.input-area {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.input-area > input {
+    flex-grow: 1;
+}
+
+ul {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+li h3 {
+    width: 100%;
+    padding-inline: var(--content-padding);
+    font-size: 1.2rem;
+    border-bottom: 3px solid var(--color-main);
+}
+</style>
