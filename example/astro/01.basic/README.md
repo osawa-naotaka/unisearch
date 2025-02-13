@@ -1,6 +1,6 @@
 # StaticSeek Example (Astro.js)
 
-A working demo of this implementation is available at [staticseek-astro.pages.dev](https://staticseek-astro.pages.dev/).
+A working demo of this implementation is available at [staticseek-astro-basic.pages.dev](https://staticseek-astro-basic.pages.dev/).
 
 ## Getting Started
 
@@ -22,6 +22,115 @@ npm install
 npm run build
 # Upload the generated "dist" directory to your HTTP server
 ```
+
+## Basic Usage of StaticSeek with Next.js
+
+The following code (`src/pages/index.astro`) demonstrates the most basic usage of StaticSeek in a Single Page Application (SPA).
+This application extracts and displays matching keywords from a predefined array.
+For input queries of two or fewer characters, an exact match search is performed. For queries of three or more characters, a fuzzy search allowing one character mistake is executed.
+
+```typescript
+---
+import Html from "../layout/html.astro";
+import { getEntry } from "astro:content";
+
+const entry = await getEntry("contents", "sentences");
+if(!entry) throw new Error("No data found");
+---
+<Html>
+	<section>
+		<div class="input-area">
+			<div>search</div>
+			<input type="text" name="search" id="search" placeholder="Enter the following keywords" />
+		</div>
+		<ul class="search-result" data-target={JSON.stringify(entry.data)}>
+		</ul>
+	</section>
+</Html>
+
+<script>
+	import { createIndex, LinearIndex, search, StaticSeekError } from "staticseek";
+
+	const search_result_element = document.querySelector<HTMLUListElement>(".search-result");
+	if(!search_result_element) throw new Error("No search result element found");
+	const target_string = search_result_element.dataset.target;
+	const target = JSON.parse(target_string ?? "") as string[];
+
+	const index = createIndex(LinearIndex, target);
+	if(index instanceof StaticSeekError) throw index;
+
+	const search_input = document.querySelector<HTMLInputElement>("#search");
+	search_input?.addEventListener("input", async (e) => {
+		const query = search_input.value;
+		const result = await search(index, query);
+		if(result instanceof StaticSeekError) throw result;
+
+		search_result_element.innerHTML = '<li><div class="sentence">sentence</div><div>score</div></li>';
+
+		if(query.length === 0) {
+			for(const r of target) {
+				const li = document.createElement("li");
+				li.innerHTML = `<div class="sentence">${r}</div><div></div>`;
+				search_result_element.appendChild(li);
+			};
+		} else {
+			for(const r of result) {
+				const li = document.createElement("li");
+				li.innerHTML = `<div class="sentence">${target[r.id]}</div><div class="score">${r.score.toFixed(4)}</div>`;
+				search_result_element.appendChild(li);
+			};
+		}
+	});
+	search_input?.dispatchEvent(new Event("input"));
+</script>
+```
+
+### Implementation Details
+
+この例では簡略化のため、innerHTMLを利用しています。一般にinnerHTMLの使用は
+セキュリティ上のリスクになるため、実際のアプリケーションでは
+createElementとappendChildrenを利用してください。
+
+staticseekはクライアント側で動かしますが、Astroコンポーネントのコンポーネントスクリプト部に書かれたコードは
+デプロイ時に一度だけしか動きません。そのため、コンポーネントテンプレート中にscript要素を定義し、
+そこでstaticseekを使います。
+実用的なアプリケーションでは、Reactなどで作られた全文検索コンポーネントをclient:visibleプロパティ付きで
+利用することをお勧めします。
+[Reactを用いたサンプル](https://github.com/osawa-naotaka/staticseek/tree/main/example/astro/02.preindexed)をご参照ください。
+
+本サンプルでは、検索対象のデータはAstroのコンテンツコレクションから取得します。
+コンテンツコレクションのディレクトリやデータ構造は src/content.config.ts で定義され、
+本サンプルでは contentsディレクトリ内のsentences.jsonをgetEntry()関数を用いて取得します。
+
+getEntryで取得したコンテンツのjavascriptオブジェクトは、コンポーネントスクリプト部、および、コンポーネントテンプレート部にかかれたhtml記述の中でしか使えません。javascriptオブジェクトをscript要素の中で使うには、
+[htmlのデータ属性を利用します](https://docs.astro.build/en/guides/client-side-scripts/#pass-frontmatter-variables-to-scripts)。データ属性は、htmlの要素に任意の属性を指定できます。javascriptオブジェクトを文字列に変換し、データ属性を通じてscript要素の中で取得することができます。
+
+データ属性を通じたjavascriptオブジェクトの受け渡しでは、最終的に出力されるhtmlファイルの中に属性値として
+オブジェクトがバンドルされます。そのため、大きすぎるオブジェクトを受け渡すと、htmlファイルのサイズが
+大きくなってしまい、ブラウザへの読み込みが遅くなります。
+この手法を用いる場合は、オブジェクトサイズに気を付けるようにしてください。
+
+- The search index is created by passing the keyword array to `createIndex`.
+- The search query is input via a text field (`input:text`), and searches are executed on each `input` event.
+- Search results are displayed using the `id` field from the `SearchResult` type, which corresponds to the index of the keyword in the original `target` array.
+
+### Additional Notes
+
+- Search results are sorted by relevance score.
+- Error handling is implemented for both index creation and search operations.
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Integration Guide: StaticSeek with Astro.js
 
