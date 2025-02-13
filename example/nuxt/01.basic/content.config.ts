@@ -4,7 +4,7 @@ export default defineContentConfig({
   collections: {
     contents: defineCollection({
         type: 'data',
-        source: 'contents/*.json',
+        source: '*.json',
         schema: z.object({
           data: z.array(z.string()),
         }),

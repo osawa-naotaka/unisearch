@@ -14,8 +14,6 @@ const result = computedAsync(async () => await search(index, toValue(query)))
 
 <template>
     <section style="max-width: 720px; margin-inline: auto">
-        <h1><NuxtLink to="/">Home</NuxtLink></h1>
-
         <div class="input-area">
             <div>search</div>
             <input type="text" name="search" id="search" v-model="query" style="width: 100%"/>
