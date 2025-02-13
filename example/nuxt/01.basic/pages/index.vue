@@ -4,7 +4,7 @@ import { computedAsync } from '@vueuse/core';
 
 const query = ref('')
 const { data } = await useAsyncData('search', () => queryCollection('contents').where('stem', '=', 'sentences').first())
-const target = toValue(data.value) || [];
+const target = toValue(data.value)?.data ?? [];
 
 const index = createIndex(LinearIndex, target);
 if(index instanceof StaticSeekError) throw index;
