@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@astrojs/react": "^4.2.0",
-    "astro": "^5.2.3"
+    "astro": "^5.2.3",
+    "staticseek": "^2.1.1"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4"

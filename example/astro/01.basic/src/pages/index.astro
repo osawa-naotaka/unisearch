@@ -1,5 +1,53 @@
 ---
 import Html from "../layout/html.astro";
+import { getEntry } from "astro:content";
+
+const entry = await getEntry("contents", "sentences");
+if(!entry) throw new Error("No data found");
 ---
 <Html>
+	<section>
+		<div class="input-area">
+			<div>search</div>
+			<input type="text" name="search" id="search" placeholder="Enter the following keywords" />
+		</div>
+		<ul class="search-result" data-target={JSON.stringify(entry.data)}>
+		</ul>
+	</section>
 </Html>
+
+<script>
+	import { createIndex, LinearIndex, search, StaticSeekError } from "staticseek";
+
+	const search_result_element = document.querySelector<HTMLUListElement>(".search-result");
+	if(!search_result_element) throw new Error("No search result element found");
+	const target_string = search_result_element.dataset.target;
+	const target = JSON.parse(target_string ?? "") as string[];
+
+	const index = createIndex(LinearIndex, target);
+	if(index instanceof StaticSeekError) throw index;
+
+	const search_input = document.querySelector<HTMLInputElement>("#search");
+	search_input?.addEventListener("input", async (e) => {
+		const query = search_input.value;
+		const result = await search(index, query);
+		if(result instanceof StaticSeekError) throw result;
+
+		search_result_element.innerHTML = '<li><div class="sentence">sentence</div><div>score</div></li>';
+
+		if(query.length === 0) {
+			for(const r of target) {
+				const li = document.createElement("li");
+				li.innerHTML = `<div class="sentence">${r}</div><div></div>`;
+				search_result_element.appendChild(li);
+			};
+		} else {
+			for(const r of result) {
+				const li = document.createElement("li");
+				li.innerHTML = `<div class="sentence">${target[r.id]}</div><div class="score">${r.score.toFixed(4)}</div>`;
+				search_result_element.appendChild(li);
+			};
+		}
+	});
+	search_input?.dispatchEvent(new Event("input"));
+</script>
