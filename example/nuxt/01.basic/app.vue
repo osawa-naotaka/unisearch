@@ -1,9 +1,8 @@
 <template>
-    <NuxtLayout>
-      <main>
+    <main>
         <NuxtPage/>
-      </main>
-    </NuxtLayout>
+    </main>
+    <footer>staticseek</footer>
 </template>
 <style lang="css">
 @charset "utf-8";

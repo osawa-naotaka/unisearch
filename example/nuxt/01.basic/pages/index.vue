@@ -6,12 +6,12 @@ const query = ref("");
 const { data } = await useAsyncData("search", () =>
     queryCollection("contents").where("stem", "=", "sentences").first(),
 );
-const target = toValue(data.value)?.data ?? [];
+const target = data.value?.data ?? [];
 
 const index = createIndex(LinearIndex, target);
 if (index instanceof StaticSeekError) throw index;
 
-const result = computedAsync(async () => await search(index, toValue(query)), []);
+const result = computedAsync(async () => await search(index, query.value), []);
 </script>
 
 <template>
@@ -21,25 +21,23 @@ const result = computedAsync(async () => await search(index, toValue(query)), []
             <input type="text" name="search" id="search" v-model="query"/>
         </div>
         <h2>results</h2>
-        <ul v-if="!(result instanceof StaticSeekError) && query.length !== 0">
+        <ul>
             <li key="header">
-                    <div class="sentence">sentence</div>
-                    <div>score</div>
+                <div class="sentence">sentence</div>
+                <div>score</div>
             </li>
-            <li v-for="r in result" :key="r.id">
-                <div class="sentence">{{ target[r.id] }}</div>
-                <div class="score">{{ r.score.toFixed(4) }}</div>
-            </li>
-        </ul>
-        <ul v-else-if="query.length === 0">
-            <li key="header">
-                    <div class="sentence">sentence</div>
-                    <div>score</div>
-            </li>
-            <li v-for="r in target" :key="r">
-                <div class="sentence">{{ r }}</div>
-                <div></div>
-            </li>
+            <template v-if="!(result instanceof StaticSeekError) && query.length !== 0">
+                <li v-for="r in result" :key="r.id">
+                    <div class="sentence">{{ target[r.id] }}</div>
+                    <div class="score">{{ r.score.toFixed(4) }}</div>
+                </li>
+            </template>
+            <template v-else-if="query.length === 0">
+                <li v-for="r in target" :key="r">
+                    <div class="sentence">{{ r }}</div>
+                    <div></div>
+                </li>
+            </template>
         </ul>
     </section>
 </template>

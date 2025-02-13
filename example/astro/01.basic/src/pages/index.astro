@@ -1,9 +1,9 @@
 ---
-import Html from "../layout/html.astro";
 import { getEntry } from "astro:content";
+import Html from "../layout/html.astro";
 
 const entry = await getEntry("contents", "sentences");
-if(!entry) throw new Error("No data found");
+if (!entry) throw new Error("No data found");
 ---
 <Html>
 	<section>

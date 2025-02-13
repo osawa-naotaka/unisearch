@@ -51,6 +51,14 @@ h2 {
     font-size: 1.2rem;
 }
 
+footer {
+    text-align: center;
+    padding: 1rem;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
 .input-area {
     display: flex;
     gap: 1rem;
@@ -59,22 +67,6 @@ h2 {
 
 .input-area > input {
     flex-grow: 1;
-}
-
-p {
-    text-align: justify;
-}
-
-article > .main-text > * + * {
-    margin-top: 1rem;
-}
-
-footer {
-    text-align: center;
-    padding: 1rem;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
 }
 
 ul {

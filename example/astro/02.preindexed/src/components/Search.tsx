@@ -1,7 +1,7 @@
-import type { SearchKey } from "../pages/searchindex.json";
 import { lazy, useState } from "react";
 import type { JSX } from "react";
 import type { SearchResult } from "staticseek";
+import type { SearchKey } from "../pages/searchindex.json";
 
 const StaticSeek = lazy(() => import("staticseek-react"));
 
