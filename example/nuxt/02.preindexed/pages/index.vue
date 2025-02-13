@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { SearchResult, StaticSeekIndex } from 'staticseek';
-import { StaticSeekError, createIndexFromObject, search } from 'staticseek';
+import type { SearchResult, StaticSeekIndex } from "staticseek";
+import { StaticSeekError, createIndexFromObject, search } from "staticseek";
 
 // ad-hock solution. you might as well use zod or something like that to validate the key.
 function typedKey(key: Record<string, unknown>) {
-    return key as { stem: string, body: { data: { title: string } } };
+    return key as { stem: string; body: { data: { title: string } } };
 }
 
 const INDEX_STATE = {
@@ -12,7 +12,7 @@ const INDEX_STATE = {
     FETCHING: 1,
     INITIALIZED: 2,
 } as const;
-type INDEX_STATE = typeof INDEX_STATE[keyof typeof INDEX_STATE];
+type INDEX_STATE = (typeof INDEX_STATE)[keyof typeof INDEX_STATE];
 
 const results = ref<SearchResult[]>([]);
 const index_state = ref<INDEX_STATE>(INDEX_STATE.NOT_INITIALIZED);
@@ -21,18 +21,18 @@ const index = ref<StaticSeekIndex | null>(null);
 const handleSearch = async (e: Event) => {
     const target = e.target as HTMLInputElement;
     const start = performance.now();
-    
+
     if (index_state.value === INDEX_STATE.FETCHING) return;
     if (index_state.value !== INDEX_STATE.INITIALIZED) {
         index_state.value = INDEX_STATE.FETCHING;
 
-        const response = await fetch('/searchindex.json');
+        const response = await fetch("/searchindex.json");
         if (!response.ok) {
             console.error(`fail to fetch index: ${response.statusText}`);
             index_state.value = INDEX_STATE.NOT_INITIALIZED;
             return;
         }
-        
+
         const response_json = await response.json();
         const newIndex = createIndexFromObject(response_json);
 
@@ -48,7 +48,7 @@ const handleSearch = async (e: Event) => {
             console.error(searchResults);
             return;
         }
-        
+
         results.value = searchResults;
         console.log(`search time: ${performance.now() - start}ms`);
         console.log(`index size: ${new Blob([JSON.stringify(response_json)]).size} byte.`);
@@ -62,7 +62,7 @@ const handleSearch = async (e: Event) => {
         console.error(searchResults);
         return;
     }
-    
+
     results.value = searchResults;
     console.log(`search time: ${performance.now() - start}ms`);
 };

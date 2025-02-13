@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ContentRenderer } from '#components';
+import { ContentRenderer } from "#components";
 
 const route = useRoute();
-const { data: post } = await useAsyncData(route.path, () => queryCollection('posts').path(route.path).first());
+const { data: post } = await useAsyncData(route.path, () => queryCollection("posts").path(route.path).first());
 </script>
 
 <template>
