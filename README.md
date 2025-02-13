@@ -111,8 +111,11 @@ Example implementations are available for:
   - [Basic Example](https://github.com/osawa-naotaka/staticseek/tree/main/example/next/01.basic)
   - [Preindexed on-demand loading](https://github.com/osawa-naotaka/staticseek/tree/main/example/next/02.preindexed)
 - Astro.js
+  - [Basic Example](https://github.com/osawa-naotaka/staticseek/tree/main/example/astro/01.basic)
   - [Preindexed on-demand loading](https://github.com/osawa-naotaka/staticseek/tree/main/example/astro/02.preindexed)
-- [Nuxt.js](https://github.com/osawa-naotaka/staticseek/tree/main/example/nuxt)
+- Nuxt.js
+  - [Basic Example](https://github.com/osawa-naotaka/staticseek/tree/main/example/nuxt/01.basic)
+  - [Preindexed on-demand loading](https://github.com/osawa-naotaka/staticseek/tree/main/example/nuxt/02.preindexed)
 
 ## Limitations
 

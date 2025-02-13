@@ -1,22 +1,24 @@
 <script setup lang="ts">
-import { createIndex, LinearIndex, search, StaticSeekError } from 'staticseek'
-import { computedAsync } from '@vueuse/core';
+import { computedAsync } from "@vueuse/core";
+import { LinearIndex, StaticSeekError, createIndex, search } from "staticseek";
 
-const query = ref('')
-const { data } = await useAsyncData('search', () => queryCollection('contents').where('stem', '=', 'sentences').first())
+const query = ref("");
+const { data } = await useAsyncData("search", () =>
+    queryCollection("contents").where("stem", "=", "sentences").first(),
+);
 const target = toValue(data.value)?.data ?? [];
 
 const index = createIndex(LinearIndex, target);
-if(index instanceof StaticSeekError) throw index;
+if (index instanceof StaticSeekError) throw index;
 
-const result = computedAsync(async () => await search(index, toValue(query)), [])
+const result = computedAsync(async () => await search(index, toValue(query)), []);
 </script>
 
 <template>
-    <section style="max-width: 720px; margin-inline: auto">
+    <section>
         <div class="input-area">
             <div>search</div>
-            <input type="text" name="search" id="search" v-model="query" style="width: 100%"/>
+            <input type="text" name="search" id="search" v-model="query"/>
         </div>
         <h2>results</h2>
         <ul v-if="!(result instanceof StaticSeekError) && query.length !== 0">

@@ -1,75 +1,95 @@
-# Nuxt Minimal Starter
+# staticseek Example (Nuxt.js)
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Experience a live demonstration of this implementation at [staticseek-nuxt-basic.pages.dev](https://staticseek-nuxt-basic.pages.dev/).
 
-## Setup
+## Getting Started
 
-Make sure to install dependencies:
+Launch the development server locally with these commands:
 
 ```bash
-# npm
 npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
 npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
 
-## Production
+Open your browser and visit [http://localhost:3000](http://localhost:3000) to see the application in action.
 
-Build the application for production:
+## Deployment
+
+This example is optimized for static hosting. Generate and deploy the static files with these steps:
 
 ```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
+npm install
+npm run generate
+# Upload the generated ".output/public" directory to your HTTP server
 ```
 
-Locally preview production build:
+## Basic Usage of staticseek with Astro.js
 
-```bash
-# npm
-npm run preview
+The following implementation (`pages/index.vue`) showcases the fundamental usage of staticseek in a Single Page Application (SPA).
+The application searches through a predefined array and highlights matching keywords. It employs two search modes:
+- For queries of 1-2 characters: Exact match search
+- For queries of 3+ characters: Fuzzy search with single-character tolerance
 
-# pnpm
-pnpm preview
+```html
+<script setup lang="ts">
+import { computedAsync } from "@vueuse/core";
+import { LinearIndex, StaticSeekError, createIndex, search } from "staticseek";
 
-# yarn
-yarn preview
+const query = ref("");
+const { data } = await useAsyncData("search", () =>
+    queryCollection("contents").where("stem", "=", "sentences").first(),
+);
+const target = toValue(data.value)?.data ?? [];
 
-# bun
-bun run preview
+const index = createIndex(LinearIndex, target);
+if (index instanceof StaticSeekError) throw index;
+
+const result = computedAsync(async () => await search(index, toValue(query)), []);
+</script>
+
+<template>
+    <section>
+        <div class="input-area">
+            <div>search</div>
+            <input type="text" name="search" id="search" v-model="query"/>
+        </div>
+        <h2>results</h2>
+        <ul v-if="!(result instanceof StaticSeekError) && query.length !== 0">
+            <li key="header">
+                    <div class="sentence">sentence</div>
+                    <div>score</div>
+            </li>
+            <li v-for="r in result" :key="r.id">
+                <div class="sentence">{{ target[r.id] }}</div>
+                <div class="score">{{ r.score.toFixed(4) }}</div>
+            </li>
+        </ul>
+        <ul v-else-if="query.length === 0">
+            <li key="header">
+                    <div class="sentence">sentence</div>
+                    <div>score</div>
+            </li>
+            <li v-for="r in target" :key="r">
+                <div class="sentence">{{ r }}</div>
+                <div></div>
+            </li>
+        </ul>
+    </section>
+</template>
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+### Implementation Details
+
+This example leverages [Nuxt Content](https://content.nuxt.com/) for data retrieval. The content collection structure and data schema are defined in `content.config.ts`. Data is fetched from `sentences.json` in the `contents` directory using the `queryCollection()` function.
+
+The search functionality is implemented through several key components:
+
+- A search index is initialized by passing the keyword array to `createIndex`
+- User input is captured through a text field, binding to the `query` variable
+- Search execution is automated using [VueUse](https://vueuse.org/)'s `computedAsync`, which triggers a new search whenever `query` changes and updates the `result` variable
+- Search results are referenced using the `SearchResult` type's `id` field, which maps to the original keyword's position in the `target` array
+
+### Additional Notes
+
+- Results are automatically sorted by relevance score
+- Comprehensive error handling is implemented for both index creation and search operations

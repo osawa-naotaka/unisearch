@@ -23,9 +23,9 @@ npm run build
 # Upload the generated "dist" directory to your HTTP server
 ```
 
-## Basic Usage of staticseek with Next.js
+## Basic Usage of staticseek with Astro.js
 
-The following code (`src/pages/index.astro`) demonstrates the most basic usage of StaticSeek in a Single Page Application (SPA).
+The following code (`src/pages/index.astro`) demonstrates the most basic usage of staticseek in a Single Page Application (SPA).
 This application extracts and displays matching keywords from a predefined array.
 For input queries of two or fewer characters, an exact match search is performed. For queries of three or more characters, a fuzzy search allowing one character mistake is executed.
 
