@@ -1,4 +1,4 @@
-# staticseek Example (Nuxt.js)
+# staticseek Example (Nuxt)
 
 Experience a live demonstration of this implementation at [staticseek-nuxt-basic.pages.dev](https://staticseek-nuxt-basic.pages.dev/).
 
@@ -23,14 +23,14 @@ npm run generate
 # Upload the generated ".output/public" directory to your HTTP server
 ```
 
-## Basic Usage of staticseek with Astro.js
+## Basic Usage of staticseek with Nuxt
 
 The following implementation (`pages/index.vue`) showcases the fundamental usage of staticseek in a Single Page Application (SPA).
 The application searches through a predefined array and highlights matching keywords. It employs two search modes:
 - For queries of 1-2 characters: Exact match search
 - For queries of 3+ characters: Fuzzy search with single-character tolerance
 
-```html
+```vue
 <script setup lang="ts">
 import { LinearIndex, StaticSeekError, createIndex, search } from "staticseek";
 import type { SearchResult } from "staticseek";

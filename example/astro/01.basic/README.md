@@ -1,4 +1,4 @@
-# staticseek Example (Astro.js)
+# staticseek Example (Astro)
 
 A working demo of this implementation is available at [staticseek-astro-basic.pages.dev](https://staticseek-astro-basic.pages.dev/).
 

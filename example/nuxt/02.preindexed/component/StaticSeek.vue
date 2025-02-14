@@ -44,7 +44,6 @@ watch(() => query, async (q) => {
     console.log("Searching took", performance.now() - start, " ms");
 
     results.value = searchResults;
-    return ;
 });
 
 init();
