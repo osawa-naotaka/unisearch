@@ -1,4 +1,4 @@
-# StaticSeek Basic Example (Next.js)
+# staticseek Basic Example (Next.js)
 
 A working demo of this implementation is available at [staticseek-next-basic.pages.dev](https://staticseek-next-basic.pages.dev/).
 

@@ -1,3 +1,10 @@
+<template>
+    <main>
+        <NuxtPage/>
+    </main>
+    <footer>staticseek</footer>
+</template>
+<style lang="css">
 @charset "utf-8";
 
 * {
@@ -38,8 +45,7 @@ body {
     background-color: var(--color-background);
 }
 
-section,
-body > header {
+main {
     max-width: var(--content-width);
     box-sizing: content-box;
     margin-inline: auto;
@@ -47,37 +53,12 @@ body > header {
     padding-inline: var(--content-padding);
 }
 
-h2 {
-    font-size: 1.2rem;
-}
-
 footer {
     text-align: center;
-    padding: 1rem;
     position: fixed;
     bottom: 0;
     width: 100%;
+    color: var(--color-background);
+    background-color: var(--color-main);
 }
-
-.input-area {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.input-area > input {
-    flex-grow: 1;
-}
-
-ul {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-}
-
-li h3 {
-    width: 100%;
-    padding-inline: var(--content-padding);
-    font-size: 1.2rem;
-    border-bottom: 3px solid var(--color-main);
-}
+</style>

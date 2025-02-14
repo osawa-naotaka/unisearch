@@ -1,4 +1,4 @@
-# StaticSeek Example (Astro.js)
+# staticseek Example (Astro)
 
 A working demo of this implementation is available at [staticseek-astro.pages.dev](https://staticseek-astro.pages.dev/).
 
@@ -23,7 +23,7 @@ npm run build
 # Upload the generated "dist" directory to your HTTP server
 ```
 
-## Integration Guide: StaticSeek with Astro.js
+## Integration Guide: StaticSeek with Astro
 
 ### 1. Creating the Search Index
 
@@ -138,7 +138,7 @@ Important implementation details:
 
 ### 3. Index Loading and Search Execution
 
-The `StaticSearch` React component, provided by the npm package [staticseek-react](https://github.com/osawa-naotaka/staticseek-react), is responsible for loading the search index and executing queries. The complete implementation is shown below:
+The `StaticSeek` React component, provided by the npm package [staticseek-react](https://github.com/osawa-naotaka/staticseek-react), is responsible for loading the search index and executing queries. The complete implementation is shown below:
 
 ```typescript
 import { useEffect, useRef, useState } from "react";

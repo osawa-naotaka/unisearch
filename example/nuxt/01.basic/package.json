@@ -1,5 +1,5 @@
 {
-  "name": "nuxt-app",
+  "name": "nuxt-basic",
   "private": true,
   "type": "module",
   "scripts": {
@@ -7,15 +7,18 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "check": "biome check app.vue ./pages",
+    "check-write": "biome check --write app.vue ./pages"
   },
   "dependencies": {
     "@nuxt/content": "^3.1.0",
-    "@vueuse/core": "^12.5.0",
-    "gray-matter": "^4.0.3",
     "nuxt": "^3.15.4",
     "staticseek": "^2.1.1",
     "vue": "latest",
     "vue-router": "latest"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4"
   }
 }

@@ -1,3 +1,14 @@
+<template>
+  <header>
+    <h1><NuxtLink to="/">Home</NuxtLink></h1>
+    <nav><NuxtLink to="/posts">posts</NuxtLink></nav>
+  </header>
+  <main>
+    <NuxtPage/>
+  </main>
+  <footer>staticseek</footer>
+</template>
+<style lang="css">
 @charset "utf-8";
 
 * {
@@ -29,6 +40,7 @@ ul {
     line-height: 1.8;
     font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
 }
+
 p {
     text-indent: 1rem;
 }
@@ -38,8 +50,7 @@ body {
     background-color: var(--color-background);
 }
 
-section,
-body > header {
+header, section {
     max-width: var(--content-width);
     box-sizing: content-box;
     margin-inline: auto;
@@ -47,8 +58,10 @@ body > header {
     padding-inline: var(--content-padding);
 }
 
-h2 {
-    font-size: 1.2rem;
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
 }
 
 footer {
@@ -59,25 +72,8 @@ footer {
     width: 100%;
 }
 
-.input-area {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.input-area > input {
-    flex-grow: 1;
-}
-
-ul {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-}
-
-li h3 {
-    width: 100%;
-    padding-inline: var(--content-padding);
+h2 {
     font-size: 1.2rem;
-    border-bottom: 3px solid var(--color-main);
 }
+
+</style>
