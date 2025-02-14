@@ -1,6 +1,5 @@
 <script setup lang="tsx">
-import { asyncComputed } from "@vueuse/core";
-import type { StaticSeekIndex } from "staticseek";
+import type { SearchResult, StaticSeekIndex } from "staticseek";
 import { StaticSeekError, createIndexFromObject, search } from "staticseek";
 
 interface Props {
@@ -9,8 +8,9 @@ interface Props {
 }
 const { query, url } = defineProps<Props>();
 
-let index = ref<StaticSeekIndex>();
-let loading = ref(true);
+const index = ref<StaticSeekIndex>();
+const loading = ref(true);
+const results = ref<SearchResult[]>([]);
 
 async function init() {
     const start = performance.now();
@@ -29,20 +29,23 @@ async function init() {
     loading.value = false;
 }
 
-const results = asyncComputed(async () => {
+watch(() => query, async (q) => {
     if (!index.value) {
-        return [];
+        results.value = [];
+        return ;
     }
     const start = performance.now();
-    const searchResults = await search(index.value, query);
+    const searchResults = await search(index.value, q);
     if (searchResults instanceof StaticSeekError) {
         console.error(searchResults);
-        return [];
+        results.value = [];
+        return;
     }
     console.log("Searching took", performance.now() - start, " ms");
 
-    return searchResults;
-}, []);
+    results.value = searchResults;
+    return ;
+});
 
 init();
 </script>

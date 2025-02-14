@@ -32,19 +32,30 @@ The application searches through a predefined array and highlights matching keyw
 
 ```html
 <script setup lang="ts">
-import { computedAsync } from "@vueuse/core";
 import { LinearIndex, StaticSeekError, createIndex, search } from "staticseek";
+import type { SearchResult } from "staticseek";
 
 const query = ref("");
+const result = ref<SearchResult[]>([]);
 const { data } = await useAsyncData("search", () =>
     queryCollection("contents").where("stem", "=", "sentences").first(),
 );
-const target = toValue(data.value)?.data ?? [];
+const target = data.value?.data ?? [];
 
 const index = createIndex(LinearIndex, target);
 if (index instanceof StaticSeekError) throw index;
 
-const result = computedAsync(async () => await search(index, toValue(query)), []);
+watch(query, async (q) => {
+    const searchResults = await search(index, q);
+    if (searchResults instanceof StaticSeekError) {
+        console.error(searchResults);
+        result.value = [];
+        return;
+    }
+
+    result.value = searchResults;
+}, { immediate: true });
+
 </script>
 
 <template>
@@ -84,7 +95,7 @@ The search functionality is implemented through several key components:
 
 - A search index is initialized by passing the keyword array to `createIndex`
 - User input is captured through a text field, binding to the `query` variable
-- Search execution is automated using [VueUse](https://vueuse.org/)'s `computedAsync`, which triggers a new search whenever `query` changes and updates the `result` variable
+- Search execution is automated using `watch`, which triggers a new search whenever `query` changes and updates the `result` variable
 - Search results are referenced using the `SearchResult` type's `id` field, which maps to the original keyword's position in the `target` array
 
 ### Additional Notes

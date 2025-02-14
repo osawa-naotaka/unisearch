@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computedAsync } from "@vueuse/core";
 import { LinearIndex, StaticSeekError, createIndex, search } from "staticseek";
+import type { SearchResult } from "staticseek";
 
 const query = ref("");
+const result = ref<SearchResult[]>([]);
 const { data } = await useAsyncData("search", () =>
     queryCollection("contents").where("stem", "=", "sentences").first(),
 );
@@ -11,7 +12,17 @@ const target = data.value?.data ?? [];
 const index = createIndex(LinearIndex, target);
 if (index instanceof StaticSeekError) throw index;
 
-const result = computedAsync(async () => await search(index, query.value), []);
+watch(query, async (q) => {
+    const searchResults = await search(index, q);
+    if (searchResults instanceof StaticSeekError) {
+        console.error(searchResults);
+        result.value = [];
+        return;
+    }
+
+    result.value = searchResults;
+}, { immediate: true });
+
 </script>
 
 <template>
