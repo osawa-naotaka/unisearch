@@ -6,11 +6,11 @@ const { data: post } = await useAsyncData(route.path, () => queryCollection("pos
 </script>
 
 <template>
-  <article style="max-width: 720px; margin-inline: auto">
-    <template v-if="post">
+  <section>
+    <article v-if="post">
       <h2>{{ post.title }}</h2>
       <ContentRenderer v-if="post" :value="post" />
-    </template>
+    </article>
     <div v-else>post not found</div>
-  </article>
+  </section>
 </template>

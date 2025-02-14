@@ -1,6 +1,7 @@
 <template>
   <header>
     <h1><NuxtLink to="/">Home</NuxtLink></h1>
+    <nav><NuxtLink to="/posts">posts</NuxtLink></nav>
   </header>
   <main>
     <NuxtPage/>
@@ -55,6 +56,12 @@ header, section {
     margin-inline: auto;
     margin-block: var(--content-padding);
     padding-inline: var(--content-padding);
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
 }
 
 footer {

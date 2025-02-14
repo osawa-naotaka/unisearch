@@ -3,7 +3,7 @@ import StaticSeek from "../component/StaticSeek.vue";
 
 // ad-hock solution. you might as well use zod or something like that to validate the key.
 function typedKey(key: Record<string, unknown>) {
-    return key as { stem: string; body: { data: { title: string } } };
+    return key as { path: string; body: { data: { title: string } } };
 }
 
 const query = ref("");
@@ -19,11 +19,11 @@ const trigger = ref(false);
         <StaticSeek v-if="trigger" :query="query" url="/searchindex.json">
             <template #default="{ results }">
                 <h2>results</h2>
-                <ul>
+                <ul class="search-results">
                     <li v-if="results.length === 0 && query.length !== 0">No results found.</li>
                     <template v-else>
-                        <li v-for="{refs, key} in results" :key="typedKey(key).stem">
-                            <NuxtLink :href="typedKey(key).stem" >
+                        <li v-for="{refs, key} in results" :key="typedKey(key).path">
+                            <NuxtLink :to="typedKey(key).path" >
                                 <h3>{{ typedKey(key).body.data.title }}</h3>
                             </NuxtLink>
                             <p>{{ refs[0].wordaround }}</p>
@@ -47,4 +47,16 @@ const trigger = ref(false);
     flex-grow: 1;
 }
 
+.search-results {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.search-results > li h3 {
+    width: 100%;
+    padding-inline: var(--content-padding);
+    font-size: 1.2rem;
+    border-bottom: 3px solid var(--color-main);
+}
 </style>

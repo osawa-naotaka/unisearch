@@ -57,18 +57,3 @@ init();
         <slot name="default" :results="results"></slot>
     </template>
 </template>
-
-<style lang="css">
-ul {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-}
-
-li h3 {
-    width: 100%;
-    padding-inline: var(--content-padding);
-    font-size: 1.2rem;
-    border-bottom: 3px solid var(--color-main);
-}
-</style>
