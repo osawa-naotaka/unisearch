@@ -9,26 +9,32 @@ interface Props {
 }
 const { query, url } = defineProps<Props>();
 
-const start = performance.now();
-const { data } = await useFetch<StaticSeekIndex>(url);
-if (!data.value) {
-    throw new Error("Failed to fetch search index.");
-}
-const newIndex = createIndexFromObject(data.value);
+let index = ref<StaticSeekIndex>();
+let loading = ref(true);
 
-if (newIndex instanceof StaticSeekError) {
-    throw newIndex;
-}
-console.log("Loading index took", performance.now() - start, " ms");
+async function init() {
+    const start = performance.now();
+    const { data } = await useFetch<StaticSeekIndex>(url);
+    if (!data.value) {
+        throw new Error("Failed to fetch search index.");
+    }
+    const newIndex = createIndexFromObject(data.value);
 
-const index = newIndex;
+    if (newIndex instanceof StaticSeekError) {
+        throw newIndex;
+    }
+    console.log("Loading index took", performance.now() - start, " ms");
+
+    index.value = newIndex;
+    loading.value = false;
+}
 
 const results = asyncComputed(async () => {
-    if (!index) {
+    if (!index.value) {
         return [];
     }
     const start = performance.now();
-    const searchResults = await search(index, query);
+    const searchResults = await search(index.value, query);
     if (searchResults instanceof StaticSeekError) {
         console.error(searchResults);
         return [];
@@ -38,11 +44,18 @@ const results = asyncComputed(async () => {
     return searchResults;
 }, []);
 
+init();
 </script>
 
 <template>
-    <slot :results="results"></slot>
+    <template v-if="loading">
+        <slot name="suspence"></slot>
+    </template>
+    <template v-else>
+        <slot name="default" :results="results"></slot>
+    </template>
 </template>
+
 <style lang="css">
 ul {
     display: flex;

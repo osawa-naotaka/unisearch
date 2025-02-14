@@ -16,19 +16,22 @@ const trigger = ref(false);
             <div>search</div>
             <input type="text" name="search" id="search" v-model="query" @input="() => { trigger = true }"/>
         </div>
-        <StaticSeek v-if="trigger" :query="query" url="/searchindex.json" v-slot="slotProps">
-            <h2>results</h2>
-            <ul>
-                <li v-if="slotProps.results.length === 0 && query.length !== 0">No results found.</li>
-                <template v-else>
-                    <li v-for="{refs, key} in slotProps.results" :key="typedKey(key).stem">
-                        <NuxtLink :href="typedKey(key).stem" >
-                            <h3>{{ typedKey(key).body.data.title }}</h3>
-                        </NuxtLink>
-                        <p>{{ refs[0].wordaround }}</p>
-                    </li>
-                </template>
-            </ul>
+        <StaticSeek v-if="trigger" :query="query" url="/searchindex.json">
+            <template #default="{ results }">
+                <h2>results</h2>
+                <ul>
+                    <li v-if="results.length === 0 && query.length !== 0">No results found.</li>
+                    <template v-else>
+                        <li v-for="{refs, key} in results" :key="typedKey(key).stem">
+                            <NuxtLink :href="typedKey(key).stem" >
+                                <h3>{{ typedKey(key).body.data.title }}</h3>
+                            </NuxtLink>
+                            <p>{{ refs[0].wordaround }}</p>
+                        </li>
+                    </template>
+                </ul>
+            </template>
+            <template #suspence><div>loading index...</div></template>
         </StaticSeek>
     </section>
 </template>
