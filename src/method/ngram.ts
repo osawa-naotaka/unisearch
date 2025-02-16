@@ -3,7 +3,6 @@ import type { Path } from "@src/frontend/base";
 import type { IndexClass } from "@src/frontend/indexing";
 import { createWithProp, intersectResults } from "@src/frontend/search";
 import { generateNgram, generateNgramToTail } from "@src/util/algorithm";
-import { splitByGrapheme } from "@src/util/preprocess";
 
 export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass {
     const name = `N${num_gram}gram`;
@@ -22,8 +21,8 @@ export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass 
                 }
             }
 
-            public setToIndex(id: number, path: Path, str: string): void {
-                const tokens = generateNgramToTail(num_gram, splitByGrapheme(str));
+            public setToIndex(id: number, path: Path, str: string[]): void {
+                const tokens = generateNgramToTail(num_gram, str);
                 for (const t of tokens) {
                     this.ngram_index.setToIndex(id, path, t);
                 }
@@ -37,16 +36,15 @@ export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass 
                 this.ngram_index.fixIndex();
             }
 
-            public async search(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
-                const grapheme = splitByGrapheme(keyword);
-                const search_env = createWithProp(env, "distance", grapheme.length < num_gram ? 1 : 0);
-                const max_match = Math.max(1, grapheme.length - num_gram + 1);
+            public async search(env: SearchEnv, keyword: string[]): Promise<SearchResult[]> {
+                const search_env = createWithProp(env, "distance", keyword.length < num_gram ? 1 : 0);
+                const max_match = Math.max(1, keyword.length - num_gram + 1);
                 const threshold =
-                    grapheme.length < num_gram ? 1 : Math.max(1, max_match - (env.distance || 0) * num_gram);
+                    keyword.length < num_gram ? 1 : Math.max(1, max_match - (env.distance || 0) * num_gram);
                 return intersectResultsNgram(
                     threshold,
                     await Promise.all(
-                        generateNgram(num_gram, grapheme).map((t) => this.ngram_index.search(search_env, t)),
+                        generateNgram(num_gram, keyword).map((t) => this.ngram_index.search(search_env, t)),
                     ),
                 );
             }

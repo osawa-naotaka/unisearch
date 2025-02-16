@@ -168,12 +168,12 @@ describe("staticseek query parser", () => {
 
     test("fuzzy 1", () =>
         expect(fuzzy([..."bcdaaa"]))
-        .toStrictEqual({val: {type: 'fuzzy', str: "bcdaaa"}, rest: []})
+        .toStrictEqual({val: {type: 'fuzzy', str: [..."bcdaaa"]}, rest: []})
     );
 
     test("fuzzy 2", () =>
         expect(fuzzy([..."bcd acc"]))
-        .toStrictEqual({val: {type: 'fuzzy', str: "bcd"}, rest: [..." acc"]})
+        .toStrictEqual({val: {type: 'fuzzy', str: [..."bcd"]}, rest: [..." acc"]})
     );
 
     test("fuzzy null", () =>
@@ -183,7 +183,7 @@ describe("staticseek query parser", () => {
 
     test("exact 1", () =>
         expect(exact([...'"abcdef"']))
-        .toStrictEqual({val: {type: 'exact', str: "abcdef"}, rest: [...""]})
+        .toStrictEqual({val: {type: 'exact', str: [..."abcdef"]}, rest: [...""]})
     );
 
     test("exact 2", () =>
@@ -193,12 +193,12 @@ describe("staticseek query parser", () => {
 
     test("exact 3", () =>
         expect(exact([...'"bcd acc" efg']))
-        .toStrictEqual({val: {type: 'exact', str: "bcd acc"}, rest: [..." efg"]})
+        .toStrictEqual({val: {type: 'exact', str: [..."bcd acc"]}, rest: [..." efg"]})
     );
 
     test("exact 4", () =>
         expect(exact([...'"bcd acc']))
-        .toStrictEqual({val: {type: 'exact', str: "bcd acc"}, rest: []})
+        .toStrictEqual({val: {type: 'exact', str: [..."bcd acc"]}, rest: []})
     );
 
     test("exact 5", () =>
@@ -213,52 +213,52 @@ describe("staticseek query parser", () => {
 
     test("token 1", () =>
         expect(token([...'abc "def"']))
-        .toStrictEqual({val: {type: 'fuzzy', str: "abc"}, rest: [...' "def"']})
+        .toStrictEqual({val: {type: 'fuzzy', str: [..."abc"]}, rest: [...' "def"']})
     );
 
     test("token 2", () =>
         expect(token([...'"def"abc']))
-        .toStrictEqual({val: {type: 'exact', str: "def"}, rest: [...'abc']})
+        .toStrictEqual({val: {type: 'exact', str: [..."def"]}, rest: [...'abc']})
     );
 
     test("not 1", () =>
         expect(not([...'-abc "def"']))
-        .toStrictEqual({val: {type: 'not', node: {type: 'fuzzy', str: "abc"}}, rest: [...' "def"']})
+        .toStrictEqual({val: {type: 'not', node: {type: 'fuzzy', str: [..."abc"]}}, rest: [...' "def"']})
     );
 
     test("not 2", () =>
         expect(not([...'-"def"abc']))
-        .toStrictEqual({val: {type: 'not', node: {type: 'exact', str: "def"}}, rest: [...'abc']})
+        .toStrictEqual({val: {type: 'not', node: {type: 'exact', str: [..."def"]}}, rest: [...'abc']})
     );
 
     test("term 1", () =>
         expect(term([...'abc "def"']))
-        .toStrictEqual({val: {type: 'fuzzy', str: "abc"}, rest: [...' "def"']})
+        .toStrictEqual({val: {type: 'fuzzy', str: [..."abc"]}, rest: [...' "def"']})
     );
 
     test("term 2", () =>
         expect(term([...'"def"abc']))
-        .toStrictEqual({val: {type: 'exact', str: "def"}, rest: [...'abc']})
+        .toStrictEqual({val: {type: 'exact', str: [..."def"]}, rest: [...'abc']})
     );
 
     test("term 3", () =>
         expect(term([...'-abc "def"']))
-        .toStrictEqual({val: {type: 'not', node: {type: 'fuzzy', str: "abc"}}, rest: [...' "def"']})
+        .toStrictEqual({val: {type: 'not', node: {type: 'fuzzy', str: [..."abc"]}}, rest: [...' "def"']})
     );
 
     test("term 4", () =>
         expect(term([...'-"def"abc']))
-        .toStrictEqual({val: {type: 'not', node: {type: 'exact', str: "def"}}, rest: [...'abc']})
+        .toStrictEqual({val: {type: 'not', node: {type: 'exact', str: [..."def"]}}, rest: [...'abc']})
     );
 
     test("group 1", () =>
         expect(group([...'abc def']))
-        .toStrictEqual({val: {type: 'fuzzy', str: "abc"}, rest: [..." def"]})
+        .toStrictEqual({val: {type: 'fuzzy', str: [..."abc"]}, rest: [..." def"]})
     );
 
     test("from 1", () =>
         expect(from([...'from:title def ghi']))
-        .toStrictEqual({val: {type: 'from', field: "title", node: {type: 'fuzzy', str: "def"}}, rest: [..." ghi"]})
+        .toStrictEqual({val: {type: 'from', field: "title", node: {type: 'fuzzy', str: [..."def"]}}, rest: [..." ghi"]})
     );
 
     test("from 2", () =>
@@ -273,12 +273,12 @@ describe("staticseek query parser", () => {
 
     test("weight 1", () =>
         expect(weight([...'weight:1 def ghi']))
-        .toStrictEqual({val: {type: 'weight', weight: 1, node: {type: 'fuzzy', str: "def"}}, rest: [..." ghi"]})
+        .toStrictEqual({val: {type: 'weight', weight: 1, node: {type: 'fuzzy', str: [..."def"]}}, rest: [..." ghi"]})
     );
 
     test("weight 2", () =>
         expect(weight([...'weight:1.2 def ghi']))
-        .toStrictEqual({val: {type: 'weight', weight: 1.2, node: {type: 'fuzzy', str: "def"}}, rest: [..." ghi"]})
+        .toStrictEqual({val: {type: 'weight', weight: 1.2, node: {type: 'fuzzy', str: [..."def"]}}, rest: [..." ghi"]})
     );
 
     test("weight 3", () =>
@@ -293,36 +293,36 @@ describe("staticseek query parser", () => {
 
     test("weight 5", () =>
         expect(weight([...'weight:1. abc']))
-        .toStrictEqual({val: {type: 'weight', weight: 1, node: {type: 'fuzzy', str: "abc"}}, rest: []})
+        .toStrictEqual({val: {type: 'weight', weight: 1, node: {type: 'fuzzy', str: [..."abc"]}}, rest: []})
     );
 
     test("adj 1", () =>
         expect(adj([...'from:title def ghi']))
-        .toStrictEqual({val: {type: 'from', field: "title", node: {type: 'fuzzy', str: "def"}}, rest: [..." ghi"]})
+        .toStrictEqual({val: {type: 'from', field: "title", node: {type: 'fuzzy', str: [..."def"]}}, rest: [..." ghi"]})
     );
   
     test("adj 2", () =>
         expect(adj([...'weight:1.23 def ghi']))
-        .toStrictEqual({val: {type: 'weight', weight: 1.23, node: {type: 'fuzzy', str: "def"}}, rest: [..." ghi"]})
+        .toStrictEqual({val: {type: 'weight', weight: 1.23, node: {type: 'fuzzy', str: [..."def"]}}, rest: [..." ghi"]})
     );
 
     test("adj 3", () =>
         expect(adj([...'weight:1 -def ghi']))
-        .toStrictEqual({val: {type: 'weight', weight: 1, node: {type: 'not', node: {type: 'fuzzy', str: "def"}}}, rest: [..." ghi"]})
+        .toStrictEqual({val: {type: 'weight', weight: 1, node: {type: 'not', node: {type: 'fuzzy', str: [..."def"]}}}, rest: [..." ghi"]})
     );
 
     test("adj 4", () =>
         expect(adj([...'def ghi']))
-        .toStrictEqual({val: {type: 'fuzzy', str: "def"}, rest: [..." ghi"]})
+        .toStrictEqual({val: {type: 'fuzzy', str: [..."def"]}, rest: [..." ghi"]})
     );
 
     test("and 1", () =>
         expect(and([...'a "bcd" -"efg" from:title hij']))
         .toStrictEqual({val: {type: 'and', nodes: [
-            {type: 'fuzzy', str: 'a'},
-            {type: 'exact', str: "bcd"},
-            {type: 'not', node: {type: 'exact', str: "efg"}},
-            {type: 'from', field: "title", node: {type: 'fuzzy', str: 'hij'}}
+            {type: 'fuzzy', str: ['a']},
+            {type: 'exact', str: [..."bcd"]},
+            {type: 'not', node: {type: 'exact', str: [..."efg"]}},
+            {type: 'from', field: "title", node: {type: 'fuzzy', str: [...'hij']}}
         ]}, rest: []})
     );
 
@@ -330,10 +330,10 @@ describe("staticseek query parser", () => {
         expect(expr([...'a OR b']))
         .toStrictEqual({val: {type: 'or', nodes: [
             {type: 'and', nodes: [
-                {type: 'fuzzy', str: 'a'},
+                {type: 'fuzzy', str: ['a']},
             ]},
             {type: 'and', nodes: [
-                {type: 'fuzzy', str: 'b'},
+                {type: 'fuzzy', str: ['b']},
             ]},
         ]}, rest: []})
     );
@@ -342,7 +342,7 @@ describe("staticseek query parser", () => {
         expect(paren([...'(a)']))
         .toStrictEqual({val: {type: 'or', nodes: [
             {type: 'and', nodes: [
-                {type: 'fuzzy', str: 'a'},
+                {type: 'fuzzy', str: ["a"]},
             ]},
         ]}, rest: []})
     ); 
@@ -351,7 +351,7 @@ describe("staticseek query parser", () => {
         expect(paren([...'(a']))
         .toStrictEqual({val: {type: 'or', nodes: [
             {type: 'and', nodes: [
-                {type: 'fuzzy', str: 'a'},
+                {type: 'fuzzy', str: ["a"]},
             ]},
         ]}, rest: []})
     ); 
@@ -360,7 +360,7 @@ describe("staticseek query parser", () => {
         expect(paren([...'(a)) abc']))
         .toStrictEqual({val: {type: 'or', nodes: [
             {type: 'and', nodes: [
-                {type: 'fuzzy', str: 'a'},
+                {type: 'fuzzy', str: ["a"]},
             ]},
         ]}, rest: [...") abc"]})
     );
@@ -369,12 +369,12 @@ describe("staticseek query parser", () => {
         expect(expr([...'a "bcd" OR -"efg" from:title hij']))
         .toStrictEqual({val: {type: 'or', nodes: [
             {type: 'and', nodes: [
-                {type: 'fuzzy', str: 'a'},
-                {type: 'exact', str: "bcd"},
+                {type: 'fuzzy', str: ["a"]},
+                {type: 'exact', str: [..."bcd"]},
             ]},
             {type: 'and', nodes: [
-                {type: 'not', node: {type: 'exact', str: "efg"}},
-                {type: 'from', field: "title", node: {type: 'fuzzy', str: 'hij'}}
+                {type: 'not', node: {type: 'exact', str: [..."efg"]}},
+                {type: 'from', field: "title", node: {type: 'fuzzy', str: [..."hij"]}}
             ]},
         ]}, rest: []})
     );
@@ -383,16 +383,16 @@ describe("staticseek query parser", () => {
         expect(expr([...'a ("bcd" OR -"efg") from:title hij']))
         .toStrictEqual({val: {type: 'or', nodes: [
             {type: 'and', nodes: [
-                {type: 'fuzzy', str: 'a'},
+                {type: 'fuzzy', str: ["a"]},
                 {type: 'or', nodes: [
                     {type: 'and', nodes: [
-                        {type: 'exact', str: "bcd"},
+                        {type: 'exact', str: [..."bcd"]},
                     ]},
                     {type: 'and', nodes: [
-                        {type: 'not', node: {type: 'exact', str: "efg"}},    
+                        {type: 'not', node: {type: 'exact', str: [..."efg"]}},    
                     ]},
                 ]},
-                {type: 'from', field: "title", node: {type: 'fuzzy', str: 'hij'}}
+                {type: 'from', field: "title", node: {type: 'fuzzy', str: [..."hij"]}}
             ]},
         ]}, rest: []})
     );
@@ -401,10 +401,10 @@ describe("staticseek query parser", () => {
         expect(expr([...'"タイトル3" OR "タイトル2"']))
         .toStrictEqual({val: {type: 'or', nodes: [
             {type: 'and', nodes: [
-                {type: 'exact', str: 'タイトル3'},
+                {type: 'exact', str: [...'タイトル3']},
             ]},
             {type: 'and', nodes: [
-                {type: 'exact', str: 'タイトル2'},
+                {type: 'exact', str: [...'タイトル2']},
             ]},
         ]}, rest: []})
     );
@@ -413,13 +413,13 @@ describe("staticseek query parser", () => {
         expect(expr([...'a ("bcd" OR -"efg")) from:title hij']))
         .toStrictEqual({val: {type: 'or', nodes: [
             {type: 'and', nodes: [
-                {type: 'fuzzy', str: 'a'},
+                {type: 'fuzzy', str: ["a"]},
                 {type: 'or', nodes: [
                     {type: 'and', nodes: [
-                        {type: 'exact', str: "bcd"},
+                        {type: 'exact', str: [..."bcd"]},
                     ]},
                     {type: 'and', nodes: [
-                        {type: 'not', node: {type: 'exact', str: "efg"}},    
+                        {type: 'not', node: {type: 'exact', str: [..."efg"]}},    
                     ]},
                 ]},
             ]},
@@ -430,14 +430,14 @@ describe("staticseek query parser", () => {
         expect(expr([...'a ("bcd" OR -"efg" from:title hij']))
         .toStrictEqual({val: {type: 'or', nodes: [
             {type: 'and', nodes: [
-                {type: 'fuzzy', str: 'a'},
+                {type: 'fuzzy', str: ["a"]},
                 {type: 'or', nodes: [
                     {type: 'and', nodes: [
-                        {type: 'exact', str: "bcd"},
+                        {type: 'exact', str: [..."bcd"]},
                     ]},
                     {type: 'and', nodes: [
-                        {type: 'not', node: {type: 'exact', str: "efg"}},
-                        {type: 'from', field: "title", node: {type: 'fuzzy', str: 'hij'}},
+                        {type: 'not', node: {type: 'exact', str: [..."efg"]}},
+                        {type: 'from', field: "title", node: {type: 'fuzzy', str: [..."hij"]}},
                     ]},
                 ]},
             ]},
@@ -448,21 +448,21 @@ describe("staticseek query parser", () => {
         expect(expr([...'a ("bcd" OR (-"efg" from:title hij)) c']))
         .toStrictEqual({val: {type: 'or', nodes: [
             {type: 'and', nodes: [
-                {type: 'fuzzy', str: 'a'},
+                {type: 'fuzzy', str: ["a"]},
                 {type: 'or', nodes: [
                     {type: 'and', nodes: [
-                        {type: 'exact', str: "bcd"},
+                        {type: 'exact', str: [..."bcd"]},
                     ]},
                     {type: 'and', nodes: [
                         {type: 'or', nodes: [
                             {type: 'and', nodes: [
-                                {type: 'not', node: {type: 'exact', str: "efg"}},
-                                {type: 'from', field: "title", node: {type: 'fuzzy', str: 'hij'}},
+                                {type: 'not', node: {type: 'exact', str: [..."efg"]}},
+                                {type: 'from', field: "title", node: {type: 'fuzzy', str: [..."hij"]}},
                             ]},
                         ]},
                     ]},
                 ]},
-                {type: 'fuzzy', str: 'c'},
+                {type: 'fuzzy', str: ['c']},
             ]},
         ]}, rest: []})
     );
@@ -471,21 +471,21 @@ describe("staticseek query parser", () => {
         expect(expr([...'a ("bcd" OR (-"efg" from:title hij) ) c']))
         .toStrictEqual({val: {type: 'or', nodes: [
             {type: 'and', nodes: [
-                {type: 'fuzzy', str: 'a'},
+                {type: 'fuzzy', str: ["a"]},
                 {type: 'or', nodes: [
                     {type: 'and', nodes: [
-                        {type: 'exact', str: "bcd"},
+                        {type: 'exact', str: [..."bcd"]},
                     ]},
                     {type: 'and', nodes: [
                         {type: 'or', nodes: [
                             {type: 'and', nodes: [
-                                {type: 'not', node: {type: 'exact', str: "efg"}},
-                                {type: 'from', field: "title", node: {type: 'fuzzy', str: 'hij'}},
+                                {type: 'not', node: {type: 'exact', str: [..."efg"]}},
+                                {type: 'from', field: "title", node: {type: 'fuzzy', str: [..."hij"]}},
                             ]},
                         ]},
                     ]},
                 ]},
-                {type: 'fuzzy', str: 'c'},
+                {type: 'fuzzy', str: ['c']},
             ]},
         ]}, rest: []})
     );
@@ -494,15 +494,15 @@ describe("staticseek query parser", () => {
         expect(expr([...'a ("bcd" OR (-"efg \\\"from:title hij) ) c']))
         .toStrictEqual({val: {type: 'or', nodes: [
             {type: 'and', nodes: [
-                {type: 'fuzzy', str: 'a'},
+                {type: 'fuzzy', str: ["a"]},
                 {type: 'or', nodes: [
                     {type: 'and', nodes: [
-                        {type: 'exact', str: "bcd"},
+                        {type: 'exact', str: [..."bcd"]},
                     ]},
                     {type: 'and', nodes: [
                         {type: 'or', nodes: [
                             {type: 'and', nodes: [
-                                {type: 'not', node: {type: 'exact', str: "efg \"from:title hij) ) c"}},
+                                {type: 'not', node: {type: 'exact', str: [..."efg \"from:title hij) ) c"]}},
                             ]},
                         ]},
                     ]},
@@ -515,12 +515,12 @@ describe("staticseek query parser", () => {
         expect(expr([...'a from:title ( "bcd" -"efg" ) ']))
         .toStrictEqual({val: {type: 'or', nodes: [
             {type: 'and', nodes: [
-                {type: 'fuzzy', str: 'a'},
+                {type: 'fuzzy', str: ["a"]},
                 {type: 'from', field: "title", node:
                     {type: 'or', nodes: [
                         {type: 'and', nodes: [
-                            {type: 'exact', str: "bcd"},
-                            {type: 'not', node: {type: 'exact', str: "efg"}}
+                            {type: 'exact', str: [..."bcd"]},
+                            {type: 'not', node: {type: 'exact', str: [..."efg"]}}
                         ]},
                     ]},
                 },

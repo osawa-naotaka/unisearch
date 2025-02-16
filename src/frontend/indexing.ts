@@ -1,7 +1,7 @@
 import type { SearchEnv, SearchIndex, StaticIndex } from "@src/frontend/base";
 import { type Path, StaticSeekError, Version } from "@src/frontend/base";
 import { IndexTypes } from "@src/frontend/indextypes";
-import { defaultNormalizer } from "@src/util/preprocess";
+import { defaultNormalizer, splitByGrapheme } from "@src/util/preprocess";
 import { extractStringsAll, getValueByPath, setObject } from "@src/util/traverser";
 
 // biome-ignore lint: using any. fix it.
@@ -27,9 +27,9 @@ export function createIndex<T>(
                     const obj = getValueByPath(path, content);
                     if (obj === undefined) continue;
                     if (typeof obj === "string") {
-                        search_index.setToIndex(id, path, defaultNormalizer(obj));
+                        search_index.setToIndex(id, path, splitByGrapheme(defaultNormalizer(obj)));
                     } else if (Array.isArray(obj)) {
-                        search_index.setToIndex(id, path, defaultNormalizer(obj.join(" ")));
+                        search_index.setToIndex(id, path, splitByGrapheme(defaultNormalizer(obj.join(" "))));
                     } else {
                         throw new StaticSeekError(`staticseek: ${path} is not string or array of string.`);
                     }
@@ -37,7 +37,7 @@ export function createIndex<T>(
             } else {
                 // indexing all
                 for (const [path, obj] of extractStringsAll("", content)) {
-                    search_index.setToIndex(id, path, defaultNormalizer(obj));
+                    search_index.setToIndex(id, path, splitByGrapheme(defaultNormalizer(obj)));
                 }
             }
 

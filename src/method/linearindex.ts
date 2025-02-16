@@ -8,7 +8,6 @@ import {
     bitapSearch,
     createBitapKey,
 } from "@src/util/algorithm";
-import { excerptOneCodepointPerGraphem, splitByGrapheme } from "@src/util/preprocess";
 
 type ContentRange = {
     id: number;
@@ -47,8 +46,8 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         }
     }
 
-    public setToIndex(id: number, path: Path, str: string): void {
-        const graphemes = excerptOneCodepointPerGraphem(str);
+    public setToIndex(id: number, path: Path, str: string[]): void {
+        const graphemes = str.map((c) => c[0]).join("");
         const start = this.index_entry.content_length;
         const end = start + graphemes.length - 1;
         this.index_entry.content += graphemes;
@@ -68,12 +67,12 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         }
     }
 
-    public async search(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
+    public async search(env: SearchEnv, keyword: string[]): Promise<SearchResult[]> {
         let poses: [number, number][] = [];
         if (env.distance === undefined || env.distance === 0) {
             poses = this.allIndexOf(keyword, this.index_entry.content);
         } else {
-            const grapheme = splitByGrapheme(keyword).map((x) => x.charCodeAt(0));
+            const grapheme = keyword.map((x) => x.charCodeAt(0));
             if (grapheme.length <= 32) {
                 const key = createBitapKey<number, number>(bitapKeyNumber(), grapheme);
                 const raw_result = bitapSearch(key, env.distance, this.u32_content);
@@ -85,7 +84,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             }
         }
 
-        return this.createSearchResult(poses, keyword, env);
+        return this.createSearchResult(poses, keyword.join(""), env);
     }
 
     protected mergeResults(raw_result: [number, number][]): [number, number][] {
@@ -170,9 +169,9 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         return Array.from(result.values());
     }
 
-    private allIndexOf(keyword: string, content: string): [number, number][] {
+    private allIndexOf(keyword: string[], content: string): [number, number][] {
         const result: [number, number][] = [];
-        const grapheme = excerptOneCodepointPerGraphem(keyword);
+        const grapheme = keyword.map((c) => c[0]).join("");
         let pos = content.indexOf(grapheme);
         while (pos !== -1) {
             result.push([pos, 0]);

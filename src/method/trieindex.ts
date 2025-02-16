@@ -1,5 +1,4 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
-import { splitByGrapheme } from "@src/util/preprocess";
 
 type Id = number;
 type TF = number;
@@ -33,10 +32,9 @@ export class TrieIndex implements SearchIndex<TrieIndexEntry> {
         this.index_entry = index || { key: [], index: {} };
     }
 
-    public setToIndex(id: Id, path: Path, str: string): void {
-        const term = splitByGrapheme(str);
+    public setToIndex(id: Id, path: Path, str: string[]): void {
         const base_node = this.index_entry.index[path] || {};
-        this.index_entry.index[path] = this.updateTrieNode(base_node, term, id);
+        this.index_entry.index[path] = this.updateTrieNode(base_node, str, id);
     }
 
     public addKey(id: number, key: Record<Path, unknown>): void {
@@ -45,15 +43,14 @@ export class TrieIndex implements SearchIndex<TrieIndexEntry> {
 
     public fixIndex(): void {}
 
-    public async search(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
-        const grapheme = splitByGrapheme(keyword);
-        if (grapheme.length === 0) {
+    public async search(env: SearchEnv, keyword: string[]): Promise<SearchResult[]> {
+        if (keyword.length === 0) {
             return [];
         }
 
         const results = new Map<Id, SearchResult>();
         for (const path of env.search_targets || Object.keys(this.index_entry.index)) {
-            const tsr = this.searchTrie(this.index_entry.index[path], grapheme, [], env.distance || 0);
+            const tsr = this.searchTrie(this.index_entry.index[path], keyword, [], env.distance || 0);
 
             const term_dict: Map<Id, TrieSearchResult[]> = new Map();
             for (const t of tsr) {
