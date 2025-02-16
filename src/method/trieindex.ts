@@ -122,49 +122,33 @@ export class TrieIndex implements SearchIndex<TrieIndexEntry> {
         matched: string[],
         distance_left: Distance,
     ): TrieSearchResult[] {
-        const exact = this.searchTrieExact(node, keyword, matched, distance_left);
+        if(keyword.length === 0) {
+            return this.getAllPostingList(node, matched, distance_left);
+        }
 
-        if (distance_left === 0 || exact.length !== 0) {
+        // exact
+        const char = keyword[0];
+        const rest = keyword.slice(1);
+        const find_node = node.children?.[char];
+        const exact = find_node ? this.searchTrie(find_node, rest, matched.concat(char), distance_left) : [];
+
+        if(distance_left === 0) {
             return exact;
         }
 
-        if (!node.children) {
-            return (
-                node.postinglist?.map((p) => ({
-                    id: p[0],
-                    tf: p[1],
-                    term: matched.concat(keyword).join(""),
-                    distance_left: distance_left,
-                })) || []
-            );
-        }
-
+        // fuzzy: deletion
         const dist = distance_left - 1;
-        const children = Object.values(node.children);
-
-        const replace = children.map((n) => this.searchTrie(n, keyword.slice(1), matched.concat(keyword[0]), dist));
-        const insertion = children.map((n) => this.searchTrie(n, keyword, matched, dist));
-        const deletion = this.searchTrie(node, keyword.slice(1), matched.concat(keyword[0]), dist);
-
-        return exact.concat(...replace, ...insertion, deletion);
-    }
-
-    private searchTrieExact(
-        node: TrieNode,
-        keyword: string[],
-        matched: string[],
-        distance_left: Distance,
-    ): TrieSearchResult[] {
-        const char = keyword[0];
-        if (keyword.length === 1) {
-            const find_node = node.children?.[char];
-            return find_node ? this.getAllPostingList(find_node, matched.concat(char), distance_left) : [];
+        const deletion = this.searchTrie(node, rest, matched, dist);
+        if (!node.children) {
+            return exact.concat(deletion);
         }
-        const child = node.children?.[char];
-        if (child === undefined) {
-            return [];
-        }
-        return this.searchTrie(child, keyword.slice(1), matched.concat(char), distance_left);
+
+        // fuzzy: replace, insertion, deletion
+        const children = Object.entries(node.children);
+        const replace = children.map(([s, n]) => this.searchTrie(n, rest, matched.concat(s), dist)).filter((x) => x.length !== 0);
+        const insertion = children.map(([_s, n]) => this.searchTrie(n, keyword, matched, dist)).filter((x) => x.length !== 0);
+
+        return exact.concat(deletion, ...replace, ...insertion);
     }
 
     private getAllPostingList(node: TrieNode, matched: string[], distance_left: Distance): TrieSearchResult[] {
