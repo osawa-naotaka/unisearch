@@ -459,61 +459,73 @@ The following benchmarks were conducted using an **Intel Core i5 13400F** and **
 | 2394 | 837 | 837 | 644 |
 | 3020 | 1053 | 1053 | 813 |
 
-
-
 ### Benchmark on Intel N100
 
 A second benchmark was conducted using an **Intel N100** CPU to evaluate performance on lower-power devices.
 
 #### **Exact Search Time (ms) (English)**
-
-| Index Size | Linear | GPU | Inverted |
-|----------------|------------|---------------|--------------|
-| 538         | 1.09       | 1.15          | 0.33         |
-| 829         | 1.25       | 1.50          | 0.31         |
-| 1,712       | 2.77       | 2.84          | 0.31         |
-| 3,001       | 4.56       | 4.66          | 0.56         |
-| 3,747       | 5.60       | 5.84          | 0.52         |
-
----
-
-#### **Fuzzy Search Time (ms) (Englilsh)**
-
-| Index Size | Linear | GPU | Inverted |
-|----------------|------------|---------------|--------------|
-| 538         | 24.32      | 8.71          | 0.59        |
-| 829         | 38.53      | 10.34         | 0.7        |
-| 1,712       | 79.62      | 15.08         | 0.66        |
-| 3,001       | 134.65     | 22.33         | 0.91        |
-| 3,747       | 170.01     | 25.82         | 1.04       |
-
+| Text Size | Linear | GPU | Inverted |
+|-----------|--------|-----|----------|
+| 538 | 1.09 | 1.16 | 0.34 |
+| 829 | 1.45 | 1.55 | 0.49 |
+| 1712 | 2.64 | 2.64 | 0.32 |
+| 3001 | 3.99 | 4.27 | 0.41 |
+| 3748 | 5.31 | 5.32 | 0.45 |
 
 ---
 
+#### **Fuzzy Search Time (ms) (English)**
+| Text Size | Linear | GPU | Inverted |
+|-----------|--------|-----|----------|
+| 538 | 21.27 | 8.50 | 0.28 |
+| 829 | 32.17 | 10.48 | 0.36 |
+| 1712 | 64.99 | 14.93 | 0.32 |
+| 3001 | 113.41 | 21.89 | 0.43 |
+| 3748 | 140.33 | 25.98 | 0.68 |
+
+---
 
 #### **Fuzzy Search Time (ms) (Japanese)**
-
-| Index Size | Linear | GPU | Inverted |
-|----------------|------------|---------------|---------------|
-| 476           | 7.77       | 8.37          | 0.89          |
-| 789           | 12.07      | 6.40          | 0.79          |
-| 1,305         | 20.56      | 7.53          | 1.59          |
-| 2,394         | 40.28      | 8.36          | 2.29          |
-| 3,020         | 47.71      | 9.31          | 2.64          |
+| Text Size | Linear | GPU | Inverted |
+|-----------|--------|-----|----------|
+| 476 | 6.63 | 5.66 | 0.27 |
+| 789 | 10.76 | 6.88 | 0.27 |
+| 1305 | 17.75 | 6.94 | 0.29 |
+| 2394 | 31.11 | 8.06 | 0.38 |
+| 3020 | 39.35 | 9.12 | 0.61 |
 
 ---
 
 #### **Indexing Time (ms) (English)**
+| Text Size | Linear | GPU | Inverted |
+|-----------|--------|-----|----------|
+| 538 | 121.82 | 122.58 | 4422 |
+| 829 | 191.94 | 191.46 | 6707 |
+| 1712 | 403.90 | 377.72 | 14501 |
+| 3001 | 709.00 | 715.72 | 25726 |
+| 3748 | 912.72 | 861.46 | 32124 |
 
-| Index Size | Linear | GPULinear | Inverted |
-|----------------|------------|---------------|--------------|
-| 538         | 140.90     | 125.52        | 4,849     |
-| 829         | 304.92     | 199.88        | 7,613     |
-| 1,712       | 573.24     | 427.04        | 24,716     |
-| 3,001       | 814.78     | 766.16        | 28,795     |
-| 3,747       | 1,120.48   | 927.54        | 36,205    |
+---
 
+#### **Index Size (Gzipped, kbyte) (English)**
+| Text Size | Linear | GPU | Inverted |
+|-----------|--------|-----|----------|
+| 538 | 191 | 191 | 91 |
+| 829 | 294 | 294 | 131 |
+| 1712 | 607 | 607 | 247 |
+| 3001 | 1057 | 1057 | 411 |
+| 3748 | 1324 | 1324 | 505 |
 
+---
+
+#### **Index Size (Gzipped, kbyte) (Japanese)**
+| Text Size | Linear | GPU | Inverted |
+|-----------|--------|-----|----------|
+| 476 | 165 | 165 | 136 |
+| 789 | 272 | 272 | 229 |
+| 1305 | 452 | 452 | 366 |
+| 2394 | 837 | 837 | 644 |
+| 3020 | 1053 | 1053 | 813 |
 
 These benchmarks illustrate the performance trade-offs among the different index types. While `HybridTrieBigramInvertedIndex` is faster, it comes at the cost of higher indexing time and reduced search accuracy. Meanwhile, `GPULinearIndex` provides a substantial speed boost while maintaining accuracy, making it a viable option for environments with GPU support.
 
