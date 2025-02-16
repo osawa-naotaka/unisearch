@@ -92,7 +92,7 @@ export class GPULinearIndex extends LinearIndex {
 
         await this.mutex.acquire();
         try {
-            this.device.queue.writeBuffer(this.gpu_buffers.content, 0, this.gpu_content);
+            this.device.queue.writeBuffer(this.gpu_buffers.content, 0, this.u32_content);
         } finally {
             this.mutex.release();
         }

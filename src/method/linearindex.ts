@@ -27,7 +27,7 @@ export type LinearIndexEntry = {
 
 export class LinearIndex implements SearchIndex<LinearIndexEntry> {
     public index_entry: LinearIndexEntry;
-    public gpu_content: Uint32Array;
+    public u32_content: Uint32Array;
 
     public constructor(index?: LinearIndexEntry) {
         this.index_entry = index || {
@@ -38,12 +38,12 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             toc: [],
         };
         if (index) {
-            this.gpu_content = new Uint32Array(this.index_entry.content_length);
+            this.u32_content = new Uint32Array(this.index_entry.content_length);
             for (let i = 0; i < this.index_entry.content_length; i++) {
-                this.gpu_content[i] = this.index_entry.content.charCodeAt(i);
+                this.u32_content[i] = this.index_entry.content.charCodeAt(i);
             }
         } else {
-            this.gpu_content = new Uint32Array();
+            this.u32_content = new Uint32Array();
         }
     }
 
@@ -62,9 +62,9 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
     }
 
     public fixIndex(): void {
-        this.gpu_content = new Uint32Array(this.index_entry.content_length);
+        this.u32_content = new Uint32Array(this.index_entry.content_length);
         for (let i = 0; i < this.index_entry.content_length; i++) {
-            this.gpu_content[i] = this.index_entry.content.charCodeAt(i);
+            this.u32_content[i] = this.index_entry.content.charCodeAt(i);
         }
     }
 
@@ -76,11 +76,11 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             const grapheme = splitByGrapheme(keyword).map((x) => x.charCodeAt(0));
             if (grapheme.length <= 32) {
                 const key = createBitapKey<number, number>(bitapKeyNumber(), grapheme);
-                const raw_result = bitapSearch(key, env.distance, this.gpu_content);
+                const raw_result = bitapSearch(key, env.distance, this.u32_content);
                 poses = this.mergeResults(raw_result);
             } else {
                 const key = createBitapKey<bigint, number>(bitapKeyBigint(), grapheme);
-                const raw_result = bitapSearch(key, env.distance, this.gpu_content);
+                const raw_result = bitapSearch(key, env.distance, this.u32_content);
                 poses = this.mergeResults(raw_result);
             }
         }
