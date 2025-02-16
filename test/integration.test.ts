@@ -655,6 +655,30 @@ describe("Hybrid trie bigram inverted index creation and search", async () => {
         ])
     );
 
+    const result1_1 = await search(index, "maintainabilityyy");
+    test("no match because of longer query length", () => 
+        expect(result1_1).toStrictEqual([])
+    );
+
+    const result1_2 = await search(index, "maintainabilityy");
+    test("matches single english article, +1 keyword length", () => 
+        expect(result1_2).toStrictEqual([
+            {
+                id: 2,
+                key: {},
+                score: 1,
+                refs: [
+                    {
+                        token: "maintainability",
+                        path: "content",
+                        distance: 1,
+                    },
+                ],
+            },
+        ])
+    );
+
+
     const result2 = await search(index, "maintaiability");
     test("matches single english article, include fuzzy match", () => 
         expect(result2).toStrictEqual([

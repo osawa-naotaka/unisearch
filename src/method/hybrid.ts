@@ -1,7 +1,7 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
 import type { IndexClass } from "@src/frontend/indexing";
-import { intersectResults } from "@src/frontend/search";
-import { hybridSpritter, isNonSpaceSeparatedChar } from "@src/util/preprocess";
+import { intersectResults, adjastDistance } from "@src/frontend/search";
+import { hybridSpritter, isNonSpaceSeparatedChar, splitByGrapheme } from "@src/util/preprocess";
 
 export type HybridIndexEntry<T1, T2> = { ja: T1; en: T2 };
 
@@ -28,13 +28,13 @@ export function Hybrid<T1, T2>(name: string, ja: IndexClass, en: IndexClass): In
                 }
             }
 
-            public setToIndex(id: number, path: Path, str: string): void {
-                const tokens = hybridSpritter([str]);
+            public setToIndex(id: number, path: Path, str: string[]): void {
+                const tokens = hybridSpritter([str.join("")]);
                 for (const t of tokens) {
                     if (isNonSpaceSeparatedChar(t)) {
-                        this.ja.setToIndex(id, path, t);
+                        this.ja.setToIndex(id, path, splitByGrapheme(t));
                     } else {
-                        this.en.setToIndex(id, path, t);
+                        this.en.setToIndex(id, path, splitByGrapheme(t));
                     }
                 }
             }
@@ -49,14 +49,16 @@ export function Hybrid<T1, T2>(name: string, ja: IndexClass, en: IndexClass): In
                 this.en.fixIndex();
             }
 
-            public async search(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
-                const tokens = hybridSpritter([keyword]);
+            public async search(env: SearchEnv, keyword: string[]): Promise<SearchResult[]> {
+                const tokens = hybridSpritter([keyword.join("")]);
                 const results = [];
                 for (const t of tokens) {
+                    const grapheme = splitByGrapheme(t);
+                    const adj_env = adjastDistance(env, grapheme);
                     if (isNonSpaceSeparatedChar(t)) {
-                        results.push(await this.ja.search(env, t));
+                        results.push(await this.ja.search(adj_env, grapheme));
                     } else {
-                        results.push(await this.en.search(env, t));
+                        results.push(await this.en.search(adj_env, grapheme));
                     }
                 }
                 return intersectResults(results);

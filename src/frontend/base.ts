@@ -46,10 +46,10 @@ export type SearchResult = {
 // interface
 export interface SearchIndex<T> {
     index_entry: T;
-    setToIndex(id: number, path: Path, str: string): void;
+    setToIndex(id: number, path: Path, str: string[]): void;
     addKey(id: number, key: Record<string, unknown>): void;
     fixIndex(): void;
-    search(env: SearchEnv, keyword: string): Promise<SearchResult[]>;
+    search(env: SearchEnv, keyword: string[]): Promise<SearchResult[]>;
 }
 
 export type StaticSeekIndex = StaticIndex<SearchIndex<unknown>>;

@@ -1,6 +1,6 @@
 {
     "name": "staticseek",
-    "version": "2.2.0",
+    "version": "2.2.1",
     "description": "Lightweight and reasonably fast full-text search engine for static sites",
     "main": "dist/staticseek.js",
     "types": "dist/staticseek.d.ts",

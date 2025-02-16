@@ -21,12 +21,12 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
         this.index_entry = index || { key: [], index: {} };
     }
 
-    public setToIndex(id: Id, path: Path, str: string): void {
+    public setToIndex(id: Id, path: Path, str: string[]): void {
         const dict: TemporalDictionary = this.temporal_index_entry.get(path) || new Map();
-        const plist: TemporalPostingList = dict.get(str) || new Map();
+        const plist: TemporalPostingList = dict.get(str.join("")) || new Map();
         const tf = (plist.get(id) || 0) + 1;
         plist.set(id, tf);
-        dict.set(str, plist);
+        dict.set(str.join(""), plist);
         this.temporal_index_entry.set(path, dict);
     }
 
@@ -45,19 +45,18 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
         }
     }
 
-    public async search(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
+    public async search(env: SearchEnv, keyword: string[]): Promise<SearchResult[]> {
         const results = new Map<Id, SearchResult>();
         for (const path of env.search_targets || Object.keys(this.index_entry.index)) {
             let res: [string, PostingList, number][] = [];
             if (env.distance === 0) {
-                res = refine([keyword, []], this.prefixComp, this.index_entry.index[path] || []).map(
+                res = refine([keyword.join(""), []], this.prefixComp, this.index_entry.index[path] || []).map(
                     ([term, plist]) => [term, plist, 0],
                 );
             } else {
-                const grapheme = splitByGrapheme(keyword);
-                const refined = refine([grapheme[0], []], this.prefixComp, this.index_entry.index[path] || []);
-                if (grapheme.length < 50) {
-                    const bitapkey = createBitapKey<number, string>(bitapKeyNumber(), grapheme);
+                const refined = refine([keyword[0], []], this.prefixComp, this.index_entry.index[path] || []);
+                if (keyword.length < 32) {
+                    const bitapkey = createBitapKey<number, string>(bitapKeyNumber(), keyword);
                     for (const [term, plist] of refined) {
                         const r = bitapSearch(bitapkey, env.distance || 0, splitByGrapheme(term));
                         if (r.length !== 0) {
@@ -67,7 +66,7 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
                         }
                     }
                 } else {
-                    const bitapkey = createBitapKey<bigint, string>(bitapKeyBigint(), grapheme);
+                    const bitapkey = createBitapKey<bigint, string>(bitapKeyBigint(), keyword);
                     for (const [term, plist] of refined) {
                         const r = bitapSearch(bitapkey, env.distance || 0, splitByGrapheme(term));
                         if (r.length !== 0) {

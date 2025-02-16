@@ -130,12 +130,12 @@ export const float: Parser<number> = map(cat(int, char("."), frac), (x) => x[0] 
 
 export type Exact = {
     type: "exact";
-    str: string;
+    str: string[];
 };
 
 export type Fuzzy = {
     type: "fuzzy";
-    str: string;
+    str: string[];
 };
 
 export type Not = {
@@ -178,13 +178,13 @@ export const escgetc: Parser<Char> = or(
     getc,
 );
 export const nstr: Parser<Str> = rep(diff(escgetc, or(...['"', "(", ")", ...spaces].map(char))), 1);
-export const fuzzy: Parser<ASTNode> = map(diff(nstr, str("OR")), (x) => ({ type: "fuzzy", str: x.join("") }));
+export const fuzzy: Parser<ASTNode> = map(diff(nstr, str("OR")), (x) => ({ type: "fuzzy", str: x }));
 
 const dquote: Parser<Char> = map(char('"'), () => "");
 
 export const exact: Parser<ASTNode> = map(cat(dquote, rep(diff(escgetc, or(char('"'))), 1), or(dquote, eos)), (x) => ({
     type: "exact",
-    str: x[1].join(""),
+    str: x[1],
 }));
 
 export const token: Parser<ASTNode> = or(exact, fuzzy);

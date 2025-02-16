@@ -5,7 +5,6 @@ import bitap_dist2 from "@src/method/wgsl/bitap_dist2.wgsl?raw";
 import bitap_dist3 from "@src/method/wgsl/bitap_dist3.wgsl?raw";
 import { bitapKeyNumber, createBitapKey } from "@src/util/algorithm";
 import { Mutex } from "@src/util/mutex";
-import { splitByGrapheme } from "@src/util/preprocess";
 
 type GPUBuffers = {
     content: GPUBuffer;
@@ -132,8 +131,8 @@ export class GPULinearIndex extends LinearIndex {
         this.gpu_pipeline[3] = this.gpuPipeline(this.device, bitap_dist3, gpu_pipeline_layout);
     }
 
-    public override async search(env: SearchEnv, keyword: string): Promise<SearchResult[]> {
-        const grapheme = splitByGrapheme(keyword).map((x) => x.charCodeAt(0));
+    public override async search(env: SearchEnv, keyword: string[]): Promise<SearchResult[]> {
+        const grapheme = keyword.map((x) => x.charCodeAt(0));
         const is_gpu_searchable =
             grapheme.length <= 32 && env.distance !== undefined && env.distance > 0 && env.distance < 4;
 

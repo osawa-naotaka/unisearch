@@ -2,14 +2,14 @@ import type { SearchEnv, SearchIndex, SearchResult, StaticIndex } from "@src/fro
 import { StaticSeekError } from "@src/frontend/base";
 import type { ASTNode } from "@src/frontend/parse";
 import { expr } from "@src/frontend/parse";
-import { defaultNormalizer, splitBySpace } from "@src/util/preprocess";
+import { defaultNormalizer, splitBySpace, splitByGrapheme } from "@src/util/preprocess";
 
 export async function search<T>(
     index: StaticIndex<SearchIndex<T>>,
     query: string,
 ): Promise<SearchResult[] | StaticSeekError> {
     try {
-        const ast = expr([...normalizeQuery(query)]);
+        const ast = expr(splitByGrapheme(normalizeQuery(query)));
         if (ast === null) return [];
         const r = await evalQuery(index.index_entry, index.env)(ast.val);
         return r.type === "excludes" ? [] : r.results.sort((a, b) => b.score - a.score);
@@ -25,6 +25,11 @@ export function createWithProp<T>(obj: SearchEnv, prop: string, val: T): SearchE
     return new_obj;
 }
 
+export function adjastDistance(env: SearchEnv, keyword: string[]): SearchEnv {
+    const distance = Math.min(env.distance || 0, Math.max(0, keyword.length - 2));
+    return createWithProp(env, "distance", distance);
+}
+
 type QueryResult = {
     type: "includes" | "excludes";
     results: SearchResult[];
@@ -36,18 +41,16 @@ const evalQuery =
         switch (ast.type) {
             case "exact":
                 return { type: "includes", results: await index.search(createWithProp(env, "distance", 0), ast.str) };
-            case "fuzzy": {
-                const distance = Math.min(env.distance || 0, Math.max(0, ast.str.length - 2));
+            case "fuzzy":
                 return {
                     type: "includes",
-                    results: await index.search(createWithProp(env, "distance", distance), ast.str),
-                };
-            }
+                    results: await index.search(adjastDistance(env, ast.str), ast.str),
+            };
             case "not": {
                 const r = await evalQuery(index, env)(ast.node);
                 return { type: "excludes", results: r.results };
             }
-            case "from":
+            case "from": {
                 if (env.field_names) {
                     const path = env.field_names[ast.field];
                     if (path) {
@@ -55,6 +58,7 @@ const evalQuery =
                     }
                 }
                 return evalQuery(index, env)(ast.node);
+            }
             case "weight":
                 return evalQuery(index, createWithProp(env, "weight", ast.weight))(ast.node);
             case "distance":

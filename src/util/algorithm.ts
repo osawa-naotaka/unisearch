@@ -203,37 +203,37 @@ export const pipe: Pipe = (...fns: AnyFunction[]) => {
     };
 };
 
-export function generate1ToNgram(n: number, graphemes: string[]): string[] {
+export function generate1ToNgram(n: number, graphemes: string[]): string[][] {
     return [...Array(n).keys()].flatMap((x) => generateNgramInternal(x + 1, graphemes));
 }
 
-export function generateNgram(n: number, graphemes: string[]): string[] {
-    return graphemes.length < n ? [graphemes.join("")] : generateNgramInternal(n, graphemes);
+export function generateNgram(n: number, graphemes: string[]): string[][] {
+    return graphemes.length < n ? [graphemes] : generateNgramInternal(n, graphemes);
 }
 
-export function generateNgramToTail(n: number, graphemes: string[]): string[] {
+export function generateNgramToTail(n: number, graphemes: string[]): string[][] {
     const grams = generateNgram(n, graphemes);
     if (n < graphemes.length) {
         for (let i = graphemes.length - n; i < graphemes.length - 1; i++) {
-            grams.push(graphemes.slice(i + 1).join(""));
+            grams.push(graphemes.slice(i + 1));
         }
     } else if (graphemes.length !== 1) {
         for (let i = 1; i < graphemes.length; i++) {
-            grams.push(graphemes.slice(i).join(""));
+            grams.push(graphemes.slice(i));
         }
     }
     return grams;
 }
 
-function generateNgramInternal(n: number, graphemes: string[]): string[] {
+function generateNgramInternal(n: number, graphemes: string[]): string[][] {
     if (graphemes.length === 0) throw new Error("call generateNgram with null string.");
     if (graphemes.length < n) {
         return [];
     }
 
-    const grams: string[] = [];
+    const grams: string[][] = [];
     for (let i = 0; i <= graphemes.length - n; i++) {
-        grams.push(graphemes.slice(i, i + n).join(""));
+        grams.push(graphemes.slice(i, i + n));
     }
     return grams;
 }
