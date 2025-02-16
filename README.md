@@ -99,7 +99,7 @@ Search performance for a 4MB dataset (approximately 100 articles):
 
 - Exact Match: < 5ms
 - Fuzzy Search: < 150ms
-- Index Generation: ~500msec
+- Index Generation: ~1sec
   - ~30sec for HybridTrieBigramInvertedIndex
 
 For detailed benchmarks across different hardware configurations and index types, see the [Benchmarks section](#Benchmark) below.
@@ -346,7 +346,7 @@ export type Reference = {
 ### Important Notes
 
 - **Version Compatibility**: Ensure matching staticseek versions between index generation and usage
-- **Performance**: Index generation takes ~500ms for 100 articles (~4MB of text), or 10-30s for `HybridTrieBigramInvertedIndex`
+- **Performance**: Index generation takes ~1s for 100 articles (~4MB of text), or 10-30s for `HybridTrieBigramInvertedIndex`
 - **Security**: Avoid including sensitive information (personal names, addresses) in indexed content
 - **Optimization**: Pre-generating indices with SSG reduces client-side processing and improves load times
 - **Unicode Support**: All whitespace types (full-width, half-width, tabs, newlines, and others) are supported in queries
