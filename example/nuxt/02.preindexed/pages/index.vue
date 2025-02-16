@@ -26,7 +26,6 @@ const trigger = ref(false);
                             <NuxtLink :to="typedKey(key).path" >
                                 <h3>{{ typedKey(key).body.data.title }}</h3>
                             </NuxtLink>
-                            <p>{{ refs[0].wordaround }}</p>
                         </li>
                     </template>
                 </ul>

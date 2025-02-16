@@ -1,6 +1,6 @@
 import type { WikipediaArticle } from "@ref/bench/benchmark_common";
 import { calculateGzipedJsonSize, calculateJsonSize } from "@ref/util";
-import { createIndex, search, indexToObject, createIndexFromObject, StaticSeekError, LinearIndex, GPULinearIndex, HybridBigramInvertedIndex } from "@src/main";
+import { createIndex, search, indexToObject, createIndexFromObject, StaticSeekError, LinearIndex, GPULinearIndex, HybridTrieBigramInvertedIndex } from "@src/main";
 import type { IndexClass } from "@src/main";
 import { getAllKeywords } from "@ref/bench/benchmark_common";
 import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
@@ -17,9 +17,9 @@ export type BenchmarkResult = {
     fuzzy_search_time: number;
     gziped_index_size: number;
 };
-export type BechmarkResultAll = {
+export type BenchmarkResultAll = {
     index_size: number;
-    results: BenchmarkResult[];
+    results: Map<string, BenchmarkResult>;
 };
 
 export async function execBenchmark(
@@ -98,16 +98,73 @@ export async function execBenchmark(
 }
 
 export async function benchmarkMethod(keywords: string[], articles: WikipediaArticle[], num_trials: number) {
-    const result: BechmarkResultAll = {
+    const result: BenchmarkResultAll = {
         index_size: calculateJsonSize(articles),
-        results: [],
+        results: new Map<string, BenchmarkResult>(),
     };
-    result.results.push(await execBenchmark(LinearIndex, {}, articles, keywords, num_trials));
-    result.results.push(await execBenchmark(GPULinearIndex, {}, articles, keywords, num_trials));
-    result.results.push(await execBenchmark(HybridBigramInvertedIndex, {}, articles, keywords, num_trials));
+    result.results.set("Linear", await execBenchmark(LinearIndex, {}, articles, keywords, num_trials));
+    result.results.set("GPU", await execBenchmark(GPULinearIndex, {}, articles, keywords, num_trials));
+    result.results.set("Inverted", await execBenchmark(HybridTrieBigramInvertedIndex, {}, articles, keywords, num_trials));
     return result;
 }
 
+export function result_markdown(result_en: BenchmarkResultAll[], result_ja: BenchmarkResultAll[]): string {
+    let markdown = "";
+    markdown += "#### **Exact Search Time (ms) (English)**\n";
+    markdown += "| Text Size | Linear | GPU | Inverted |\n";
+    markdown += "|-----------|--------|-----|----------|\n";
+
+    for(const en of result_en) {
+        markdown += `| ${(en.index_size / 1000).toFixed(0)} | ${en.results.get("Linear")?.exact_search_time.toFixed(2)} | ${en.results.get("GPU")?.exact_search_time.toFixed(2)} | ${en.results.get("Inverted")?.exact_search_time.toFixed(2)} |\n`;
+    }
+
+    markdown += "\n---\n\n";
+    markdown += "#### **Fuzzy Search Time (ms) (English)**\n";
+    markdown += "| Text Size | Linear | GPU | Inverted |\n";
+    markdown += "|-----------|--------|-----|----------|\n";
+
+    for(const en of result_en) {
+        markdown += `| ${(en.index_size / 1000).toFixed(0)} | ${en.results.get("Linear")?.fuzzy_search_time.toFixed(2)} | ${en.results.get("GPU")?.fuzzy_search_time.toFixed(2)} | ${en.results.get("Inverted")?.fuzzy_search_time.toFixed(2)} |\n`;
+    }
+
+    markdown += "\n---\n\n";
+    markdown += "#### **Fuzzy Search Time (ms) (Japanese)**\n";
+    markdown += "| Text Size | Linear | GPU | Inverted |\n";
+    markdown += "|-----------|--------|-----|----------|\n";
+
+    for(const ja of result_ja) {
+        markdown += `| ${(ja.index_size / 1000).toFixed(0)} | ${ja.results.get("Linear")?.fuzzy_search_time.toFixed(2)} | ${ja.results.get("GPU")?.fuzzy_search_time.toFixed(2)} | ${ja.results.get("Inverted")?.fuzzy_search_time.toFixed(2)} |\n`;
+    }
+
+    markdown += "\n---\n\n";
+    markdown += "#### **Indexing Time (ms) (English)**\n";
+    markdown += "| Text Size | Linear | GPU | Inverted |\n";
+    markdown += "|-----------|--------|-----|----------|\n";
+
+    for(const en of result_en) {
+        markdown += `| ${(en.index_size / 1000).toFixed(0)} | ${en.results.get("Linear")?.indexing_time.toFixed(2)} | ${en.results.get("GPU")?.indexing_time.toFixed(2)} | ${en.results.get("Inverted")?.indexing_time.toFixed(0)} |\n`;
+    }
+
+    markdown += "\n---\n\n";
+    markdown += "#### **Index Size (Gzipped, kbyte) (English)**\n";
+    markdown += "| Text Size | Linear | GPU | Inverted |\n";
+    markdown += "|-----------|--------|-----|----------|\n";
+
+    for(const en of result_en) {
+        markdown += `| ${(en.index_size / 1000).toFixed(0)} | ${((en.results.get("Linear")?.gziped_index_size || 0) / 1000).toFixed(0)} | ${((en.results.get("GPU")?.gziped_index_size || 0) / 1000).toFixed(0)} | ${((en.results.get("Inverted")?.gziped_index_size || 0) / 1000).toFixed(0)} |\n`;
+    }
+
+    markdown += "\n---\n\n";
+    markdown += "#### **Index Size (Gzipped, kbyte) (Japanese)**\n";
+    markdown += "| Text Size | Linear | GPU | Inverted |\n";
+    markdown += "|-----------|--------|-----|----------|\n";
+
+    for(const ja of result_ja) {
+        markdown += `| ${(ja.index_size / 1000).toFixed(0)} | ${((ja.results.get("Linear")?.gziped_index_size || 0) / 1000).toFixed(0)} | ${((ja.results.get("GPU")?.gziped_index_size || 0) / 1000).toFixed(0)} | ${((ja.results.get("Inverted")?.gziped_index_size || 0) / 1000).toFixed(0)} |\n`;
+    }
+
+    return markdown;
+}
 
 
 // benchmark body
@@ -117,20 +174,17 @@ const run_keywords = 100;
 const num_trials = 5;
 
 const keywords_ja = getAllKeywords(wikipedia_ja_keyword_long).slice(0, run_keywords);
-const benchmark_results_all_ja: BechmarkResultAll[] = []
+const benchmark_results_all_ja: BenchmarkResultAll[] = []
 
 for(const num of run_nums) {
     benchmark_results_all_ja.push(await benchmarkMethod(keywords_ja, wikipedia_ja_extracted_1000.slice(0, num), num_trials));
 }
 
 const keywords_en = getAllKeywords(wikipedia_en_keyword).slice(0, run_keywords);
-const benchmark_results_all_en: BechmarkResultAll[] = []
+const benchmark_results_all_en: BenchmarkResultAll[] = []
 
 for(const num of run_nums) {
     benchmark_results_all_en.push(await benchmarkMethod(keywords_en, wikipedia_en_extracted_1000.slice(0, num), num_trials));
 }
 
-console.log("Japanese results.")
-console.log(await Promise.all(benchmark_results_all_ja));
-console.log("English results.")
-console.log(await Promise.all(benchmark_results_all_en));
+console.log(result_markdown(await Promise.all(benchmark_results_all_en), await Promise.all(benchmark_results_all_ja)));

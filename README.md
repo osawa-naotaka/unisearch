@@ -84,13 +84,12 @@ const result = await search(index, "search word");
    - 2-10x faster for larger datasets
    - Gracefully falls back to LinearIndex when WebGPU is unavailable
 
-3. **HybridBigramInvertedIndex**
-   - ~10x faster search performance
-   - Ideal for larger datasets in CKJ-like language
+3. **HybridTrieBigramInvertedIndex**
+   - ~100x faster search performance
+   - Ideal for larger datasets
    - Trade-offs:
      - Slower index generation
-     - Slower fuzzy serch speed in English-like language
-     - Higher false positive rate
+     - Higher false positive rate for CJK-like languages
      - Less precise fuzzy search for CJK-like languages
      - Limited result metadata
 
@@ -100,7 +99,8 @@ Search performance for a 4MB dataset (approximately 100 articles):
 
 - Exact Match: < 5ms
 - Fuzzy Search: < 150ms
-- Index Generation: ~1sec, or ~10sec for optimized index
+- Index Generation: ~1sec
+  - ~30sec for HybridTrieBigramInvertedIndex
 
 For detailed benchmarks across different hardware configurations and index types, see the [Benchmarks section](#Benchmark) below.
 
@@ -153,7 +153,7 @@ type SearchEnv = {
 - `index_class`: Specifies the search algorithm implementation
   - `LinearIndex`: Standard implementation (default choice)
   - `GPULinearIndex`: WebGPU-accelerated implementation
-  - `HybridBigramInvertedIndex`: High-performance implementation for larger datasets in CJK-like language
+  - `HybridTrieBigramInvertedIndex`: High-performance implementation for larger datasets
 
 - `contents`: Array of JavaScript objects to be indexed
   - Supports string fields and string array fields
@@ -346,7 +346,7 @@ export type Reference = {
 ### Important Notes
 
 - **Version Compatibility**: Ensure matching staticseek versions between index generation and usage
-- **Performance**: Index generation takes ~500ms for 100 articles (~4MB of text), or 10s for optimized index
+- **Performance**: Index generation takes ~1s for 100 articles (~4MB of text), or 10-30s for `HybridTrieBigramInvertedIndex`
 - **Security**: Avoid including sensitive information (personal names, addresses) in indexed content
 - **Optimization**: Pre-generating indices with SSG reduces client-side processing and improves load times
 - **Unicode Support**: All whitespace types (full-width, half-width, tabs, newlines, and others) are supported in queries
@@ -368,25 +368,25 @@ By leveraging `GPULinearIndex`, fuzzy searches can be offloaded to the GPU, sign
 
 If a GPU is not available in the execution environment, `GPULinearIndex` will automatically fall back to `LinearIndex`, ensuring compatibility across different devices.
 
-### Hybrid Bigram Inverted Index
+### Hybrid Trie Bigram Inverted Index
 
 ```javascript
-import { HybridBigramInvertedIndex, createIndex, search, StaticSeekError } from "staticseek";
+import { HybridTrieBigramInvertedIndex, createIndex, search, StaticSeekError } from "staticseek";
 
-const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
+const index = createIndex(HybridTrieBigramInvertedIndex, array_of_articles);
 ```
 
-The `HybridBigramInvertedIndex` offers an 10x search speed improvement compared to `LinearIndex` except for fuzzy serch in English. The API usage remains the same, making integration seamless.
+The `HybridTrieBigramInvertedIndex` offers an 10x - 100x search speed improvement compared to `LinearIndex`. The API usage remains the same, making integration seamless.
 
 However, this increased speed comes at a cost, introducing several trade-offs:
 
-1. **Longer Indexing Time**: Index creation is significantly slower, taking approximately 10 seconds for 100 articles. It is essential to generate the index in advance, such as during a static site generation (SSG) build process.
-2. **Higher Search Noise**: False positives (irrelevant results appearing in search results) become more frequent.
-3. **Reduced Accuracy for CJK Languages**: Fuzzy searches in languages such as Chinese, Japanese, and Korean may produce noisier results, matching unintended terms.
+1. **Longer Indexing Time**: Index creation is significantly slower, taking approximately 10-30 seconds for 100 articles. It is essential to generate the index in advance, such as during a static site generation (SSG) build process.
+2. **Higher Search Noise for CJK Language**: False positives (irrelevant results appearing in search results) become more frequent in languages such as Chinese, Japanese, and Korean(CJK).
+3. **Reduced Accuracy for CJK Languages**: Fuzzy searches in CJK may produce noisier results, matching unintended terms.
 4. **Limited Result Metadata**: Some search result details, such as exact match position (`pos`) and surrounding text (`wordaround`), are unavailable.
 5. **Incomplete TF-IDF Scoring**: Currently, only term frequency (TF) is calculated, leading to less refined ranking.
 
-Despite these drawbacks, `HybridBigramInvertedIndex` ensures fast search performance across all devices, delivering a smooth user experience except for fuzzy serch in English. If prioritizing responsiveness is critical, this index type is a good choice.
+Despite these drawbacks, `HybridTrieBigramInvertedIndex` ensures fast search performance across all devices, delivering a smooth user experience. If prioritizing responsiveness is critical, this index type is a good choice.
 
 ## Benchmark
 
@@ -395,109 +395,139 @@ Despite these drawbacks, `HybridBigramInvertedIndex` ensures fast search perform
 The following benchmarks were conducted using an **Intel Core i5 13400F** and **NVIDIA GeForce RTX 4070**. The index size is represented in kilobytes, while all other metrics are measured in milliseconds (ms).
 
 
-#### **Exact Search Time (ms) (English)**  
-
-| Index Size | Linear | GPU | Inverted |
-|---------------|-------------|---------------|--------------|
-| 538 | 0.44 | 0.43 | 0.05 |
-| 829 | 0.64 | 0.65 | 0.06 |
-| 1,712 | 1.25 | 1.24 | 0.06 |
-| 3,001 | 2.11 | 2.12 | 0.08 |
-| 3,748 | 2.58 | 2.64 | 0.07 |
-
----
-
-#### **Fuzzy Search Time (ms) (English)**  
-
-| Index Size | Linear | GPU | Inverted |
-|---------------|-------------|---------------|--------------|
-| 538 | 11.48 | 5.01 | 9.25 |
-| 829 | 17.65 | 5.71 | 12.09 |
-| 1,712 | 35.94 | 6.44 | 20.95 |
-| 3,001 | 63.10 | 7.87 | 29.48 |
-| 3,748 | 78.77 | 8.36 | 34.47 |
+#### **Exact Search Time (ms) (English)**
+| Text Size | Linear | GPU | Inverted |
+|-----------|--------|-----|----------|
+| 538 | 0.45 | 0.44 | 0.11 |
+| 829 | 0.66 | 0.69 | 0.08 |
+| 1712 | 1.27 | 1.32 | 0.11 |
+| 3001 | 2.17 | 2.24 | 0.10 |
+| 3748 | 2.68 | 2.70 | 0.10 |
 
 ---
 
-### **Fuzzy Search Time (ms) (Japanese)**
+#### **Fuzzy Search Time (ms) (English)**
+| Text Size | Linear | GPU | Inverted |
+|-----------|--------|-----|----------|
+| 538 | 10.86 | 4.83 | 0.09 |
+| 829 | 16.76 | 5.63 | 0.10 |
+| 1712 | 34.31 | 5.96 | 0.10 |
+| 3001 | 59.62 | 5.88 | 0.13 |
+| 3748 | 74.55 | 6.57 | 0.14 |
 
-| Index Size | Linear | GPU | Inverted |
-|---------------|------------|---------------|--------------|
-| 475        | 3.18       | 4.33          | 0.26         |
-| 789        | 5.34       | 4.46          | 0.29         |
-| 1,305      | 8.88       | 4.65          | 0.53         |
-| 2,394      | 16.36      | 4.36          | 0.82         |
-| 3,020      | 20.53      | 5.93          | 1.00         |
+---
+
+#### **Fuzzy Search Time (ms) (Japanese)**
+| Text Size | Linear | GPU | Inverted |
+|-----------|--------|-----|----------|
+| 476 | 3.53 | 4.17 | 0.10 |
+| 789 | 5.09 | 4.24 | 0.10 |
+| 1305 | 8.58 | 4.47 | 0.11 |
+| 2394 | 15.48 | 4.87 | 0.11 |
+| 3020 | 19.65 | 5.45 | 0.13 |
 
 ---
 
 #### **Indexing Time (ms) (English)**
+| Text Size | Linear | GPU | Inverted |
+|-----------|--------|-----|----------|
+| 538 | 39.92 | 42.30 | 1,738 |
+| 829 | 69.14 | 68.48 | 2,731 |
+| 1712 | 149.00 | 141.24 | 5,819 |
+| 3001 | 290.62 | 273.20 | 10,521 |
+| 3748 | 363.58 | 338.52 | 12,992 |
 
-| Index Size | Linear | GPU | Inverted |
-|---------------|-------------|---------------|--------------|
-| 538 | 41.06 | 37.16 | 648 |
-| 829 | 94.16 | 66.10 | 981 |
-| 1,712 | 170.86 | 137.94 | 1,901 |
-| 3,001 | 292.28 | 247.78 | 3,268 |
-| 3,748 | 394.30 | 329.54 | 4,060 |
+---
 
+#### **Index Size (Gzipped, kbyte) (English)**
+| Text Size | Linear | GPU | Inverted |
+|-----------|--------|-----|----------|
+| 538 | 191 | 191 | 91 |
+| 829 | 294 | 294 | 131 |
+| 1712 | 607 | 607 | 247 |
+| 3001 | 1057 | 1057 | 411 |
+| 3748 | 1324 | 1324 | 505 |
 
+---
+
+#### **Index Size (Gzipped, kbyte) (Japanese)**
+| Text Size | Linear | GPU | Inverted |
+|-----------|--------|-----|----------|
+| 476 | 165 | 165 | 136 |
+| 789 | 272 | 272 | 229 |
+| 1305 | 452 | 452 | 366 |
+| 2394 | 837 | 837 | 644 |
+| 3020 | 1053 | 1053 | 813 |
 
 ### Benchmark on Intel N100
 
 A second benchmark was conducted using an **Intel N100** CPU to evaluate performance on lower-power devices.
 
 #### **Exact Search Time (ms) (English)**
-
-| Index Size | Linear | GPU | Inverted |
-|----------------|------------|---------------|--------------|
-| 538         | 1.09       | 1.15          | 0.33         |
-| 829         | 1.25       | 1.50          | 0.23         |
-| 1,712       | 2.77       | 2.84          | 0.22         |
-| 3,001       | 4.56       | 4.66          | 0.21         |
-| 3,747       | 5.60       | 5.84          | 0.28         |
-
----
-
-#### **Fuzzy Search Time (ms) (Englilsh)**
-
-| Index Size | Linear | GPU | Inverted |
-|----------------|------------|---------------|--------------|
-| 538         | 24.32      | 8.71          | 25.51        |
-| 829         | 38.53      | 10.34         | 33.65        |
-| 1,712       | 79.62      | 15.08         | 55.21        |
-| 3,001       | 134.65     | 22.33         | 81.26        |
-| 3,747       | 170.01     | 25.82         | 93.87        |
-
+| Text Size | Linear | GPU | Inverted |
+|-----------|--------|-----|----------|
+| 538 | 1.09 | 1.16 | 0.34 |
+| 829 | 1.45 | 1.55 | 0.49 |
+| 1712 | 2.64 | 2.64 | 0.32 |
+| 3001 | 3.99 | 4.27 | 0.41 |
+| 3748 | 5.31 | 5.32 | 0.45 |
 
 ---
 
+#### **Fuzzy Search Time (ms) (English)**
+| Text Size | Linear | GPU | Inverted |
+|-----------|--------|-----|----------|
+| 538 | 21.27 | 8.50 | 0.28 |
+| 829 | 32.17 | 10.48 | 0.36 |
+| 1712 | 64.99 | 14.93 | 0.32 |
+| 3001 | 113.41 | 21.89 | 0.43 |
+| 3748 | 140.33 | 25.98 | 0.68 |
+
+---
 
 #### **Fuzzy Search Time (ms) (Japanese)**
-
-| Index Size | Linear | GPU | Inverted |
-|----------------|------------|---------------|---------------|
-| 476           | 7.77       | 8.37          | 0.89          |
-| 789           | 12.07      | 6.40          | 0.79          |
-| 1,305         | 20.56      | 7.53          | 1.59          |
-| 2,394         | 40.28      | 8.36          | 2.29          |
-| 3,020         | 47.71      | 9.31          | 2.64          |
+| Text Size | Linear | GPU | Inverted |
+|-----------|--------|-----|----------|
+| 476 | 6.63 | 5.66 | 0.27 |
+| 789 | 10.76 | 6.88 | 0.27 |
+| 1305 | 17.75 | 6.94 | 0.29 |
+| 2394 | 31.11 | 8.06 | 0.38 |
+| 3020 | 39.35 | 9.12 | 0.61 |
 
 ---
 
 #### **Indexing Time (ms) (English)**
+| Text Size | Linear | GPU | Inverted |
+|-----------|--------|-----|----------|
+| 538 | 121.82 | 122.58 | 4422 |
+| 829 | 191.94 | 191.46 | 6707 |
+| 1712 | 403.90 | 377.72 | 14501 |
+| 3001 | 709.00 | 715.72 | 25726 |
+| 3748 | 912.72 | 861.46 | 32124 |
 
-| Index Size | Linear | GPULinear | Inverted |
-|----------------|------------|---------------|--------------|
-| 538         | 140.90     | 125.52        | 1,763     |
-| 829         | 304.92     | 199.88        | 2,686     |
-| 1,712       | 573.24     | 427.04        | 5,210     |
-| 3,001       | 814.78     | 766.16        | 9,153     |
-| 3,747       | 1,120.48   | 927.54        | 11,237    |
+---
 
+#### **Index Size (Gzipped, kbyte) (English)**
+| Text Size | Linear | GPU | Inverted |
+|-----------|--------|-----|----------|
+| 538 | 191 | 191 | 91 |
+| 829 | 294 | 294 | 131 |
+| 1712 | 607 | 607 | 247 |
+| 3001 | 1057 | 1057 | 411 |
+| 3748 | 1324 | 1324 | 505 |
 
+---
 
-These benchmarks illustrate the performance trade-offs among the different index types. While `HybridBigramInvertedIndex` is faster except for fuzzy serch in English, it comes at the cost of higher indexing time and reduced search accuracy. Meanwhile, `GPULinearIndex` provides a substantial speed boost while maintaining accuracy, making it a viable option for environments with GPU support.
+#### **Index Size (Gzipped, kbyte) (Japanese)**
+| Text Size | Linear | GPU | Inverted |
+|-----------|--------|-----|----------|
+| 476 | 165 | 165 | 136 |
+| 789 | 272 | 272 | 229 |
+| 1305 | 452 | 452 | 366 |
+| 2394 | 837 | 837 | 644 |
+| 3020 | 1053 | 1053 | 813 |
+
+These benchmarks illustrate the performance trade-offs among the different index types. While `HybridTrieBigramInvertedIndex` is faster, it comes at the cost of higher indexing time and reduced search accuracy. Meanwhile, `GPULinearIndex` provides a substantial speed boost while maintaining accuracy, making it a viable option for environments with GPU support.
 
 For optimal performance, select the index type that best fits your application’s needs.
 
@@ -514,9 +544,9 @@ For fuzzy search, the `bitap` algorithm is employed, which runs approximately 50
 
 The `GPULinearIndex` follows the same exact match search approach as `LinearIndex`. For fuzzy search queries exceeding 32 characters, it also defaults to the `LinearIndex` method. However, for shorter fuzzy searches, `GPULinearIndex` accelerates processing by running the `bitap` algorithm on the GPU. Each character position in the index spawns a parallel search thread, executing a `bitap`-based search across the query length. This implementation leverages WebGPU and executes in `wgsl`.
 
-### HybridBigramInvertedIndex
+### HybridTrieBigramInvertedIndex
 
-The `HybridBigramInvertedIndex` categorizes characters into two groups: languages such as Japanese, where word boundaries are difficult to define, and languages like English, where words are naturally separated by spaces. Different indexing strategies are applied to each category. For English, a standard word-based inverted index is used, while for Japanese and similar languages, a bigram-based inverted index is created by fragmenting sentences without explicit word segmentation.
+The `HybridTrieBigramInvertedIndex` categorizes characters into two groups: languages such as Japanese, where word boundaries are difficult to define, and languages like English, where words are naturally separated by spaces. Different indexing strategies are applied to each category. For English, a word-based inverted index with Trie data structiure is used, while for Japanese and similar languages, a bigram-based inverted index is created by fragmenting sentences without explicit word segmentation.
 
 Although increasing the n-gram size (e.g., using trigrams) could reduce search noise, it would also inflate the index size. A balance between accuracy and efficiency was sought, leading to the adoption of bigrams.
 
@@ -529,7 +559,7 @@ The preprocessing pipeline applies minimal transformations:
 
 For inverted indexes, stopwords and stemming are not utilized to maintain neutrality across languages. Additionally, for graphemes composed of multiple code points (e.g., emojis), only the first code point is extracted for indexing.
 
-For `HybridBigramInvertedIndex`, additional preprocessing steps are performed:
+For `HybridTrieBigramInvertedIndex`, additional preprocessing steps are performed:
 - Symbols and punctuation are removed and used as delimiters
 - Tokenization by whitespace
 - Classification of languages that hard to segment into words (e.g., Japanese) versus those that do not (e.g., English)
@@ -540,15 +570,11 @@ As a result, standalone symbols cannot be searched, and URLs are tokenized into 
 
 Several alternative algorithms were explored but ultimately discarded due to inefficiencies:
 
-1. **Trie Structures**
-   - While promising for incremental searches, trie-based indexes increased in size due to posting list overhead at each node.
-   - Since `HybridBigramInvertedIndex` already provides strong performance for Japanese, the additional complexity of tries was deemed unnecessary.
-
-2. **Bloom Filters**
+1. **Bloom Filters**
    - Although effective in reducing false negatives, Bloom filters increased posting list sizes proportional to the number of hash functions used.
    - Even with an optimal configuration of 2-3 hash functions, the resulting index size became impractical.
 
-3. **LSH, MinHash, and Sentence Embeddings**
+2. **LSH, MinHash, and Sentence Embeddings**
    - While these approaches hold potential for semantic search, they proved unsuitable for full-text search with fuzzy matching.
    - Misspelled words would effectively introduce new dictionary entries, increasing dimensional complexity and making distance calculations unreliable.
    - Even with dimensionality reduction techniques, vectorized representations failed to accurately capture fuzzy text similarities.

@@ -1,6 +1,6 @@
 import { test, expect, describe } from "vitest";
 import { array_of_articles } from "@test/array_of_articles.js";
-import { LinearIndex, createIndex, search, StaticSeekError, HybridBigramInvertedIndex } from "@dist/staticseek";
+import { LinearIndex, createIndex, search, StaticSeekError, HybridTrieBigramInvertedIndex } from "@dist/staticseek";
 import type { StaticSeekIndex } from "@dist/staticseek";
 import { createIndexFromObject, indexToObject } from "@dist/staticseek";
 
@@ -633,8 +633,8 @@ describe("long query search", async () => {
 });
 
 
-describe("Hybrid bigram inverted index creation and search", async () => {
-    const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
+describe("Hybrid trie bigram inverted index creation and search", async () => {
+    const index = createIndex(HybridTrieBigramInvertedIndex, array_of_articles);
     if(index instanceof StaticSeekError) throw index;
 
     const result1 = await search(index, "maintainability");
@@ -664,7 +664,7 @@ describe("Hybrid bigram inverted index creation and search", async () => {
                 score: 1,
                 refs: [
                     {
-                        token: "maintainability",
+                        token: "maintaiability",
                         path: "content",
                         distance: 1,
                     },
@@ -674,8 +674,21 @@ describe("Hybrid bigram inverted index creation and search", async () => {
     );
 
     const result3 = await search(index, "aintainability");
-    test("no match in spite of fuzzy match, distance is 1. because the first letter is not matched.", () => 
-        expect(result3).toStrictEqual([])
+    test("matches single english article, include fuzzy match, with first letter loss.", () => 
+        expect(result3).toStrictEqual([
+            {
+                id: 2,
+                key: {},
+                score: 1,
+                refs: [
+                    {
+                        token: "aintainability",
+                        path: "content",
+                        distance: 1,
+                    },
+                ],
+            },
+        ])
     );
 
     const result4 = await search(index, "概");
@@ -752,8 +765,8 @@ describe("Hybrid bigram inverted index creation and search", async () => {
     );
 });
 
-describe("Hybrid bigram inverted index fuzzy search", async () => {
-    const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
+describe("Hybrid trie bigram inverted index fuzzy search", async () => {
+    const index = createIndex(HybridTrieBigramInvertedIndex, array_of_articles);
     if(index instanceof StaticSeekError) throw index;
 
     const result1 = await search(index, "再用可能");
@@ -894,8 +907,8 @@ describe("Hybrid bigram inverted index fuzzy search", async () => {
     );
 });
 
-describe("Hybrid bigram inverted index fuzzy search, with alphabet and kanji", async () => {
-    const index = createIndex(HybridBigramInvertedIndex, array_of_articles);
+describe("Hybrid trie bigram inverted index fuzzy search, with alphabet and kanji", async () => {
+    const index = createIndex(HybridTrieBigramInvertedIndex, array_of_articles);
     if(index instanceof StaticSeekError) throw index;
 
     const result1 = await search(index, "再利用可能 j");
