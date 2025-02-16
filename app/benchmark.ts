@@ -1,6 +1,6 @@
 import type { WikipediaArticle } from "@ref/bench/benchmark_common";
 import { calculateGzipedJsonSize, calculateJsonSize } from "@ref/util";
-import { createIndex, search, indexToObject, createIndexFromObject, StaticSeekError, LinearIndex, GPULinearIndex, HybridBigramInvertedIndex } from "@src/main";
+import { createIndex, search, indexToObject, createIndexFromObject, StaticSeekError, LinearIndex, GPULinearIndex, HybridTrieBigramInvertedIndex } from "@src/main";
 import type { IndexClass } from "@src/main";
 import { getAllKeywords } from "@ref/bench/benchmark_common";
 import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
@@ -104,7 +104,7 @@ export async function benchmarkMethod(keywords: string[], articles: WikipediaArt
     };
     result.results.push(await execBenchmark(LinearIndex, {}, articles, keywords, num_trials));
     result.results.push(await execBenchmark(GPULinearIndex, {}, articles, keywords, num_trials));
-    result.results.push(await execBenchmark(HybridBigramInvertedIndex, {}, articles, keywords, num_trials));
+    result.results.push(await execBenchmark(HybridTrieBigramInvertedIndex, {}, articles, keywords, num_trials));
     return result;
 }
 
