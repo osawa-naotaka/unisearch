@@ -100,7 +100,7 @@ Search performance for a 4MB dataset (approximately 100 articles):
 - Exact Match: < 5ms
 - Fuzzy Search: < 150ms
 - Index Generation: ~500msec
-  - ~100sec for HybridTrieBigramInvertedIndex
+  - ~30sec for HybridTrieBigramInvertedIndex
 
 For detailed benchmarks across different hardware configurations and index types, see the [Benchmarks section](#Benchmark) below.
 
@@ -346,7 +346,7 @@ export type Reference = {
 ### Important Notes
 
 - **Version Compatibility**: Ensure matching staticseek versions between index generation and usage
-- **Performance**: Index generation takes ~500ms for 100 articles (~4MB of text), or 100s for `HybridTrieBigramInvertedIndex`
+- **Performance**: Index generation takes ~500ms for 100 articles (~4MB of text), or 10-30s for `HybridTrieBigramInvertedIndex`
 - **Security**: Avoid including sensitive information (personal names, addresses) in indexed content
 - **Optimization**: Pre-generating indices with SSG reduces client-side processing and improves load times
 - **Unicode Support**: All whitespace types (full-width, half-width, tabs, newlines, and others) are supported in queries
@@ -380,7 +380,7 @@ The `HybridTrieBigramInvertedIndex` offers an 10x - 100x search speed improvemen
 
 However, this increased speed comes at a cost, introducing several trade-offs:
 
-1. **Longer Indexing Time**: Index creation is significantly slower, taking approximately 100 seconds for 100 articles. It is essential to generate the index in advance, such as during a static site generation (SSG) build process.
+1. **Longer Indexing Time**: Index creation is significantly slower, taking approximately 10-30 seconds for 100 articles. It is essential to generate the index in advance, such as during a static site generation (SSG) build process.
 2. **Higher Search Noise for CJK Language**: False positives (irrelevant results appearing in search results) become more frequent in languages such as Chinese, Japanese, and Korean(CJK).
 3. **Reduced Accuracy for CJK Languages**: Fuzzy searches in CJK may produce noisier results, matching unintended terms.
 4. **Limited Result Metadata**: Some search result details, such as exact match position (`pos`) and surrounding text (`wordaround`), are unavailable.
@@ -399,11 +399,11 @@ The following benchmarks were conducted using an **Intel Core i5 13400F** and **
 
 | Index Size | Linear | GPU | Inverted |
 |---------------|-------------|---------------|--------------|
-| 538 | 0.44 | 0.43 | 0.05 |
-| 829 | 0.64 | 0.65 | 0.06 |
-| 1,712 | 1.25 | 1.24 | 0.06 |
-| 3,001 | 2.11 | 2.12 | 0.08 |
-| 3,748 | 2.58 | 2.64 | 0.07 |
+| 538 | 0.44 | 0.43 | 0.07 |
+| 829 | 0.64 | 0.65 | 0.12 |
+| 1,712 | 1.25 | 1.24 | 0.25 |
+| 3,001 | 2.11 | 2.12 | 0.25 |
+| 3,748 | 2.58 | 2.64 | 0.26 |
 
 ---
 
@@ -452,10 +452,10 @@ A second benchmark was conducted using an **Intel N100** CPU to evaluate perform
 | Index Size | Linear | GPU | Inverted |
 |----------------|------------|---------------|--------------|
 | 538         | 1.09       | 1.15          | 0.33         |
-| 829         | 1.25       | 1.50          | 0.23         |
-| 1,712       | 2.77       | 2.84          | 0.22         |
-| 3,001       | 4.56       | 4.66          | 0.21         |
-| 3,747       | 5.60       | 5.84          | 0.28         |
+| 829         | 1.25       | 1.50          | 0.31         |
+| 1,712       | 2.77       | 2.84          | 0.31         |
+| 3,001       | 4.56       | 4.66          | 0.56         |
+| 3,747       | 5.60       | 5.84          | 0.52         |
 
 ---
 
@@ -463,11 +463,11 @@ A second benchmark was conducted using an **Intel N100** CPU to evaluate perform
 
 | Index Size | Linear | GPU | Inverted |
 |----------------|------------|---------------|--------------|
-| 538         | 24.32      | 8.71          | 25.51        |
-| 829         | 38.53      | 10.34         | 33.65        |
-| 1,712       | 79.62      | 15.08         | 55.21        |
-| 3,001       | 134.65     | 22.33         | 81.26        |
-| 3,747       | 170.01     | 25.82         | 93.87        |
+| 538         | 24.32      | 8.71          | 0.59        |
+| 829         | 38.53      | 10.34         | 0.7        |
+| 1,712       | 79.62      | 15.08         | 0.66        |
+| 3,001       | 134.65     | 22.33         | 0.91        |
+| 3,747       | 170.01     | 25.82         | 1.04       |
 
 
 ---
@@ -489,11 +489,11 @@ A second benchmark was conducted using an **Intel N100** CPU to evaluate perform
 
 | Index Size | Linear | GPULinear | Inverted |
 |----------------|------------|---------------|--------------|
-| 538         | 140.90     | 125.52        | 1,763     |
-| 829         | 304.92     | 199.88        | 2,686     |
-| 1,712       | 573.24     | 427.04        | 5,210     |
-| 3,001       | 814.78     | 766.16        | 9,153     |
-| 3,747       | 1,120.48   | 927.54        | 11,237    |
+| 538         | 140.90     | 125.52        | 4,849     |
+| 829         | 304.92     | 199.88        | 7,613     |
+| 1,712       | 573.24     | 427.04        | 24,716     |
+| 3,001       | 814.78     | 766.16        | 28,795     |
+| 3,747       | 1,120.48   | 927.54        | 36,205    |
 
 
 
