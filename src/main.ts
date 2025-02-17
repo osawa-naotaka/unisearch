@@ -16,4 +16,5 @@ export type {
     SearchResult,
 } from "@src/frontend/base";
 export type { IndexClass } from "@src/frontend/indexing";
-export * from "zod" 
+import * as v from 'valibot';
+export { v };

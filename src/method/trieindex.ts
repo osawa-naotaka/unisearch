@@ -1,39 +1,34 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
-import { z } from "zod";
+import * as v from 'valibot';
 
-const Id_z = z.number();
-const TF_z = z.number();
-const PostingListEntry_z = z.tuple([Id_z, TF_z]);
-const PostingList_z = z.array(PostingListEntry_z);
+const Id_v = v.number();
+const TF_v = v.number();
+const PostingListEntry_v = v.tuple([Id_v, TF_v]);
+const PostingList_v = v.array(PostingListEntry_v);
 
-type Id = z.infer<typeof Id_z>;
-type TF = z.infer<typeof TF_z>;
+type Id = v.InferOutput<typeof Id_v>;
+type TF = v.InferOutput<typeof TF_v>;
 type Distance = number;
-type PostingListEntry = z.infer<typeof PostingListEntry_z>;
+type PostingListEntry = v.InferOutput<typeof PostingListEntry_v>;
+type PostingList = v.InferOutput<typeof PostingList_v>;
 
-const TrieNode_base_z = z.object({
-    postinglist: PostingList_z.optional()
+type TrieNode = {
+    children?: Record<string, TrieNode>;
+    postinglist?: PostingList;
+};
+
+const TrieNode_v: v.GenericSchema<TrieNode> = v.object({
+    children: v.optional(v.record(v.string(), v.lazy(() => TrieNode_v))),
+    postinglist: v.optional(PostingList_v)
 });
 
-type TrieNode = z.infer<typeof TrieNode_base_z> & {
-    children?: Record<string, TrieNode>
-}
-
-const TrieNode_z: z.ZodType<TrieNode> = TrieNode_base_z.extend({
-    children: z.lazy(() => z.record(z.string(), TrieNode_z))
+const TrieIndexEntry_v = v.object({
+    index: v.record(v.string(), TrieNode_v),
+    key: v.array(v.record(v.string(), v.unknown()))
 });
 
-const TrieIndexEntry_base_z = z.object({
-    key: z.array(z.record(z.string(), z.unknown()))
-});
+type TrieIndexEntry = v.InferOutput<typeof TrieIndexEntry_v>;
 
-type TrieIndexEntry = z.infer<typeof TrieIndexEntry_base_z> & {
-    index: Record<Path, TrieNode>;
-}
-
-const TrieIndexEntry_z: z.ZodType<TrieIndexEntry> = TrieIndexEntry_base_z.extend({
-    index: z.record(z.string(), TrieNode_z)
-})
 
 type TrieSearchResult = {
     id: Id;
@@ -46,7 +41,7 @@ export class TrieIndex implements SearchIndex<TrieIndexEntry> {
     public readonly index_entry: TrieIndexEntry;
 
     constructor(index?: TrieIndexEntry) {
-        this.index_entry = index ? TrieIndexEntry_z.parse(index) : { key: [], index: {} };
+        this.index_entry = index ? v.parse(TrieIndexEntry_v, index) : { key: [], index: {} };
     }
 
     public setToIndex(id: Id, path: Path, str: string[]): void {

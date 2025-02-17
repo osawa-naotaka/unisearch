@@ -3,7 +3,7 @@ import { StaticSeekError } from "@src/frontend/base";
 import { createIndex } from "@src/frontend/indexing";
 import { LinearIndex } from "@src/method/linearindex";
 import { search } from "@src/frontend/search";
-import { z } from 'zod';
+import * as v from "valibot";
 
 describe("search test", async () => {
     const contents = [
@@ -12,7 +12,7 @@ describe("search test", async () => {
         { title: "タイトル３", text: "テキスト３．１テキスト３．２テキスト３．３"},
     ];
 
-    const index = createIndex(LinearIndex, contents, { key_fields: z.object({ title: z.string() })  });
+    const index = createIndex(LinearIndex, contents, { key_fields: v.object({ title: v.string() })  });
     if(index instanceof StaticSeekError) {
         throw index;
     }

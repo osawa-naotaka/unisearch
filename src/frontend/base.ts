@@ -1,7 +1,7 @@
-import { z, ZodObject } from "zod";
+import * as v from 'valibot';
 
 // version
-export const Version = "2.0.0";
+export const Version = "3.0.0";
 
 // types
 
@@ -14,28 +14,27 @@ export type FieldNameMap = Record<FieldName, Path>;
 export class StaticSeekError extends Error {}
 
 // index
-export type IndexOpt<T extends ZodObject<any>> = {
-    field_names?: Record<string, string>;
+export type IndexOpt<T extends v.ObjectSchema<any, any>> = {
     key_fields?: T;
     search_targets?: string[];
     weight?: number;
     distance?: number;
 }
 
-export const SearchEnv_z = z.object({
-    field_names: z.record(z.string(), z.string()).optional(),
-    search_targets: z.array(z.string()).optional(),
-    weight: z.number(),
-    distance: z.number()
+export const SearchEnv_v = v.object({
+    search_targets: v.optional(v.array(v.string())),
+    field_names: v.record(v.string(), v.string()),
+    weight: v.number(),
+    distance: v.number()
 });
 
-export type SearchEnv = z.infer<typeof SearchEnv_z>;
+export type SearchEnv = v.InferOutput<typeof SearchEnv_v>;
 
-export const StaticIndex_z = z.object({
-    version: z.string(),
-    type: z.string(),
-    env: SearchEnv_z,
-    index_entry: z.unknown()
+export const StaticIndex_v = v.object({
+    version: v.string(),
+    type: v.string(),
+    env: SearchEnv_v,
+    index_entry: v.unknown()
 });
 
 export type StaticIndex<T> = {

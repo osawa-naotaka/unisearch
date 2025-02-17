@@ -1,14 +1,14 @@
 import type { Path, IndexOpt, SearchIndex, StaticIndex } from "@src/frontend/base";
-import { StaticSeekError, Version, StaticIndex_z } from "@src/frontend/base";
+import { StaticSeekError, Version, StaticIndex_v } from "@src/frontend/base";
 import { IndexTypes } from "@src/frontend/indextypes";
 import { defaultNormalizer, splitByGrapheme } from "@src/util/preprocess";
 import { extractStringsAll, getValueByPath } from "@src/util/traverser";
-import { ZodError, ZodObject } from "zod";
+import * as v from 'valibot';
 
 // biome-ignore lint: using any. fix it.
 export type IndexClass = new (index?: any) => SearchIndex<any>;
 
-export function createIndex<T, K extends ZodObject<any>>(
+export function createIndex<T, K extends v.ObjectSchema<any, any>>(
     index_class: IndexClass,
     contents: unknown[],
     opt: IndexOpt<K> = {},
@@ -44,30 +44,28 @@ export function createIndex<T, K extends ZodObject<any>>(
 
             // register key entry
             if(opt.key_fields) {
-                search_index.addKey(id, opt.key_fields.parse(content));
+                search_index.addKey(id, v.parse(opt.key_fields, content));
             }
         });
 
-        // create field name map
-        if (opt.field_names === undefined) {
-            opt.field_names = {};
-            for (const path of opt.search_targets || extractStringsAll("", contents[0]).map(([path]) => path)) {
-                const name = nameOf(path);
-                if (name !== undefined) {
-                    opt.field_names[name] = path;
-                }
-            }
-        }
-
         // fix index
         search_index.fixIndex();
+
+        // create field name map
+        const field_names: Record<string, string> = {};
+        for (const path of extractStringsAll("", contents[0]).map(([p]) => p)) {
+            const name = nameOf(path);
+            if (name !== undefined) {
+                field_names[name] = path;
+            }
+        }
 
         for (const [key, value] of Object.entries(IndexTypes)) {
             if (value === index_class) {
                 return {
                     version: Version,
                     type: key,
-                    env: { field_names: opt.field_names, search_targets: opt.search_targets, distance: opt.distance || 1, weight: opt.weight || 1},
+                    env: { field_names: field_names, distance: opt.distance || 1, weight: opt.weight || 1},
                     index_entry: search_index,
                 };
             }
@@ -76,7 +74,7 @@ export function createIndex<T, K extends ZodObject<any>>(
     } catch (e) {
         if (e instanceof StaticSeekError) {
             return e;
-        } else if (e instanceof ZodError) {
+        } else if (e instanceof v.ValiError) {
             return new StaticSeekError(`StaticSeek createIndex: malformed format ${e.message}.`);
         }
         throw e;
@@ -85,7 +83,7 @@ export function createIndex<T, K extends ZodObject<any>>(
 
 export function createIndexFromObject<T>(index: StaticIndex<T>): StaticIndex<SearchIndex<T>> | StaticSeekError {
     try {
-        const parsed_index = StaticIndex_z.parse(index);
+        const parsed_index = v.parse(StaticIndex_v, index);
         if (parsed_index.version !== Version)
             return new StaticSeekError(
                 `Older versions of the index are used. Please rebuild the index with version ${Version}.`,
@@ -97,7 +95,7 @@ export function createIndexFromObject<T>(index: StaticIndex<T>): StaticIndex<Sea
             index_entry: new IndexTypes[index.type](parsed_index.index_entry),
         };    
     } catch(e) {
-        if(e instanceof ZodError) {
+        if(e instanceof v.ValiError) {
             return new StaticSeekError(`StaticSeek createIndexFromObject: malformed index ${e.message}.`);
         } else if(e instanceof StaticSeekError) {
             return e;

@@ -8,31 +8,31 @@ import {
     bitapSearch,
     createBitapKey,
 } from "@src/util/algorithm";
-import { z } from "zod";
+import * as v from 'valibot';
 
-const ContentRange_z = z.object({
-    id: z.number(),
-    path: z.string(),
-    start: z.number(),
-    end: z.number()
+const ContentRange_v = v.object({
+    id: v.number(),
+    path: v.string(),
+    start: v.number(),
+    end: v.number()
 });
-type ContentRange = z.infer<typeof ContentRange_z>;
+type ContentRange = v.InferOutput<typeof ContentRange_v>;
 
-export const LinearIndexEntry_z = z.object({
-    key: z.array(z.record(z.string(), z.unknown())),
-    content: z.string(),
-    content_length: z.number(),
-    num_id: z.number(),
-    toc: z.array(ContentRange_z)
+export const LinearIndexEntry_v = v.object({
+    key: v.array(v.record(v.string(), v.unknown())),
+    content: v.string(),
+    content_length: v.number(),
+    num_id: v.number(),
+    toc: v.array(ContentRange_v)
 });
-export type LinearIndexEntry = z.infer<typeof LinearIndexEntry_z>;
+export type LinearIndexEntry = v.InferOutput<typeof LinearIndexEntry_v>;
 
 export class LinearIndex implements SearchIndex<LinearIndexEntry> {
     public index_entry: LinearIndexEntry;
     public u32_content: Uint32Array;
 
     public constructor(index?: LinearIndexEntry) {
-        this.index_entry = index ? LinearIndexEntry_z.parse(index) : {
+        this.index_entry = index ? v.parse(LinearIndexEntry_v, index) : {
             key: [],
             content: "",
             content_length: 0,

@@ -51,11 +51,9 @@ const evalQuery =
                 return { type: "excludes", results: r.results };
             }
             case "from": {
-                if (env.field_names) {
-                    const path = env.field_names[ast.field];
-                    if (path) {
-                        return evalQuery(index, createWithProp(env, "search_targets", [path]))(ast.node);
-                    }
+                const path = env.field_names[ast.field];
+                if (path) {
+                    return evalQuery(index, createWithProp(env, "search_targets", [path]))(ast.node);
                 }
                 return evalQuery(index, env)(ast.node);
             }
