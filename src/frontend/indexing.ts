@@ -1,8 +1,9 @@
-import type { SearchEnv, SearchIndex, StaticIndex } from "@src/frontend/base";
-import { type Path, StaticSeekError, Version } from "@src/frontend/base";
+import type { Path, SearchEnv, SearchIndex, StaticIndex } from "@src/frontend/base";
+import { StaticSeekError, Version, StaticIndex_z } from "@src/frontend/base";
 import { IndexTypes } from "@src/frontend/indextypes";
 import { defaultNormalizer, splitByGrapheme } from "@src/util/preprocess";
 import { extractStringsAll, getValueByPath, setObject } from "@src/util/traverser";
+import { ZodError } from "zod";
 
 // biome-ignore lint: using any. fix it.
 export type IndexClass = new (index?: any) => SearchIndex<any>;
@@ -91,16 +92,26 @@ export function createIndex<T>(
 }
 
 export function createIndexFromObject<T>(index: StaticIndex<T>): StaticIndex<SearchIndex<T>> | StaticSeekError {
-    if (index.version !== Version)
-        return new StaticSeekError(
-            `Older versions of the index are used. Please rebuild the index with version ${Version}.`,
-        );
-    return {
-        version: index.version,
-        type: index.type,
-        env: index.env,
-        index_entry: new IndexTypes[index.type](index.index_entry),
-    };
+    try {
+        const parsed_index = StaticIndex_z.parse(index);
+        if (parsed_index.version !== Version)
+            return new StaticSeekError(
+                `Older versions of the index are used. Please rebuild the index with version ${Version}.`,
+            );
+        return {
+            version: parsed_index.version,
+            type: parsed_index.type,
+            env: parsed_index.env,
+            index_entry: new IndexTypes[index.type](parsed_index.index_entry),
+        };    
+    } catch(e) {
+        if(e instanceof ZodError) {
+            return new StaticSeekError(`StaticSeek createIndexFromObject: malformed index.`);
+        } else if(e instanceof StaticSeekError) {
+            return e;
+        }
+        throw e;
+    }
 }
 
 export function indexToObject<T>(index: StaticIndex<SearchIndex<T>>): StaticIndex<T> {

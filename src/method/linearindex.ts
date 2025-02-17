@@ -8,28 +8,31 @@ import {
     bitapSearch,
     createBitapKey,
 } from "@src/util/algorithm";
+import { z } from "zod";
 
-type ContentRange = {
-    id: number;
-    path: string;
-    start: number;
-    end: number;
-};
+const ContentRange_z = z.object({
+    id: z.number(),
+    path: z.string(),
+    start: z.number(),
+    end: z.number()
+});
+type ContentRange = z.infer<typeof ContentRange_z>;
 
-export type LinearIndexEntry = {
-    key: Record<string, unknown>[];
-    content: string;
-    content_length: number;
-    num_id: number;
-    toc: ContentRange[];
-};
+export const LinearIndexEntry_z = z.object({
+    key: z.array(z.record(z.string(), z.unknown())),
+    content: z.string(),
+    content_length: z.number(),
+    num_id: z.number(),
+    toc: z.array(ContentRange_z)
+});
+export type LinearIndexEntry = z.infer<typeof LinearIndexEntry_z>;
 
 export class LinearIndex implements SearchIndex<LinearIndexEntry> {
     public index_entry: LinearIndexEntry;
     public u32_content: Uint32Array;
 
     public constructor(index?: LinearIndexEntry) {
-        this.index_entry = index || {
+        this.index_entry = index ? LinearIndexEntry_z.parse(index) : {
             key: [],
             content: "",
             content_length: 0,

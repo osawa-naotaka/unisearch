@@ -1,13 +1,24 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
 import { bitapKeyBigint, bitapKeyNumber, bitapSearch, createBitapKey, refine } from "@src/util/algorithm";
 import { splitByGrapheme } from "@src/util/preprocess";
+import { z } from "zod";
 
-type Term = string;
-type Id = number;
-type TF = number;
-type PostingList = [Id, TF][];
-type Dictionary = [Term, PostingList][];
-export type InvertedIndexEntry = { key: Record<string, unknown>[]; index: Record<Path, Dictionary> };
+const Term_z = z.string();
+const Id_z = z.number();
+const TF_z = z.number();
+const PostingList_z = z.array(z.tuple([Id_z, TF_z]));
+const Dictionary_z = z.array(z.tuple([Term_z, PostingList_z]))
+export const InvertedIndexEntry_z = z.object({
+    key: z.array(z.record(z.string(), z.unknown())),
+    index: z.record(z.string(), Dictionary_z)
+});
+
+type Term = z.infer<typeof Term_z>;
+type Id = z.infer<typeof Id_z>;
+type TF = z.infer<typeof TF_z>;
+type PostingList = z.infer<typeof PostingList_z>;
+type Dictionary = z.infer<typeof Dictionary_z>;
+type InvertedIndexEntry = z.infer<typeof InvertedIndexEntry_z>;
 
 type TemporalPostingList = Map<Id, TF>;
 type TemporalDictionary = Map<Term, TemporalPostingList>;
@@ -18,7 +29,7 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
     private readonly temporal_index_entry: TemporalIndexEntry = new Map();
 
     constructor(index?: InvertedIndexEntry) {
-        this.index_entry = index || { key: [], index: {} };
+        this.index_entry = index ? InvertedIndexEntry_z.parse(index) : { key: [], index: {} };
     }
 
     public setToIndex(id: Id, path: Path, str: string[]): void {

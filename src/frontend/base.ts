@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 // version
 export const Version = "2.0.0";
 
@@ -12,6 +14,23 @@ export type FieldNameMap = Record<FieldName, Path>;
 export class StaticSeekError extends Error {}
 
 // index
+export const SearchEnv_z = z.object({
+    field_names: z.record(z.string(), z.string()).optional(),
+    key_fields: z.array(z.string()).optional(),
+    search_targets: z.array(z.string()).optional(),
+    weight: z.number().optional(),
+    distance: z.number().optional()
+});
+
+export type SearchEnv = z.infer<typeof SearchEnv_z>;
+
+export const StaticIndex_z = z.object({
+    version: z.string(),
+    type: z.string(),
+    env: SearchEnv_z,
+    index_entry: z.unknown()
+});
+
 export type StaticIndex<T> = {
     version: string;
     type: string;
@@ -20,14 +39,6 @@ export type StaticIndex<T> = {
 };
 
 // query
-export type SearchEnv = {
-    field_names?: FieldNameMap;
-    key_fields?: Path[];
-    search_targets?: Path[];
-    weight?: number;
-    distance?: number;
-};
-
 export type Reference = {
     token: string;
     path: Path;
