@@ -49,12 +49,12 @@ if(index instanceof StaticSeekError) throw index;
 const result = await search(index, "検索語");
 ```
 
-性能に問題がある場合は、以下のようにしてあいまい検索を無効化してください。
+性能に問題がある場合は、検索速度に特化したインデックスをご使用ください。
 
 ```javascript
-import { LinearIndex, createIndex, search, StaticSeekError } from "staticseek";
+import { HybridTrieBigramInvertedIndex, createIndex, search, StaticSeekError } from "staticseek";
 
-const index = createIndex(LinearIndex, array_of_articles, { distance: 0 });
+const index = createIndex(HybridTrieBigramInvertedIndex, array_of_articles);
 if(index instanceof StaticSeekError) throw index;
 
 const result = await search(index, "search word");
@@ -131,20 +131,15 @@ staticseekは、インデックス作成と検索実行の2つのフェーズで
 ### インデックス作成
 
 ```typescript
-type Path = string;
-type FieldName = string;
-
-function createIndex(
+export function createIndex<T>(
     index_class: IndexClass,
     contents: unknown[],
-    env: SearchEnv = {},
-): StaticSeekIndex | StaticSeekError;
+    opt: IndexOpt = {},
+): StaticIndex<SearchIndex<T>> | StaticSeekError;
 
-type SearchEnv = {
-    field_names?: Record<FieldName, Path>;
-    key_fields?: Path[];
-    search_targets?: Path[];
-    weight?: number;
+export type IndexOpt = {
+    key_fields?: string[];
+    search_targets?: string[];
     distance?: number;
 };
 ```
@@ -161,10 +156,8 @@ type SearchEnv = {
   - 文字列を含むネストされた配列は検索から除外される
 
 - `env`: インデックス作成と検索の構成オプション（オプション）
-  - `field_names`: 検索クエリ用のカスタムフィールドマッピング（例：`{ link: "slug" }`）
   - `key_fields`: 検索結果に含めるフィールド
   - `search_targets`: 検索用にインデックス化するフィールド
-  - `weight`: スコアリングのデフォルトの重み
   - `distance`: あいまい検索のデフォルトの編集距離
 
 この関数は、`StaticSeekIndex`オブジェクトまたは`StaticSeekError`を返します。
@@ -296,13 +289,6 @@ const index = createIndex(LinearIndex, array_of_articles, {
 特定のフィールドに検索を限定します。
 ```
 from:title 検索語    // titleフィールドのみを検索
-```
-
-インデックス作成時にカスタムフィールド名を構成します。
-```javascript
-const index = createIndex(LinearIndex, array_of_articles, {
-    field_names: { link: "slug" }  // "from:link"でslugフィールドを検索できるようにする
-});
 ```
 
 #### スコアの重み付け

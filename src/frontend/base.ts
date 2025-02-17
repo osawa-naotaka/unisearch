@@ -1,7 +1,7 @@
 import * as v from "valibot";
 
 // version
-export const Version = "3.0.0";
+export const Version = "2.3.0";
 
 // types
 
