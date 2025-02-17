@@ -1,13 +1,24 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
 import { bitapKeyBigint, bitapKeyNumber, bitapSearch, createBitapKey, refine } from "@src/util/algorithm";
 import { splitByGrapheme } from "@src/util/preprocess";
+import * as v from "valibot";
 
-type Term = string;
-type Id = number;
-type TF = number;
-type PostingList = [Id, TF][];
-type Dictionary = [Term, PostingList][];
-export type InvertedIndexEntry = { key: Record<string, unknown>[]; index: Record<Path, Dictionary> };
+const Term_v = v.string();
+const Id_v = v.number();
+const TF_v = v.number();
+const PostingList_v = v.array(v.tuple([Id_v, TF_v]));
+const Dictionary_v = v.array(v.tuple([Term_v, PostingList_v]));
+export const InvertedIndexEntry_v = v.object({
+    key: v.array(v.record(v.string(), v.unknown())),
+    index: v.record(v.string(), Dictionary_v),
+});
+
+type Term = v.InferOutput<typeof Term_v>;
+type Id = v.InferOutput<typeof Id_v>;
+type TF = v.InferOutput<typeof TF_v>;
+type PostingList = v.InferOutput<typeof PostingList_v>;
+type Dictionary = v.InferOutput<typeof Dictionary_v>;
+type InvertedIndexEntry = v.InferOutput<typeof InvertedIndexEntry_v>;
 
 type TemporalPostingList = Map<Id, TF>;
 type TemporalDictionary = Map<Term, TemporalPostingList>;
@@ -18,7 +29,7 @@ export class InvertedIndex implements SearchIndex<InvertedIndexEntry> {
     private readonly temporal_index_entry: TemporalIndexEntry = new Map();
 
     constructor(index?: InvertedIndexEntry) {
-        this.index_entry = index || { key: [], index: {} };
+        this.index_entry = index ? v.parse(InvertedIndexEntry_v, index) : { key: [], index: {} };
     }
 
     public setToIndex(id: Id, path: Path, str: string[]): void {

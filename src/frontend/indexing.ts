@@ -1,8 +1,9 @@
-import type { SearchEnv, SearchIndex, StaticIndex } from "@src/frontend/base";
-import { type Path, StaticSeekError, Version } from "@src/frontend/base";
+import type { IndexOpt, Path, SearchIndex, StaticIndex } from "@src/frontend/base";
+import { StaticIndex_v, StaticSeekError, Version } from "@src/frontend/base";
 import { IndexTypes } from "@src/frontend/indextypes";
 import { defaultNormalizer, splitByGrapheme } from "@src/util/preprocess";
 import { extractStringsAll, getValueByPath, setObject } from "@src/util/traverser";
+import * as v from "valibot";
 
 // biome-ignore lint: using any. fix it.
 export type IndexClass = new (index?: any) => SearchIndex<any>;
@@ -10,7 +11,7 @@ export type IndexClass = new (index?: any) => SearchIndex<any>;
 export function createIndex<T>(
     index_class: IndexClass,
     contents: unknown[],
-    env: SearchEnv = {},
+    opt: IndexOpt = {},
 ): StaticIndex<SearchIndex<T>> | StaticSeekError {
     try {
         if (!Array.isArray(contents)) throw new StaticSeekError("staticseek: contents must be array.");
@@ -20,10 +21,10 @@ export function createIndex<T>(
         const search_index = new index_class();
 
         contents.forEach((content, id) => {
-            if (env.search_targets) {
-                env.search_targets.sort();
+            if (opt.search_targets) {
+                opt.search_targets.sort();
                 // indexing required filed only
-                for (const path of env.search_targets) {
+                for (const path of opt.search_targets) {
                     const obj = getValueByPath(path, content);
                     if (obj === undefined) continue;
                     if (typeof obj === "string") {
@@ -42,9 +43,9 @@ export function createIndex<T>(
             }
 
             // register key entry
-            if (env.key_fields && env.key_fields.length !== 0) {
+            if (opt.key_fields && opt.key_fields.length !== 0) {
                 const key: Record<string, unknown> = {};
-                for (const path of env.key_fields) {
+                for (const path of opt.key_fields) {
                     const obj = getValueByPath(path, content);
                     setObject(key, path, obj);
                 }
@@ -52,31 +53,24 @@ export function createIndex<T>(
             }
         });
 
-        // create field name map
-        if (env.field_names === undefined) {
-            env.field_names = {};
-            for (const path of env.search_targets || extractStringsAll("", contents[0]).map(([path]) => path)) {
-                const name = nameOf(path);
-                if (name !== undefined) {
-                    env.field_names[name] = path;
-                }
-            }
-        }
-
-        // set default distance to 1
-        if (env.distance === undefined) {
-            env.distance = 1;
-        }
-
         // fix index
         search_index.fixIndex();
+
+        // create field name map
+        const field_names: Record<string, string> = {};
+        for (const path of extractStringsAll("", contents[0]).map(([p]) => p)) {
+            const name = nameOf(path);
+            if (name !== undefined) {
+                field_names[name] = path;
+            }
+        }
 
         for (const [key, value] of Object.entries(IndexTypes)) {
             if (value === index_class) {
                 return {
                     version: Version,
                     type: key,
-                    env: env,
+                    env: { field_names: field_names, distance: opt.distance || 1, weight: 1 },
                     index_entry: search_index,
                 };
             }
@@ -86,21 +80,35 @@ export function createIndex<T>(
         if (e instanceof StaticSeekError) {
             return e;
         }
+        if (e instanceof v.ValiError) {
+            return new StaticSeekError(`StaticSeek createIndex: malformed format ${e.message}.`);
+        }
         throw e;
     }
 }
 
 export function createIndexFromObject<T>(index: StaticIndex<T>): StaticIndex<SearchIndex<T>> | StaticSeekError {
-    if (index.version !== Version)
-        return new StaticSeekError(
-            `Older versions of the index are used. Please rebuild the index with version ${Version}.`,
-        );
-    return {
-        version: index.version,
-        type: index.type,
-        env: index.env,
-        index_entry: new IndexTypes[index.type](index.index_entry),
-    };
+    try {
+        const parsed_index = v.parse(StaticIndex_v, index);
+        if (parsed_index.version !== Version)
+            return new StaticSeekError(
+                `Older versions of the index are used. Please rebuild the index with version ${Version}.`,
+            );
+        return {
+            version: parsed_index.version,
+            type: parsed_index.type,
+            env: parsed_index.env,
+            index_entry: new IndexTypes[index.type](parsed_index.index_entry),
+        };
+    } catch (e) {
+        if (e instanceof v.ValiError) {
+            return new StaticSeekError(`StaticSeek createIndexFromObject: malformed index ${e.message}.`);
+        }
+        if (e instanceof StaticSeekError) {
+            return e;
+        }
+        throw e;
+    }
 }
 
 export function indexToObject<T>(index: StaticIndex<SearchIndex<T>>): StaticIndex<T> {

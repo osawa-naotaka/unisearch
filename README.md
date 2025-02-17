@@ -49,12 +49,12 @@ if(index instanceof StaticSeekError) throw index;
 const result = await search(index, "search word");
 ```
 
-If you experience performance issues, try disabling fuzzy search.
+If you experience performance issues, try using speed-optimized index.
 
 ```javascript
-import { LinearIndex, createIndex, search, StaticSeekError } from "staticseek";
+import { HybridTrieBigramInvertedIndex, createIndex, search, StaticSeekError } from "staticseek";
 
-const index = createIndex(LinearIndex, array_of_articles, { distance: 0 });
+const index = createIndex(HybridTrieBigramInvertedIndex, array_of_articles);
 if(index instanceof StaticSeekError) throw index;
 
 const result = await search(index, "search word");
@@ -130,20 +130,15 @@ staticseek operates in two phases: index creation and search execution. The inde
 ### Basic Index Creation
 
 ```typescript
-type Path = string;
-type FieldName = string;
-
-function createIndex(
+export function createIndex<T>(
     index_class: IndexClass,
     contents: unknown[],
-    env: SearchEnv = {},
-): StaticSeekIndex | StaticSeekError;
+    opt: IndexOpt = {},
+): StaticIndex<SearchIndex<T>> | StaticSeekError;
 
-type SearchEnv = {
-    field_names?: Record<FieldName, Path>;
-    key_fields?: Path[];
-    search_targets?: Path[];
-    weight?: number;
+export type IndexOpt = {
+    key_fields?: string[];
+    search_targets?: string[];
     distance?: number;
 };
 ```
@@ -160,10 +155,8 @@ type SearchEnv = {
   - Nested arrays containing strings are excluded from search
   
 - `env`: Configuration options for indexing and searching (optional)
-  - `field_names`: Custom field mapping for search queries (e.g., `{ link: "slug" }`)
   - `key_fields`: Fields to include in search results
   - `search_targets`: Fields to index for searching
-  - `weight`: Default weight for scoring
   - `distance`: Default edit distance for fuzzy search
 
 The function returns either a `StaticSeekIndex` object or `StaticSeekError` if validation fails.
@@ -294,13 +287,6 @@ Use `\"` to include double quotes in the search term.
 Limit search to specific fields:
 ```
 from:title searchterm    // Search only in title field
-```
-
-Configure custom field names during index creation:
-```javascript
-const index = createIndex(LinearIndex, array_of_articles, {
-    field_names: { link: "slug" }  // Allow "from:link" to search slug field
-});
 ```
 
 #### Score Weighting

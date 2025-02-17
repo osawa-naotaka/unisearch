@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.3.0] - 2025-02-18
+### Added
+- object validation is added in createIndexFromObject
+
+### Removed
+- createIndex option 'weight' and 'field_names' are removed.
+
 ## [2.2.1] - 2025-02-17
 ### Fixed
 - fix fuzzy search bug in HybridTrieBigramInvertedIndex.
@@ -122,7 +129,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - search frontend, google-like syntax
 - sorting search result based on TF-IDF
 
-[Unreleased]: https://github.com/osawa-naotaka/staticseek/compare/v2.2.1...HEAD
+[Unreleased]: https://github.com/osawa-naotaka/staticseek/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/osawa-naotaka/staticseek/compare/v2.2.1...v2.3.0
 [2.2.1]: https://github.com/osawa-naotaka/staticseek/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/osawa-naotaka/staticseek/compare/v2.1.1...v2.2.0
 [2.1.1]: https://github.com/osawa-naotaka/staticseek/compare/v2.1.0...v2.1.1

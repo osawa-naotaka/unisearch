@@ -187,7 +187,7 @@ describe("basic Linear index with array of strings.", async () => {
 });
 
 describe("index with key_field", async () => {
-    const index = createIndex(LinearIndex, array_of_articles, {key_fields: ['slug', 'data.title']})
+    const index = createIndex(LinearIndex, array_of_articles, { key_fields: ["slug", "data.title"] });
     if(index instanceof StaticSeekError) throw index;
     const result1 = await search(index, "maintainability");
     test("matches single english article", () => 
@@ -533,7 +533,7 @@ describe("not search", async () => {
 });
 
 describe("or search", async () => {
-    const index = createIndex(LinearIndex, array_of_articles, {key_fields: ["slug"]});
+    const index = createIndex(LinearIndex, array_of_articles, { key_fields: ["slug"] });
     if(index instanceof StaticSeekError) throw index;
 
     const result2 = await search(index, 'デザイン OR インタラクション');
@@ -572,10 +572,10 @@ describe("or search", async () => {
 });
 
 describe("from: search", async () => {
-    const index = createIndex(LinearIndex, array_of_articles, { field_names: { link: "slug" } });
+    const index = createIndex(LinearIndex, array_of_articles);
     if(index instanceof StaticSeekError) throw index;
 
-    const result1 = await search(index, "from:link guide");
+    const result1 = await search(index, "from:slug guide");
     test("matches single english article", () => 
         expect(result1).toStrictEqual([
             {

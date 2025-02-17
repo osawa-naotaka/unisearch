@@ -2,7 +2,7 @@ import type { SearchEnv, SearchIndex, SearchResult, StaticIndex } from "@src/fro
 import { StaticSeekError } from "@src/frontend/base";
 import type { ASTNode } from "@src/frontend/parse";
 import { expr } from "@src/frontend/parse";
-import { defaultNormalizer, splitBySpace, splitByGrapheme } from "@src/util/preprocess";
+import { defaultNormalizer, splitByGrapheme, splitBySpace } from "@src/util/preprocess";
 
 export async function search<T>(
     index: StaticIndex<SearchIndex<T>>,
@@ -26,7 +26,7 @@ export function createWithProp<T>(obj: SearchEnv, prop: string, val: T): SearchE
 }
 
 export function adjastDistance(env: SearchEnv, keyword: string[]): SearchEnv {
-    const distance = Math.min(env.distance || 0, Math.max(0, keyword.length - 2));
+    const distance = Math.min(env.distance, Math.max(0, keyword.length - 2));
     return createWithProp(env, "distance", distance);
 }
 
@@ -45,17 +45,15 @@ const evalQuery =
                 return {
                     type: "includes",
                     results: await index.search(adjastDistance(env, ast.str), ast.str),
-            };
+                };
             case "not": {
                 const r = await evalQuery(index, env)(ast.node);
                 return { type: "excludes", results: r.results };
             }
             case "from": {
-                if (env.field_names) {
-                    const path = env.field_names[ast.field];
-                    if (path) {
-                        return evalQuery(index, createWithProp(env, "search_targets", [path]))(ast.node);
-                    }
+                const path = env.field_names[ast.field];
+                if (path) {
+                    return evalQuery(index, createWithProp(env, "search_targets", [path]))(ast.node);
                 }
                 return evalQuery(index, env)(ast.node);
             }

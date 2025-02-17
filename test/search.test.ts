@@ -11,7 +11,7 @@ describe("search test", async () => {
         { title: "タイトル３", text: "テキスト３．１テキスト３．２テキスト３．３"},
     ];
 
-    const index = createIndex(LinearIndex, contents, { key_fields: ["title"] });
+    const index = createIndex(LinearIndex, contents, { key_fields: ["title"]  });
     if(index instanceof StaticSeekError) {
         throw index;
     }

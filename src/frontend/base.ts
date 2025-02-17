@@ -1,5 +1,7 @@
+import * as v from "valibot";
+
 // version
-export const Version = "2.0.0";
+export const Version = "2.3.0";
 
 // types
 
@@ -12,6 +14,28 @@ export type FieldNameMap = Record<FieldName, Path>;
 export class StaticSeekError extends Error {}
 
 // index
+export type IndexOpt = {
+    key_fields?: string[];
+    search_targets?: string[];
+    distance?: number;
+};
+
+export const SearchEnv_v = v.object({
+    search_targets: v.optional(v.array(v.string())),
+    field_names: v.record(v.string(), v.string()),
+    weight: v.number(),
+    distance: v.number(),
+});
+
+export type SearchEnv = v.InferOutput<typeof SearchEnv_v>;
+
+export const StaticIndex_v = v.object({
+    version: v.string(),
+    type: v.string(),
+    env: SearchEnv_v,
+    index_entry: v.unknown(),
+});
+
 export type StaticIndex<T> = {
     version: string;
     type: string;
@@ -20,13 +44,6 @@ export type StaticIndex<T> = {
 };
 
 // query
-export type SearchEnv = {
-    field_names?: FieldNameMap;
-    key_fields?: Path[];
-    search_targets?: Path[];
-    weight?: number;
-    distance?: number;
-};
 
 export type Reference = {
     token: string;

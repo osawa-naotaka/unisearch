@@ -1,22 +1,38 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
+import * as v from "valibot";
 
-type Id = number;
-type TF = number;
+const Id_v = v.number();
+const TF_v = v.number();
+const PostingListEntry_v = v.tuple([Id_v, TF_v]);
+const PostingList_v = v.array(PostingListEntry_v);
+
+type Id = v.InferOutput<typeof Id_v>;
+type TF = v.InferOutput<typeof TF_v>;
 type Distance = number;
-type PostingListEntry = [Id, TF];
-type PostingList = PostingListEntry[];
+type PostingListEntry = v.InferOutput<typeof PostingListEntry_v>;
+type PostingList = v.InferOutput<typeof PostingList_v>;
 
 type TrieNode = {
-    children?: TrieChildren;
+    children?: Record<string, TrieNode>;
     postinglist?: PostingList;
 };
 
-type TrieChildren = Record<string, TrieNode>;
+const TrieNode_v: v.GenericSchema<TrieNode> = v.object({
+    children: v.optional(
+        v.record(
+            v.string(),
+            v.lazy(() => TrieNode_v),
+        ),
+    ),
+    postinglist: v.optional(PostingList_v),
+});
 
-type TrieIndexEntry = {
-    index: Record<Path, TrieNode>;
-    key: Record<string, unknown>[];
-};
+const TrieIndexEntry_v = v.object({
+    index: v.record(v.string(), TrieNode_v),
+    key: v.array(v.record(v.string(), v.unknown())),
+});
+
+type TrieIndexEntry = v.InferOutput<typeof TrieIndexEntry_v>;
 
 type TrieSearchResult = {
     id: Id;
@@ -29,7 +45,7 @@ export class TrieIndex implements SearchIndex<TrieIndexEntry> {
     public readonly index_entry: TrieIndexEntry;
 
     constructor(index?: TrieIndexEntry) {
-        this.index_entry = index || { key: [], index: {} };
+        this.index_entry = index ? v.parse(TrieIndexEntry_v, index) : { key: [], index: {} };
     }
 
     public setToIndex(id: Id, path: Path, str: string[]): void {
@@ -119,7 +135,7 @@ export class TrieIndex implements SearchIndex<TrieIndexEntry> {
         matched: string[],
         distance_left: Distance,
     ): TrieSearchResult[] {
-        if(keyword.length === 0) {
+        if (keyword.length === 0) {
             return this.getAllPostingList(node, matched, distance_left);
         }
 
@@ -129,7 +145,7 @@ export class TrieIndex implements SearchIndex<TrieIndexEntry> {
         const find_node = node.children?.[char];
         const exact = find_node ? this.searchTrie(find_node, rest, matched.concat(char), distance_left) : [];
 
-        if(distance_left === 0) {
+        if (distance_left === 0) {
             return exact;
         }
 
@@ -142,8 +158,12 @@ export class TrieIndex implements SearchIndex<TrieIndexEntry> {
 
         // fuzzy: replace, insertion, deletion
         const children = Object.entries(node.children);
-        const replace = children.map(([s, n]) => this.searchTrie(n, rest, matched.concat(s), dist)).filter((x) => x.length !== 0);
-        const insertion = children.map(([_s, n]) => this.searchTrie(n, keyword, matched, dist)).filter((x) => x.length !== 0);
+        const replace = children
+            .map(([s, n]) => this.searchTrie(n, rest, matched.concat(s), dist))
+            .filter((x) => x.length !== 0);
+        const insertion = children
+            .map(([_s, n]) => this.searchTrie(n, keyword, matched, dist))
+            .filter((x) => x.length !== 0);
 
         return exact.concat(deletion, ...replace, ...insertion);
     }
