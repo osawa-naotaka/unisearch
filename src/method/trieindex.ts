@@ -1,5 +1,5 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
-import * as v from 'valibot';
+import * as v from "valibot";
 
 const Id_v = v.number();
 const TF_v = v.number();
@@ -18,17 +18,21 @@ type TrieNode = {
 };
 
 const TrieNode_v: v.GenericSchema<TrieNode> = v.object({
-    children: v.optional(v.record(v.string(), v.lazy(() => TrieNode_v))),
-    postinglist: v.optional(PostingList_v)
+    children: v.optional(
+        v.record(
+            v.string(),
+            v.lazy(() => TrieNode_v),
+        ),
+    ),
+    postinglist: v.optional(PostingList_v),
 });
 
 const TrieIndexEntry_v = v.object({
     index: v.record(v.string(), TrieNode_v),
-    key: v.array(v.record(v.string(), v.unknown()))
+    key: v.array(v.record(v.string(), v.unknown())),
 });
 
 type TrieIndexEntry = v.InferOutput<typeof TrieIndexEntry_v>;
-
 
 type TrieSearchResult = {
     id: Id;
@@ -131,7 +135,7 @@ export class TrieIndex implements SearchIndex<TrieIndexEntry> {
         matched: string[],
         distance_left: Distance,
     ): TrieSearchResult[] {
-        if(keyword.length === 0) {
+        if (keyword.length === 0) {
             return this.getAllPostingList(node, matched, distance_left);
         }
 
@@ -141,7 +145,7 @@ export class TrieIndex implements SearchIndex<TrieIndexEntry> {
         const find_node = node.children?.[char];
         const exact = find_node ? this.searchTrie(find_node, rest, matched.concat(char), distance_left) : [];
 
-        if(distance_left === 0) {
+        if (distance_left === 0) {
             return exact;
         }
 
@@ -154,8 +158,12 @@ export class TrieIndex implements SearchIndex<TrieIndexEntry> {
 
         // fuzzy: replace, insertion, deletion
         const children = Object.entries(node.children);
-        const replace = children.map(([s, n]) => this.searchTrie(n, rest, matched.concat(s), dist)).filter((x) => x.length !== 0);
-        const insertion = children.map(([_s, n]) => this.searchTrie(n, keyword, matched, dist)).filter((x) => x.length !== 0);
+        const replace = children
+            .map(([s, n]) => this.searchTrie(n, rest, matched.concat(s), dist))
+            .filter((x) => x.length !== 0);
+        const insertion = children
+            .map(([_s, n]) => this.searchTrie(n, keyword, matched, dist))
+            .filter((x) => x.length !== 0);
 
         return exact.concat(deletion, ...replace, ...insertion);
     }

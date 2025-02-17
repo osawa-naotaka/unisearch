@@ -1,16 +1,16 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
 import { bitapKeyBigint, bitapKeyNumber, bitapSearch, createBitapKey, refine } from "@src/util/algorithm";
 import { splitByGrapheme } from "@src/util/preprocess";
-import * as v from 'valibot';
+import * as v from "valibot";
 
 const Term_v = v.string();
 const Id_v = v.number();
 const TF_v = v.number();
 const PostingList_v = v.array(v.tuple([Id_v, TF_v]));
-const Dictionary_v = v.array(v.tuple([Term_v, PostingList_v]))
+const Dictionary_v = v.array(v.tuple([Term_v, PostingList_v]));
 export const InvertedIndexEntry_v = v.object({
     key: v.array(v.record(v.string(), v.unknown())),
-    index: v.record(v.string(), Dictionary_v)
+    index: v.record(v.string(), Dictionary_v),
 });
 
 type Term = v.InferOutput<typeof Term_v>;

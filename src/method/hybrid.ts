@@ -1,7 +1,7 @@
 import { StaticSeekError } from "@src/frontend/base";
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
 import type { IndexClass } from "@src/frontend/indexing";
-import { intersectResults, adjastDistance } from "@src/frontend/search";
+import { adjastDistance, intersectResults } from "@src/frontend/search";
 import { hybridSpritter, isNonSpaceSeparatedChar, splitByGrapheme } from "@src/util/preprocess";
 
 export type HybridIndexEntry<T1, T2> = { ja: T1; en: T2 };
@@ -16,7 +16,7 @@ export function Hybrid<T1, T2>(name: string, ja: IndexClass, en: IndexClass): In
 
             constructor(index?: HybridIndexEntry<T1, T2>) {
                 if (index) {
-                    if(index.ja === undefined || index.en === undefined) {
+                    if (index.ja === undefined || index.en === undefined) {
                         throw new StaticSeekError("StaticSeek: malformed index structure: Hybrid.");
                     }
                     this.index_entry = index;

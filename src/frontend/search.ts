@@ -2,7 +2,7 @@ import type { SearchEnv, SearchIndex, SearchResult, StaticIndex } from "@src/fro
 import { StaticSeekError } from "@src/frontend/base";
 import type { ASTNode } from "@src/frontend/parse";
 import { expr } from "@src/frontend/parse";
-import { defaultNormalizer, splitBySpace, splitByGrapheme } from "@src/util/preprocess";
+import { defaultNormalizer, splitByGrapheme, splitBySpace } from "@src/util/preprocess";
 
 export async function search<T>(
     index: StaticIndex<SearchIndex<T>>,
@@ -45,7 +45,7 @@ const evalQuery =
                 return {
                     type: "includes",
                     results: await index.search(adjastDistance(env, ast.str), ast.str),
-            };
+                };
             case "not": {
                 const r = await evalQuery(index, env)(ast.node);
                 return { type: "excludes", results: r.results };

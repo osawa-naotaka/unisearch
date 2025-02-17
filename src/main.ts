@@ -16,5 +16,3 @@ export type {
     SearchResult,
 } from "@src/frontend/base";
 export type { IndexClass } from "@src/frontend/indexing";
-import * as v from 'valibot';
-export { v };

@@ -3,7 +3,6 @@ import { array_of_articles } from "@test/array_of_articles.js";
 import { LinearIndex, createIndex, search, StaticSeekError, HybridTrieBigramInvertedIndex } from "@dist/staticseek";
 import type { StaticSeekIndex } from "@dist/staticseek";
 import { createIndexFromObject, indexToObject } from "@dist/staticseek";
-import * as v from "valibot";
 
 describe("basic Linear index creation and search", async () => {
     const index: StaticSeekIndex | StaticSeekError  = createIndex(LinearIndex, array_of_articles);
@@ -188,7 +187,7 @@ describe("basic Linear index with array of strings.", async () => {
 });
 
 describe("index with key_field", async () => {
-    const index = createIndex(LinearIndex, array_of_articles, { key_fields: v.object({ slug: v.string(), data: v.object({ title: v.string() }) }) });
+    const index = createIndex(LinearIndex, array_of_articles, { key_fields: ["slug", "data.title"] });
     if(index instanceof StaticSeekError) throw index;
     const result1 = await search(index, "maintainability");
     test("matches single english article", () => 
@@ -534,7 +533,7 @@ describe("not search", async () => {
 });
 
 describe("or search", async () => {
-    const index = createIndex(LinearIndex, array_of_articles, { key_fields: v.object({ slug: v.string() }) });
+    const index = createIndex(LinearIndex, array_of_articles, { key_fields: ["slug"] });
     if(index instanceof StaticSeekError) throw index;
 
     const result2 = await search(index, 'デザイン OR インタラクション');

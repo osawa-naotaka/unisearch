@@ -1,17 +1,17 @@
-import type { Path, IndexOpt, SearchIndex, StaticIndex } from "@src/frontend/base";
-import { StaticSeekError, Version, StaticIndex_v } from "@src/frontend/base";
+import type { IndexOpt, Path, SearchIndex, StaticIndex } from "@src/frontend/base";
+import { StaticIndex_v, StaticSeekError, Version } from "@src/frontend/base";
 import { IndexTypes } from "@src/frontend/indextypes";
 import { defaultNormalizer, splitByGrapheme } from "@src/util/preprocess";
-import { extractStringsAll, getValueByPath } from "@src/util/traverser";
-import * as v from 'valibot';
+import { extractStringsAll, getValueByPath, setObject } from "@src/util/traverser";
+import * as v from "valibot";
 
 // biome-ignore lint: using any. fix it.
 export type IndexClass = new (index?: any) => SearchIndex<any>;
 
-export function createIndex<T, K extends v.ObjectSchema<any, any>>(
+export function createIndex<T>(
     index_class: IndexClass,
     contents: unknown[],
-    opt: IndexOpt<K> = {},
+    opt: IndexOpt = {},
 ): StaticIndex<SearchIndex<T>> | StaticSeekError {
     try {
         if (!Array.isArray(contents)) throw new StaticSeekError("staticseek: contents must be array.");
@@ -43,8 +43,13 @@ export function createIndex<T, K extends v.ObjectSchema<any, any>>(
             }
 
             // register key entry
-            if(opt.key_fields) {
-                search_index.addKey(id, v.parse(opt.key_fields, content));
+            if (opt.key_fields && opt.key_fields.length !== 0) {
+                const key: Record<string, unknown> = {};
+                for (const path of opt.key_fields) {
+                    const obj = getValueByPath(path, content);
+                    setObject(key, path, obj);
+                }
+                search_index.addKey(id, key);
             }
         });
 
@@ -65,7 +70,7 @@ export function createIndex<T, K extends v.ObjectSchema<any, any>>(
                 return {
                     version: Version,
                     type: key,
-                    env: { field_names: field_names, distance: opt.distance || 1, weight: opt.weight || 1},
+                    env: { field_names: field_names, distance: opt.distance || 1, weight: 1 },
                     index_entry: search_index,
                 };
             }
@@ -74,7 +79,8 @@ export function createIndex<T, K extends v.ObjectSchema<any, any>>(
     } catch (e) {
         if (e instanceof StaticSeekError) {
             return e;
-        } else if (e instanceof v.ValiError) {
+        }
+        if (e instanceof v.ValiError) {
             return new StaticSeekError(`StaticSeek createIndex: malformed format ${e.message}.`);
         }
         throw e;
@@ -93,11 +99,12 @@ export function createIndexFromObject<T>(index: StaticIndex<T>): StaticIndex<Sea
             type: parsed_index.type,
             env: parsed_index.env,
             index_entry: new IndexTypes[index.type](parsed_index.index_entry),
-        };    
-    } catch(e) {
-        if(e instanceof v.ValiError) {
+        };
+    } catch (e) {
+        if (e instanceof v.ValiError) {
             return new StaticSeekError(`StaticSeek createIndexFromObject: malformed index ${e.message}.`);
-        } else if(e instanceof StaticSeekError) {
+        }
+        if (e instanceof StaticSeekError) {
             return e;
         }
         throw e;

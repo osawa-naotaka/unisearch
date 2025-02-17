@@ -1,4 +1,4 @@
-import * as v from 'valibot';
+import * as v from "valibot";
 
 // version
 export const Version = "3.0.0";
@@ -14,18 +14,17 @@ export type FieldNameMap = Record<FieldName, Path>;
 export class StaticSeekError extends Error {}
 
 // index
-export type IndexOpt<T extends v.ObjectSchema<any, any>> = {
-    key_fields?: T;
+export type IndexOpt = {
+    key_fields?: string[];
     search_targets?: string[];
-    weight?: number;
     distance?: number;
-}
+};
 
 export const SearchEnv_v = v.object({
     search_targets: v.optional(v.array(v.string())),
     field_names: v.record(v.string(), v.string()),
     weight: v.number(),
-    distance: v.number()
+    distance: v.number(),
 });
 
 export type SearchEnv = v.InferOutput<typeof SearchEnv_v>;
@@ -34,7 +33,7 @@ export const StaticIndex_v = v.object({
     version: v.string(),
     type: v.string(),
     env: SearchEnv_v,
-    index_entry: v.unknown()
+    index_entry: v.unknown(),
 });
 
 export type StaticIndex<T> = {

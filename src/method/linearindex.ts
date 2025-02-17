@@ -8,13 +8,13 @@ import {
     bitapSearch,
     createBitapKey,
 } from "@src/util/algorithm";
-import * as v from 'valibot';
+import * as v from "valibot";
 
 const ContentRange_v = v.object({
     id: v.number(),
     path: v.string(),
     start: v.number(),
-    end: v.number()
+    end: v.number(),
 });
 type ContentRange = v.InferOutput<typeof ContentRange_v>;
 
@@ -23,7 +23,7 @@ export const LinearIndexEntry_v = v.object({
     content: v.string(),
     content_length: v.number(),
     num_id: v.number(),
-    toc: v.array(ContentRange_v)
+    toc: v.array(ContentRange_v),
 });
 export type LinearIndexEntry = v.InferOutput<typeof LinearIndexEntry_v>;
 
@@ -32,13 +32,15 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
     public u32_content: Uint32Array;
 
     public constructor(index?: LinearIndexEntry) {
-        this.index_entry = index ? v.parse(LinearIndexEntry_v, index) : {
-            key: [],
-            content: "",
-            content_length: 0,
-            num_id: 0,
-            toc: [],
-        };
+        this.index_entry = index
+            ? v.parse(LinearIndexEntry_v, index)
+            : {
+                  key: [],
+                  content: "",
+                  content_length: 0,
+                  num_id: 0,
+                  toc: [],
+              };
         if (index) {
             this.u32_content = new Uint32Array(this.index_entry.content_length);
             for (let i = 0; i < this.index_entry.content_length; i++) {
