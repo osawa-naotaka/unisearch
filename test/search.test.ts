@@ -3,6 +3,7 @@ import { StaticSeekError } from "@src/frontend/base";
 import { createIndex } from "@src/frontend/indexing";
 import { LinearIndex } from "@src/method/linearindex";
 import { search } from "@src/frontend/search";
+import { z } from 'zod';
 
 describe("search test", async () => {
     const contents = [
@@ -11,7 +12,7 @@ describe("search test", async () => {
         { title: "タイトル３", text: "テキスト３．１テキスト３．２テキスト３．３"},
     ];
 
-    const index = createIndex(LinearIndex, contents, { key_fields: ["title"] });
+    const index = createIndex(LinearIndex, contents, { key_fields: z.object({ title: z.string() })  });
     if(index instanceof StaticSeekError) {
         throw index;
     }

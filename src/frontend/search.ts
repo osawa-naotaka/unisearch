@@ -26,7 +26,7 @@ export function createWithProp<T>(obj: SearchEnv, prop: string, val: T): SearchE
 }
 
 export function adjastDistance(env: SearchEnv, keyword: string[]): SearchEnv {
-    const distance = Math.min(env.distance || 0, Math.max(0, keyword.length - 2));
+    const distance = Math.min(env.distance, Math.max(0, keyword.length - 2));
     return createWithProp(env, "distance", distance);
 }
 

@@ -1,17 +1,17 @@
-import type { Path, SearchEnv, SearchIndex, StaticIndex } from "@src/frontend/base";
+import type { Path, IndexOpt, SearchIndex, StaticIndex } from "@src/frontend/base";
 import { StaticSeekError, Version, StaticIndex_z } from "@src/frontend/base";
 import { IndexTypes } from "@src/frontend/indextypes";
 import { defaultNormalizer, splitByGrapheme } from "@src/util/preprocess";
-import { extractStringsAll, getValueByPath, setObject } from "@src/util/traverser";
-import { ZodError } from "zod";
+import { extractStringsAll, getValueByPath } from "@src/util/traverser";
+import { ZodError, ZodObject } from "zod";
 
 // biome-ignore lint: using any. fix it.
 export type IndexClass = new (index?: any) => SearchIndex<any>;
 
-export function createIndex<T>(
+export function createIndex<T, K extends ZodObject<any>>(
     index_class: IndexClass,
     contents: unknown[],
-    env: SearchEnv = {},
+    opt: IndexOpt<K> = {},
 ): StaticIndex<SearchIndex<T>> | StaticSeekError {
     try {
         if (!Array.isArray(contents)) throw new StaticSeekError("staticseek: contents must be array.");
@@ -21,10 +21,10 @@ export function createIndex<T>(
         const search_index = new index_class();
 
         contents.forEach((content, id) => {
-            if (env.search_targets) {
-                env.search_targets.sort();
+            if (opt.search_targets) {
+                opt.search_targets.sort();
                 // indexing required filed only
-                for (const path of env.search_targets) {
+                for (const path of opt.search_targets) {
                     const obj = getValueByPath(path, content);
                     if (obj === undefined) continue;
                     if (typeof obj === "string") {
@@ -43,30 +43,20 @@ export function createIndex<T>(
             }
 
             // register key entry
-            if (env.key_fields && env.key_fields.length !== 0) {
-                const key: Record<string, unknown> = {};
-                for (const path of env.key_fields) {
-                    const obj = getValueByPath(path, content);
-                    setObject(key, path, obj);
-                }
-                search_index.addKey(id, key);
+            if(opt.key_fields) {
+                search_index.addKey(id, opt.key_fields.parse(content));
             }
         });
 
         // create field name map
-        if (env.field_names === undefined) {
-            env.field_names = {};
-            for (const path of env.search_targets || extractStringsAll("", contents[0]).map(([path]) => path)) {
+        if (opt.field_names === undefined) {
+            opt.field_names = {};
+            for (const path of opt.search_targets || extractStringsAll("", contents[0]).map(([path]) => path)) {
                 const name = nameOf(path);
                 if (name !== undefined) {
-                    env.field_names[name] = path;
+                    opt.field_names[name] = path;
                 }
             }
-        }
-
-        // set default distance to 1
-        if (env.distance === undefined) {
-            env.distance = 1;
         }
 
         // fix index
@@ -77,7 +67,7 @@ export function createIndex<T>(
                 return {
                     version: Version,
                     type: key,
-                    env: env,
+                    env: { field_names: opt.field_names, search_targets: opt.search_targets, distance: opt.distance || 1, weight: opt.weight || 1},
                     index_entry: search_index,
                 };
             }
@@ -86,6 +76,8 @@ export function createIndex<T>(
     } catch (e) {
         if (e instanceof StaticSeekError) {
             return e;
+        } else if (e instanceof ZodError) {
+            return new StaticSeekError(`StaticSeek createIndex: malformed format ${e.message}.`);
         }
         throw e;
     }
@@ -106,7 +98,7 @@ export function createIndexFromObject<T>(index: StaticIndex<T>): StaticIndex<Sea
         };    
     } catch(e) {
         if(e instanceof ZodError) {
-            return new StaticSeekError(`StaticSeek createIndexFromObject: malformed index.`);
+            return new StaticSeekError(`StaticSeek createIndexFromObject: malformed index ${e.message}.`);
         } else if(e instanceof StaticSeekError) {
             return e;
         }
