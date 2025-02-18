@@ -14,7 +14,6 @@ staticseek is a client-side full-text search engine designed specifically for st
 - Google-like query syntax
 - Unicode support for all languages including CJK characters and emojis
 - Multiple index implementations for different performance needs
-- Zero dependencies
 - Seamless integration with popular Static Site Generators (SSG)
 
 ## Quick Start
