@@ -1,4 +1,4 @@
-import type { SearchEnv, SearchResult } from "@src/frontend/base";
+import type { SearchEnv, SearchResult } from "@ref/method/base";
 import { FlatLinearIndexString } from "@ref/method/flatlinearindexstring";
 import bitap_dist1 from "@ref/method/wgsl/bitap_dist1.wgsl?raw";
 import bitap_dist2 from "@ref/method/wgsl/bitap_dist2.wgsl?raw";

@@ -1,5 +1,5 @@
-import type { SearchEnv, SearchIndex, StaticIndex } from "@src/frontend/base";
-import { type Path, StaticSeekError, Version } from "@src/frontend/base";
+import type { SearchEnv, SearchIndex, StaticIndex } from "@ref/method/base";
+import { type Path, StaticSeekError, Version } from "@ref/method/base";
 import { IndexTypes } from "@ref/method/indextypes";
 import { defaultNormalizer } from "@src/util/preprocess";
 import { extractStringsAll, getValueByPath } from "@src/util/traverser";

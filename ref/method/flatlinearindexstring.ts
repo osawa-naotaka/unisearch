@@ -1,4 +1,4 @@
-import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
+import type { Path, SearchEnv, SearchIndex, SearchResult } from "@ref/method/base";
 import { StaticSeekError } from "@src/frontend/base";
 import {
     BinarySearchType,
