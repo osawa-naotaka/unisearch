@@ -74,7 +74,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
 
     public async search(env: SearchEnv, keyword: string[]): Promise<SearchResult[]> {
         let poses: [number, number][] = [];
-        if (env.distance === undefined || env.distance === 0) {
+        if (env.distance === 0) {
             poses = this.allIndexOf(keyword, this.index_entry.content);
         } else {
             const grapheme = keyword.map((x) => x.charCodeAt(0));
@@ -168,7 +168,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
                         (v.distance + 1),
                 )
                 .reduce((x, y) => x + y);
-            r.score = tf * idf * (env.weight || 1);
+            r.score = tf * idf * env.weight;
         }
 
         return Array.from(result.values());

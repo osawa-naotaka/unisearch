@@ -66,7 +66,7 @@ export class TrieIndex implements SearchIndex<TrieIndexEntry> {
 
         const results = new Map<Id, SearchResult>();
         for (const path of env.search_targets || Object.keys(this.index_entry.index)) {
-            const tsr = this.searchTrie(this.index_entry.index[path], keyword, [], env.distance || 0);
+            const tsr = this.searchTrie(this.index_entry.index[path], keyword, [], env.distance);
 
             const term_dict: Map<Id, TrieSearchResult[]> = new Map();
             for (const t of tsr) {
@@ -87,7 +87,7 @@ export class TrieIndex implements SearchIndex<TrieIndexEntry> {
             for (const [id, tsr] of term_dict.entries()) {
                 const r = results.get(id) || { id: id, key: this.index_entry.key[id] || {}, score: 0, refs: [] };
                 for (const res of tsr) {
-                    const distance = (env.distance || 0) - res.distance_left;
+                    const distance = env.distance - res.distance_left;
                     r.refs.push({ token: res.term, path: path, distance: distance });
                     r.score += res.tf;
                     results.set(res.id, r);

@@ -39,8 +39,7 @@ export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass 
             public async search(env: SearchEnv, keyword: string[]): Promise<SearchResult[]> {
                 const search_env = createWithProp(env, "distance", keyword.length < num_gram ? 1 : 0);
                 const max_match = Math.max(1, keyword.length - num_gram + 1);
-                const threshold =
-                    keyword.length < num_gram ? 1 : Math.max(1, max_match - (env.distance || 0) * num_gram);
+                const threshold = keyword.length < num_gram ? 1 : Math.max(1, max_match - env.distance * num_gram);
                 return intersectResultsNgram(
                     threshold,
                     await Promise.all(
