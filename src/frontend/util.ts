@@ -3,8 +3,8 @@ import { StaticSeekError } from "@src/frontend/base";
 import { createIndexFromObject } from "@src/frontend/indexing";
 import { search } from "@src/frontend/search";
 
-type SearcherResult = Promise<SearchResult[] | StaticSeekError>;
-type SearchFn = (query: string) => SearcherResult;
+type SearchFnResult = Promise<SearchResult[] | StaticSeekError>;
+type SearchFn = (query: string) => SearchFnResult;
 
 export function createSearchFn(url: string): SearchFn {
     let index: StaticSeekIndex | null = null;
@@ -22,7 +22,7 @@ export function createSearchFn(url: string): SearchFn {
         processing = false;
     }
 
-    return (query: string): SearcherResult => {
+    return (query: string): SearchFnResult => {
         return new Promise((resolve, reject) => {
             queue.push(async () => {
                 try {

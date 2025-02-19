@@ -16,7 +16,7 @@ import * as r from "../utils/dom-builder";
 
 
 function generateResultHTMLElement(search_results: SearchResult[]): HTMLLIElement[] {
-    const result = search_results.map(sr => {
+    return search_results.map(sr => {
         const post = v.parse(PostInfo_v, sr.key);
 
         return r.li({}, 
@@ -30,8 +30,6 @@ function generateResultHTMLElement(search_results: SearchResult[]): HTMLLIElemen
             )
         );
     });
-
-    return result;
 }
 
 
