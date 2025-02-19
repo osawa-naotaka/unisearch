@@ -1,0 +1,98 @@
+---
+type Props = Record<string, unknown>;
+---
+<section>
+    <div class="search-bar content">
+        <input type="search" class="search-text is-empty" placeholder="SEARCH KEYWORDS" />
+    </div>
+    <ul class="search-result content"></ul>    
+</section>
+<script>
+import { createSearchFn, StaticSeekError } from "staticseek";
+import type { SearchResult } from "staticseek";
+import * as v from "valibot";
+import { PostInfo_v } from '../utils/types';
+import * as r from "../utils/dom-builder";
+
+
+function generateResultHTMLElement(search_results: SearchResult[]): HTMLLIElement[] {
+    const result = search_results.map(sr => {
+        const post = v.parse(PostInfo_v, sr.key);
+
+        return r.li({}, 
+            r.div({ className: "search-result-title" },
+                r.a({ href: `/posts/${post.id}` },
+                    r.text(post.data.title)
+                )
+            ),
+            r.div({ className: "search-result-description" },
+                r.text(sr.refs[0].wordaround || "")
+            )
+        );
+    });
+
+    return result;
+}
+
+
+try
+{
+    const text   = r.forceQuerySelector<HTMLInputElement>('.search-text');
+    const result = r.forceQuerySelector<HTMLElement>     ('.search-result');
+
+    const search_function = createSearchFn('/searchindex.json');
+
+    text.addEventListener('input', async () =>
+    {
+        result.innerText = "";
+        if(text.value) {
+            text.classList.remove("is-empty");
+            const search_results = await search_function(text.value);
+
+            if(!(search_results instanceof StaticSeekError)) {
+                generateResultHTMLElement(search_results).map((e) => result.appendChild(e));
+            }
+        }
+    });
+}
+catch(e)
+{
+    if(e instanceof Error)
+    {
+        console.error(`${e.name}: ${e.message}`);
+    }
+    else
+    {
+        throw e;
+    }
+}
+</script>
+<style>
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-block-end: 0.25rem;
+    border-block-end: 2px solid;
+}
+.search-text {
+    width: 100%;
+    height: 1.5rem;
+    border: 0 none;
+    outline: none;
+    font-size: 1rem;
+    background-color: var(--color-background);
+}
+.search-text::placeholder {
+    opacity: 0.5;
+}
+.search-result {
+    margin-block: 2rem;
+}
+.search-result {
+    list-style-type: none;
+}
+:global(.search-result-title) {
+    border-bottom: 2px solid black;
+}
+</style>
