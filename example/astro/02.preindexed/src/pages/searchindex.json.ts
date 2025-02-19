@@ -2,13 +2,6 @@ import { getCollection } from "astro:content";
 import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek";
 import type { IndexClass } from "staticseek";
 
-export type SearchKey = {
-    id: string;
-    data: {
-        title: string;
-    };
-};
-
 export async function GET() {
     const posts = await getCollection("posts");
     const index_class: IndexClass = GPULinearIndex;

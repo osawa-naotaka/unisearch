@@ -11,9 +11,8 @@
     "check-write": "biome check --write ./src"
   },
   "dependencies": {
-    "@astrojs/react": "^4.2.0",
     "astro": "^5.2.3",
-    "staticseek": "^2.1.1"
+    "staticseek": "^2.4.0"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4"
