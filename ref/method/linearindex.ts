@@ -1,4 +1,4 @@
-import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
+import type { Path, SearchEnv, SearchIndex, SearchResult } from "@ref/method/base";
 import { bitapKeyBigint, bitapKeyNumber, bitapSearch, createBitapKey } from "@src/util/algorithm";
 import type { BitapKey } from "@src/util/algorithm";
 import { splitByGrapheme } from "@src/util/preprocess";

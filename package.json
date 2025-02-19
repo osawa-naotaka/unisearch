@@ -1,6 +1,6 @@
 {
     "name": "staticseek",
-    "version": "2.3.0",
+    "version": "2.4.0",
     "description": "Lightweight and reasonably fast full-text search engine for static sites",
     "main": "dist/staticseek.js",
     "types": "dist/staticseek.d.ts",
@@ -20,15 +20,15 @@
     },
     "devDependencies": {
         "@biomejs/biome": "1.9.4",
-        "@microsoft/api-extractor": "^7.49.1",
-        "@vitest/ui": "^2.1.8",
-        "@webgpu/types": "^0.1.52",
-        "typescript": "~5.6.2",
-        "vite": "^5.4.10",
-        "vite-plugin-dts": "^4.3.0",
-        "vite-plugin-wasm": "^3.3.0",
-        "vite-tsconfig-paths": "^5.1.3",
-        "vitest": "^2.1.5"
+        "@microsoft/api-extractor": "^7.50.0",
+        "@vitest/ui": "^3.0.5",
+        "@webgpu/types": "^0.1.54",
+        "typescript": "~5.7.3",
+        "vite": "^6.1.0",
+        "vite-plugin-dts": "^4.5.0",
+        "vite-plugin-wasm": "^3.4.1",
+        "vite-tsconfig-paths": "^5.1.4",
+        "vitest": "^3.0.5"
     },
     "dependencies": {
         "valibot": "^1.0.0-rc.1"

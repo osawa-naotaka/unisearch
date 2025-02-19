@@ -1,5 +1,5 @@
 {
-  "name": "astro-preindexed",
+  "name": "integration-test-environment",
   "type": "module",
   "version": "0.0.1",
   "scripts": {
@@ -12,8 +12,7 @@
   },
   "dependencies": {
     "astro": "^5.2.3",
-    "staticseek": "^2.4.0",
-    "valibot": "^1.0.0-rc.1"
+    "staticseek": "file:../.."
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4"

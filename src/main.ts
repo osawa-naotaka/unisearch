@@ -1,5 +1,6 @@
 export { createIndex, indexToObject, createIndexFromObject } from "@src/frontend/indexing";
 export { search } from "@src/frontend/search";
+export { createSearchFn } from "@src/frontend/util";
 export { HybridBigramInvertedIndex } from "@src/method/hybridbigraminvertedindex";
 export { HybridTrieBigramInvertedIndex } from "@src/method/hybridtriebigraminvertedindex";
 export { LinearIndex } from "@src/method/linearindex";

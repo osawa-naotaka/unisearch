@@ -133,8 +133,7 @@ export class GPULinearIndex extends LinearIndex {
 
     public override async search(env: SearchEnv, keyword: string[]): Promise<SearchResult[]> {
         const grapheme = keyword.map((x) => x.charCodeAt(0));
-        const is_gpu_searchable =
-            grapheme.length <= 32 && env.distance !== undefined && env.distance > 0 && env.distance < 4;
+        const is_gpu_searchable = grapheme.length <= 32 && env.distance > 0 && env.distance < 4;
 
         if (is_gpu_searchable) {
             if (this.device === undefined) {
@@ -170,7 +169,7 @@ export class GPULinearIndex extends LinearIndex {
             device.queue.writeBuffer(gpu_buffers.end_mask, 0, new Uint32Array([1 << (grapheme.length - 1)]));
             device.queue.writeBuffer(gpu_buffers.keyword_len, 0, new Uint32Array([grapheme.length]));
 
-            const pipeline = this.gpu_pipeline[env.distance || 1];
+            const pipeline = this.gpu_pipeline[env.distance];
 
             const encoder = device.createCommandEncoder();
             encoder.pushDebugGroup("bitap");

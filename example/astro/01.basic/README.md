@@ -89,7 +89,7 @@ if(!entry) throw new Error("No data found");
 
 For simplicity, this example uses `innerHTML`. However, in production applications, you should use `createElement` and `appendChild` methods instead of `innerHTML` to mitigate security risks associated with direct HTML injection.
 
-While staticseek operates on the client side, code written in the Astro component's component script section only executes once during deployment. Therefore, staticseek is [implemented within a script element in the component template](https://docs.astro.build/en/guides/client-side-scripts/). For production applications, we recommend using a full-text search component built with React or similar frameworks, marked with the `client:visible` property.
+While staticseek operates on the client side, code written in the Astro component's component script section only executes once during deployment. Therefore, staticseek is [implemented within a script element in the component template](https://docs.astro.build/en/guides/client-side-scripts/). 
 
 This example retrieves search target data from Astro's Content Collections. The content collection directory structure and data schema are defined in `src/content.config.ts`. The sample uses the `getEntry()` function to fetch data from `sentences.json` within the `contents` directory.
 

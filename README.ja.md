@@ -14,7 +14,6 @@ staticseekは、静的ウェブサイト向けに特化して設計されたク�
 - Googleに似たクエリ構文
 - CJK文字や絵文字を含むすべての言語のUnicodeサポート
 - さまざまな要求性能に対応する複数のインデックス実装
-- 依存ライブラリゼロ
 - 静的サイトジェネレーター（SSG）とのシームレスな統合
 
 ## クイックスタート
@@ -25,7 +24,11 @@ staticseekは、静的ウェブサイト向けに特化して設計されたク�
 npm install staticseek
 ```
 
+もしくは、[jsDelivrが提供しているCDNサービス](https://www.jsdelivr.com/package/npm/staticseek)を利用して
+staticseekを直接インポートします。
+
 次に、検索機能を使いたいプロジェクトにstaticseekをインポートし、インデックスの作成と検索を実行します。
+ここで、`array_of_articles`は、検索対象のテキストが含まれたJavascriptオブジェクトの配列とします。
 
 ```javascript
 import { LinearIndex, createIndex, search, StaticSeekError } from "staticseek";
@@ -36,17 +39,22 @@ if(index instanceof StaticSeekError) throw index;
 
 // 検索を実行
 const result = await search(index, "検索語");
+if(result instanceof StaticSeekError) throw result;
+for(const r of result) {
+  console.log(array_of_articles[r.id]);
+}
 ```
 
-WebGPUを使い検索を高速化するには、以下のようにします。
+検索結果は配列として得られ、スコア（一致度）によりソートされています。
+検索結果のidフィールドに、ヒットした文章の配列位置が格納されています。
+
+WebGPUを使い検索を高速化するには、以下のようにします。インデックス作成後の使い方は上記と同じです。
 
 ```javascript
 import { GPULinearIndex, createIndex, search, StaticSeekError } from "staticseek";
 
 const index = createIndex(GPULinearIndex, array_of_articles);
-if(index instanceof StaticSeekError) throw index;
-
-const result = await search(index, "検索語");
+...
 ```
 
 性能に問題がある場合は、検索速度に特化したインデックスをご使用ください。
@@ -55,9 +63,7 @@ const result = await search(index, "検索語");
 import { HybridTrieBigramInvertedIndex, createIndex, search, StaticSeekError } from "staticseek";
 
 const index = createIndex(HybridTrieBigramInvertedIndex, array_of_articles);
-if(index instanceof StaticSeekError) throw index;
-
-const result = await search(index, "search word");
+...
 ```
 
 
@@ -96,7 +102,8 @@ const result = await search(index, "search word");
 
 ## 検索速度・インデックス作成速度
 
-4MBのデータセット（約100記事）の検索速度は概ね以下の通りです。
+適切なインデックスを選ぶことにより、一般的な検索時間は数msに収まります。
+4MBのデータセット（約100記事、ワーストケース、最も遅いインデックスを利用の場合）の検索速度は概ね以下の通りです。
 
 - 完全一致: < 5ms
 - あいまい検索: < 150ms
@@ -131,11 +138,11 @@ staticseekは、インデックス作成と検索実行の2つのフェーズで
 ### インデックス作成
 
 ```typescript
-export function createIndex<T>(
+export function createIndex(
     index_class: IndexClass,
     contents: unknown[],
     opt: IndexOpt = {},
-): StaticIndex<SearchIndex<T>> | StaticSeekError;
+): StaticSeekIndex | StaticSeekError;
 
 export type IndexOpt = {
     key_fields?: string[];
@@ -163,9 +170,10 @@ export type IndexOpt = {
 この関数は、`StaticSeekIndex`オブジェクトまたは`StaticSeekError`を返します。
 envやcontentsが正しく設定されていない場合はStaticSeekErrorを返します。
 
-### 検索結果の設定
+### インデックス化時の設定
 
-インデックスを作成するときに、検索結果に含めるフィールドを指定できます。以下にデータ構造の例を示します。
+インデックスを作成するときに、`env`パラメータを設定することで、インデックス化と検索における挙動を制御できます.
+以下にデータ構造の例を示します。
 
 ```javascript
 const array_of_articles = [
@@ -182,6 +190,7 @@ const array_of_articles = [
 ];
 ```
 
+#### key_fields
 検索結果に特定のフィールドを含めるには、`key_fields`オプションを使用します。
 
 ```javascript
@@ -189,15 +198,22 @@ const index = createIndex(LinearIndex, array_of_articles, {
     key_fields: ['slug', 'data.title']
 });
 ```
-
-### インデックスサイズの制御
-
-#### フィールドの選択
+#### search_target
 `search_targets`オプションを使用して、インデックス化するフィールドを制限できます。
 
 ```javascript
 const index = createIndex(LinearIndex, array_of_articles, {
     search_targets: ['data.title', 'data.description', 'data.tags']
+});
+```
+
+#### distance
+あいまい検索時のデフォルト編集距離を指定するには、`distance`オプションを利用します。
+`distance`オプションを指定しない場合は、編集距離1(1文字までの間違いを許容)が利用されます。
+
+```javascript
+const index = createIndex(LinearIndex, array_of_articles, {
+    distance: 2  // Set default edit distance for all searches
 });
 ```
 
@@ -219,16 +235,41 @@ function indexToObject(index: StaticSeekIndex): StaticSeekIndexObject
 const index = createIndex(LinearIndex, array_of_articles);
 if(index instanceof StaticSeekError) throw index;
 const json = JSON.stringify(indexToObject(index));
+// jsonをファイルに書き出し、hostにアップロードする
 ```
 
 2. クライアントでインデックスをロードして再構築します。
-```javascript
-function createIndexFromObject(index: StaticSeekIndexObject): StaticSeekIndex | StaticSeekError;
 
-const resp = await fetch(index_url);
-const re_index = createIndexFromObject(resp.json());
-if(re_index instanceof StaticSeekError) throw re_index;
-const result = await search(re_index, "検索語");
+ユーティリティファンクションの`createSearchFn`を用いると、インデックスをフェッチし、そのインデックスを利用する検索関数を簡単に作成できます。
+
+```typescript
+type SearchFn = (query: string) => Promise<SearchResult[] | StaticSeekError>;
+
+export function createSearchFn(url: string): SearchFn;
+```
+
+```typescript
+import { createSearchFn } from "staticseek";
+
+const search_function = createSearchFn(index_url);
+const result = await search_function("search word");
+```
+
+もしくは、手動でインデックスをfetchします。
+
+```typescript
+function createIndexFromObject(index: StaticSeekIndexObject): StaticSeekIndex | StaticSeekError;
+```
+
+```typescript
+import { createIndexFromObject, search, StaticSeekError} from "staticseek";
+
+const response = await fetch(url);
+if (!response.ok) throw new Error();
+const json = await response.json();
+const index = createIndexFromObject(json);
+if (index instanceof StaticSeekError) throw index;
+const result = await search(index, "search word");
 ```
 
 ## 検索の実行
@@ -236,7 +277,14 @@ const result = await search(re_index, "検索語");
 インデックスが作成されると、同じインデックスを使用して複数の検索を実行できます。
 
 ```typescript
-async function search(index: StaticSeekIndex, query: string): Promise<SearchResult[] | StaticSeekError>
+async function search(index: StaticSeekIndex, query: string): Promise<SearchResult[] | StaticSeekError>;
+```
+
+`createSearchFn`を使って検索関数を作成する場合、検索関数のクロージャにインデックスが格納されるため、
+クエリ文字列だけを検索関数に与えて検索できます。
+
+```typescript
+type SearchFn = (query: string) => Promise<SearchResult[] | StaticSeekError>;
 ```
 
 ### クエリ構文

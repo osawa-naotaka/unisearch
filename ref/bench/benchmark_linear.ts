@@ -5,10 +5,9 @@ import { FlatLinearIndexString } from "@ref/method/flatlinearindexstring";
 import { LinearIndex } from "@ref/method/linearindex";
 import { LinearIndexString } from "@ref/method/linearindexstring";
 import { GPULinearIndex } from "@ref/method/gpulinearindex";
-import { HybridBigramInvertedIndex } from "@ref/method/indextypes";
 import { StaticSeekError } from "@src/main";
 import { createIndex } from "@ref/method/indexing";
-import { search } from "@src/frontend/search";
+import { search } from "@ref/method/search";
 import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
 import { wikipedia_ja_keyword } from "@test/wikipedia_ja_keyword";
 import { calculateGzipedJsonSize } from "@ref/util";
@@ -97,7 +96,6 @@ const benchmark_results_linear_string = await execBenchmark(LinearIndexString, {
 const benchmark_results_flat = await execBenchmark(FlatLinearIndex, {}, articles, keywords);
 const benchmark_results_flat_string = await execBenchmark(FlatLinearIndexString, {}, articles, keywords);
 const benchmark_results_gpu = await execBenchmark(GPULinearIndex, {}, articles, keywords);
-const benchmark_results_hybrid = await execBenchmark(HybridBigramInvertedIndex, {}, articles, keywords);
 
 console.log("benchmark results: LinearIndex");
 console.log(benchmark_results_linear);
@@ -109,5 +107,3 @@ console.log("benchmark results: FlatLinearIndexString");
 console.log(benchmark_results_flat_string);
 console.log("benchmark results: GPULinearIndex");
 console.log(benchmark_results_gpu);
-console.log("benchmark results: HybridBigramInvertedIndex");
-console.log(benchmark_results_hybrid);

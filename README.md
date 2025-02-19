@@ -14,7 +14,6 @@ staticseek is a client-side full-text search engine designed specifically for st
 - Google-like query syntax
 - Unicode support for all languages including CJK characters and emojis
 - Multiple index implementations for different performance needs
-- Zero dependencies
 - Seamless integration with popular Static Site Generators (SSG)
 
 ## Quick Start
@@ -25,7 +24,10 @@ First, install staticseek in your environment:
 npm install staticseek
 ```
 
-Next, import staticseek into your project and perform indexing and searching:
+Alternatively, you can directly import staticseek using [jsDelivr's CDN service](https://www.jsdelivr.com/package/npm/staticseek).
+
+Next, import staticseek into your project and perform indexing and searching.
+Here, `array_of_articles` represents an array of JavaScript objects containing the text to be searched.
 
 ```javascript
 import { LinearIndex, createIndex, search, StaticSeekError } from "staticseek";
@@ -36,17 +38,21 @@ if(index instanceof StaticSeekError) throw index;
 
 // Perform a search
 const result = await search(index, "search word");
+if(result instanceof StaticSeekError) throw result;
+for(const r of result) {
+  console.log(array_of_articles[r.id]);
+}
 ```
 
-For WebGPU-accelerated searching:
+The search results are returned as an array, sorted by score (relevance). The id field in each result contains the array index of the matching document.
+
+To accelerate searches using WebGPU, use the following code. The usage after index creation remains the same as above.
 
 ```javascript
 import { GPULinearIndex, createIndex, search, StaticSeekError } from "staticseek";
 
 const index = createIndex(GPULinearIndex, array_of_articles);
-if(index instanceof StaticSeekError) throw index;
-
-const result = await search(index, "search word");
+...
 ```
 
 If you experience performance issues, try using speed-optimized index.
@@ -55,9 +61,7 @@ If you experience performance issues, try using speed-optimized index.
 import { HybridTrieBigramInvertedIndex, createIndex, search, StaticSeekError } from "staticseek";
 
 const index = createIndex(HybridTrieBigramInvertedIndex, array_of_articles);
-if(index instanceof StaticSeekError) throw index;
-
-const result = await search(index, "search word");
+...
 ```
 
 ## Search Features
@@ -95,7 +99,8 @@ const result = await search(index, "search word");
 
 ## Performance
 
-Search performance for a 4MB dataset (approximately 100 articles):
+By selecting the appropriate index type, typical search times can be kept within a few milliseconds.
+Search performance for a 4MB dataset (worst case scenario, slowest index type, approximately 100 articles):
 
 - Exact Match: < 5ms
 - Fuzzy Search: < 150ms
@@ -130,11 +135,11 @@ staticseek operates in two phases: index creation and search execution. The inde
 ### Basic Index Creation
 
 ```typescript
-export function createIndex<T>(
+export function createIndex(
     index_class: IndexClass,
     contents: unknown[],
     opt: IndexOpt = {},
-): StaticIndex<SearchIndex<T>> | StaticSeekError;
+): StaticSeekIndex | StaticSeekError;
 
 export type IndexOpt = {
     key_fields?: string[];
@@ -161,9 +166,11 @@ export type IndexOpt = {
 
 The function returns either a `StaticSeekIndex` object or `StaticSeekError` if validation fails.
 
-### Configuring Search Results
 
-When creating an index, you can specify which fields should be included in search results. Here's an example data structure:
+### Configuring Indexing
+
+When creating an index, you can control indexing and search behavior by specifying the `env` parameter.
+Here's an example data structure:
 
 ```javascript
 const array_of_articles = [
@@ -180,6 +187,7 @@ const array_of_articles = [
 ];
 ```
 
+#### key_fields
 To include specific fields in search results, use the `key_fields` option:
 
 ```javascript
@@ -188,9 +196,7 @@ const index = createIndex(LinearIndex, array_of_articles, {
 });
 ```
 
-### Controlling Index Size
-
-#### Field Selection
+#### search_target
 You can limit which fields are indexed using the `search_targets` option:
 
 ```javascript
@@ -199,7 +205,19 @@ const index = createIndex(LinearIndex, array_of_articles, {
 });
 ```
 
-#### Storage Considerations
+#### distance
+Use the `distance` option to specify the default edit distance for fuzzy searches. 
+If the `distance` option is not specified, an edit distance of 1 (allowing up to one character mismatch) is used.
+
+```javascript
+const index = createIndex(LinearIndex, array_of_articles, {
+    distance: 2  // Set default edit distance for all searches
+});
+```
+
+If you set the edit distance to 0, fuzzy serch is disabled and exact match is performed instead.
+
+### Storage Considerations
 - Index size approximately equals the total text size
 - HTTP compression (gzip) helps reduce transfer size
 - For indices > 1MB, consider:
@@ -211,22 +229,51 @@ const index = createIndex(LinearIndex, array_of_articles, {
 For static sites, you can pre-generate indices during build time to optimize page load performance:
 
 1. Convert index to a serializable object:
-```javascript
-function indexToObject(index: StaticSeekIndex): StaticSeekIndexObject
+```typescript
+function indexToObject(index: StaticSeekIndex): StaticSeekIndexObject;
+```
+
+```typescript
+import { createIndex, LinearIndex, StaticSeekError, indexToObject } from "staticseek"
 
 const index = createIndex(LinearIndex, array_of_articles);
 if(index instanceof StaticSeekError) throw index;
 const json = JSON.stringify(indexToObject(index));
+// Write the json to a file and upload it to the host
 ```
 
-2. Load and reconstruct index on the client:
-```javascript
-function createIndexFromObject(index: StaticSeekIndexObject): StaticSeekIndex | StaticSeekError;
+2. Load and reconstruct the index on the client side.
 
-const resp = await fetch(index_url);
-const re_index = createIndexFromObject(resp.json());
-if(re_index instanceof StaticSeekError) throw re_index;
-const result = await search(re_index, "search word");
+The utility function `createSearchFn` provides an easy way to fetch the index and create a search function that uses it.
+
+```typescript
+type SearchFn = (query: string) => Promise<SearchResult[] | StaticSeekError>;
+
+export function createSearchFn(url: string): SearchFn;
+```
+
+```typescript
+import { createSearchFn } from "staticseek";
+
+const search_function = createSearchFn(index_url);
+const result = await search_function("search word");
+```
+
+Alternatively, you can fetch the index manually.
+
+```typescript
+function createIndexFromObject(index: StaticSeekIndexObject): StaticSeekIndex | StaticSeekError;
+```
+
+```typescript
+import { createIndexFromObject, search, StaticSeekError} from "staticseek";
+
+const response = await fetch(url);
+if (!response.ok) throw new Error();
+const json = await response.json();
+const index = createIndexFromObject(json);
+if (index instanceof StaticSeekError) throw index;
+const result = await search(index, "search word");
 ```
 
 ## Performing Searches
@@ -234,7 +281,14 @@ const result = await search(re_index, "search word");
 Once an index is created, you can perform multiple searches using the same index:
 
 ```typescript
-async function search(index: StaticSeekIndex, query: string): Promise<SearchResult[] | StaticSeekError>
+async function search(index: StaticSeekIndex, query: string): Promise<SearchResult[] | StaticSeekError>;
+```
+
+When creating a search function using `createSearchFn`, the index is stored in the function's closure, 
+allowing you to perform searches by providing only the query string to the search function.
+
+```typescript
+type SearchFn = (query: string) => Promise<SearchResult[] | StaticSeekError>;
 ```
 
 ### Query Syntax
