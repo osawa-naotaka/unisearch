@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import type { JSX } from "react";
 import { createSearchFn, SearchResult, StaticSeekError } from "staticseek";
+import type { SearchFn } from "staticseek";
 import * as v from "valibot";
 
 const schema = v.object({
@@ -35,7 +36,7 @@ function StaticSeekResult(result: SearchResult[]): JSX.Element {
 }
 
 export default function Index() {
-    const search_fn = useRef<(query: string) => Promise<SearchResult[] | StaticSeekError>>(null);
+    const search_fn = useRef<SearchFn>(null);
     const [result, setResult] = useState<SearchResult[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
