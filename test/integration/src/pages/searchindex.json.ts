@@ -1,24 +1,14 @@
-import { getCollection } from "astro:content";
 import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek";
-import type { IndexClass } from "staticseek";
-
-export type SearchKey = {
-    id: string;
-    data: {
-        title: string;
-    };
-};
+import { array_of_articles } from "../../../array_of_articles";
 
 export async function GET() {
-    const posts = await getCollection("posts");
-    const index_class: IndexClass = GPULinearIndex;
-    const linear_index = createIndex(index_class, posts, {
-        search_targets: ["body", "data.title"],
-        key_fields: ["data.title", "id"],
+    const index = createIndex(GPULinearIndex, array_of_articles, {
+        search_targets: ["content", "data.title", "data.description", "data.tags"],
+        key_fields: ["data"],
     });
-    if (linear_index instanceof StaticSeekError) {
-        return new Response(null, { status: 500, statusText: linear_index.message });
+    if (index instanceof StaticSeekError) {
+        return new Response(null, { status: 500, statusText: index.message });
     }
 
-    return new Response(JSON.stringify(indexToObject(linear_index)));
+    return new Response(JSON.stringify(indexToObject(index)));
 }

@@ -1,14 +1,18 @@
 {
     "name": "staticseek",
-    "version": "2.4.0",
-    "description": "Lightweight and reasonably fast full-text search engine for static sites",
+    "version": "2.5.0",
+    "description": "A Lightweight, Fast Full-text Search Engine for Static Sites",
     "main": "dist/staticseek.js",
     "types": "dist/staticseek.d.ts",
     "author": {
         "name": "osawa naotaka"
     },
     "license": "MIT",
-    "homepage": "https://github.com/osawa-naotaka/staticseek",
+    "homepage": "https://staticseek.lulliecat.com",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/osawa-naotaka/staticseek.git"
+    },
     "type": "module",
     "scripts": {
         "dev": "vite",

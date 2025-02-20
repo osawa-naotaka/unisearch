@@ -5,8 +5,9 @@ import { search } from "@src/frontend/search";
 
 type SearchFnResult = Promise<SearchResult[] | StaticSeekError>;
 type SearchFn = (query: string) => SearchFnResult;
+type SearchFnCallback = (isLoading: boolean) => void;
 
-export function createSearchFn(url: string): SearchFn {
+export function createSearchFn(url: string, callback: SearchFnCallback = () => {}): SearchFn {
     let index: StaticSeekIndex | null = null;
     const queue: (() => Promise<void>)[] = [];
     let processing = false;
@@ -27,16 +28,19 @@ export function createSearchFn(url: string): SearchFn {
             queue.push(async () => {
                 try {
                     if (index === null) {
+                        callback(true);
                         const response = await fetch(url);
                         if (!response.ok) throw new StaticSeekError(`fail to fetch index: ${response.statusText}`);
                         const json = await response.json();
                         const newIndex = createIndexFromObject(json);
                         if (newIndex instanceof StaticSeekError) throw newIndex;
                         index = newIndex;
+                        callback(false);
                     }
                     const result = await search(index, query);
                     resolve(result);
                 } catch (e) {
+                    callback(false);
                     reject(e);
                 }
             });

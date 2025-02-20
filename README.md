@@ -248,8 +248,9 @@ The utility function `createSearchFn` provides an easy way to fetch the index an
 
 ```typescript
 type SearchFn = (query: string) => Promise<SearchResult[] | StaticSeekError>;
+type SearchFnCallback = (isLoading: boolean) => void;
 
-export function createSearchFn(url: string): SearchFn;
+export function createSearchFn(url: string, callback: SearchFnCallback = () => {}): SearchFn;
 ```
 
 ```typescript
@@ -258,6 +259,8 @@ import { createSearchFn } from "staticseek";
 const search_function = createSearchFn(index_url);
 const result = await search_function("search word");
 ```
+
+The `callback` function provided to `createSearchFn` is invoked when the index starts loading (`isLoading = true`) and again when the loading is complete (`isLoading = false`). This callback is useful for displaying a message to inform the user while the index is being loaded.
 
 Alternatively, you can fetch the index manually.
 
