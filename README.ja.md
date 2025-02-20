@@ -244,8 +244,9 @@ const json = JSON.stringify(indexToObject(index));
 
 ```typescript
 type SearchFn = (query: string) => Promise<SearchResult[] | StaticSeekError>;
+type SearchFnCallback = (isLoading: boolean) => void;
 
-export function createSearchFn(url: string): SearchFn;
+export function createSearchFn(url: string, callback: SearchFnCallback = () => {}): SearchFn;
 ```
 
 ```typescript
@@ -254,6 +255,11 @@ import { createSearchFn } from "staticseek";
 const search_function = createSearchFn(index_url);
 const result = await search_function("search word");
 ```
+
+`createSearchFn`に与える`callback`関数は二回呼ばれます。
+一回目はインデックスを読み込みはじめる直前に、`isLoading = true`で呼ばれます。
+二回目は、インデックス読み込み終了直後に`isLoading = false`で呼ばれます。
+このコールバック関数を使うことで、ユーザーに今がインデックス読み込み待ちなのかどうかを伝えることができます。
 
 もしくは、手動でインデックスをfetchします。
 
