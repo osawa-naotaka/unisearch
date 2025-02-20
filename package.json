@@ -1,6 +1,6 @@
 {
     "name": "staticseek",
-    "version": "2.5.0",
+    "version": "2.5.1",
     "description": "A Lightweight, Fast Full-text Search Engine for Static Sites",
     "main": "dist/staticseek.js",
     "types": "dist/staticseek.d.ts",
@@ -35,6 +35,7 @@
         "vitest": "^3.0.5"
     },
     "dependencies": {
+        "staticseek": "^2.5.0",
         "valibot": "^1.0.0-rc.1"
     }
 }

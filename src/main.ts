@@ -15,5 +15,8 @@ export type {
     FieldNameMap,
     Reference,
     SearchResult,
+    SearchFn,
+    SearchFnResult,
 } from "@src/frontend/base";
+export type { SearchFnCallback } from "@src/frontend/util";
 export type { IndexClass } from "@src/frontend/indexing";

@@ -1,16 +1,22 @@
 "use client";
 
-import type { SearchKey } from "@/app/searchindex.json/route.ts";
 import Link from "next/link";
-import { lazy, useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { JSX } from "react";
-import type { SearchResult } from "staticseek";
+import { createSearchFn, SearchResult, StaticSeekError } from "staticseek";
+import type { SearchFn } from "staticseek";
+import * as v from "valibot";
 
-const StaticSeek = lazy(() => import("staticseek-react"));
+const schema = v.object({
+    slug: v.string(),
+    data: v.object({
+        title: v.string(),
+    }),
+});
 
 function StaticSeekResult(result: SearchResult[]): JSX.Element {
     const lis = result.map((item) => {
-        const key = item.key as SearchKey; // ad-hock solution. you might as well use zod or something like that to validate the key.
+        const key = v.parse(schema, item.key);
         return (
             <li key={key.slug}>
                 <Link href={`/posts/${key.slug as string}`}>
@@ -30,12 +36,21 @@ function StaticSeekResult(result: SearchResult[]): JSX.Element {
 }
 
 export default function Index() {
-    const [query, setQuery] = useState<string>("");
-    const [trigger, setTrigger] = useState<boolean>(false);
+    const search_fn = useRef<SearchFn>(null);
+    const [result, setResult] = useState<SearchResult[]>([]);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    function onChangeInput(e: React.ChangeEvent<HTMLInputElement>) {
-        setQuery(e.target.value);
-        setTrigger(true);
+    useEffect(() => {
+        search_fn.current = createSearchFn("/searchindex.json", setIsLoading);
+    }, [])
+
+    async function onChangeInput(e: React.ChangeEvent<HTMLInputElement>) {
+        if(search_fn.current) {
+            const r = await search_fn.current(e.target.value);
+            if(!(r instanceof StaticSeekError)) {
+                setResult(r);
+            }
+        }
     }
 
     return (
@@ -44,11 +59,7 @@ export default function Index() {
                 <div>search</div>
                 <input type="text" name="search" id="search" placeholder="type your search query in English..." onChange={onChangeInput} />
             </div>
-            {trigger && (
-                <StaticSeek query={query} indexUrl="/searchindex.json" suspense={<div>Loading index...</div>}>
-                    {StaticSeekResult}
-                </StaticSeek>
-            )}
+            {isLoading ? (<div>Loading index...</div>) : StaticSeekResult(result)}
         </main>
     );
 }
