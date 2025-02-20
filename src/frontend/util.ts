@@ -1,11 +1,9 @@
-import type { SearchResult, StaticSeekIndex } from "@src/frontend/base";
+import type { SearchFn, SearchFnResult, StaticSeekIndex } from "@src/frontend/base";
 import { StaticSeekError } from "@src/frontend/base";
 import { createIndexFromObject } from "@src/frontend/indexing";
 import { search } from "@src/frontend/search";
 
-type SearchFnResult = Promise<SearchResult[] | StaticSeekError>;
-type SearchFn = (query: string) => SearchFnResult;
-type SearchFnCallback = (isLoading: boolean) => void;
+export type SearchFnCallback = (isLoading: boolean) => void;
 
 export function createSearchFn(url: string, callback: SearchFnCallback = () => {}): SearchFn {
     let index: StaticSeekIndex | null = null;

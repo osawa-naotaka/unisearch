@@ -71,3 +71,5 @@ export interface SearchIndex<T> {
 
 export type StaticSeekIndex = StaticIndex<SearchIndex<unknown>>;
 export type StaticSeekIndexObject = StaticIndex<unknown>;
+export type SearchFnResult = Promise<SearchResult[] | StaticSeekError>;
+export type SearchFn = (query: string) => SearchFnResult;

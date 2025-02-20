@@ -32,22 +32,13 @@ First, create a static index file. The following example demonstrates how to set
 ```typescript
 import { getAllPosts } from "@/lib/posts";
 import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek";
-import type { IndexClass } from "staticseek";
 
 export const dynamic = "force-static";
 export const revalidate = false;
 
-export type SearchKey = {
-    slug: string;
-    data: {
-        title: string;
-    };
-};
-
 export async function GET(request: Request) {
     const allPosts = await getAllPosts();
-    const index_class: IndexClass = GPULinearIndex;
-    const index = createIndex(index_class, allPosts, { key_fields: ["data.title", "slug"], search_targets: ["data.title", "content"] });
+    const index = createIndex(GPULinearIndex, allPosts, { key_fields: ["data.title", "slug"], search_targets: ["data.title", "content"] });
     if (index instanceof StaticSeekError) {
         return new Response(index.message, { status: 500 });
     }
@@ -70,17 +61,23 @@ Create a search page component (e.g., in `src/app/page.tsx`):
 ```typescript
 "use client";
 
-import type { SearchKey } from "@/app/searchindex.json/route.ts";
 import Link from "next/link";
-import { lazy, useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { JSX } from "react";
-import type { SearchResult } from "staticseek";
+import { createSearchFn, SearchResult, StaticSeekError } from "staticseek";
+import type { SearchFn } from "staticseek";
+import * as v from "valibot";
 
-const StaticSeek = lazy(() => import("staticseek-react"));
+const schema = v.object({
+    slug: v.string(),
+    data: v.object({
+        title: v.string(),
+    }),
+});
 
 function StaticSeekResult(result: SearchResult[]): JSX.Element {
     const lis = result.map((item) => {
-        const key = item.key as SearchKey; // Ad-hoc solution; consider using Zod or a similar library for key validation.
+        const key = v.parse(schema, item.key);
         return (
             <li key={key.slug}>
                 <Link href={`/posts/${key.slug as string}`}>
@@ -93,121 +90,50 @@ function StaticSeekResult(result: SearchResult[]): JSX.Element {
 
     return (
         <>
-            <h2>Results</h2>
+            <h2>results</h2>
             <ul>{result.length > 0 ? lis : <li>No results found.</li>}</ul>
         </>
     );
 }
 
 export default function Index() {
-    const [query, setQuery] = useState<string>("");
-    const [trigger, setTrigger] = useState<boolean>(false);
+    const search_fn = useRef<SearchFn>(null);
+    const [result, setResult] = useState<SearchResult[]>([]);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    function onChangeInput(e: React.ChangeEvent<HTMLInputElement>) {
-        setQuery(e.target.value);
-        setTrigger(true);
+    useEffect(() => {
+        search_fn.current = createSearchFn("/searchindex.json", setIsLoading);
+    }, [])
+
+    async function onChangeInput(e: React.ChangeEvent<HTMLInputElement>) {
+        if(search_fn.current) {
+            const r = await search_fn.current(e.target.value);
+            if(!(r instanceof StaticSeekError)) {
+                setResult(r);
+            }
+        }
     }
 
     return (
         <main>
             <div className="input-area">
-                <div>Search</div>
-                <input type="text" name="search" id="search" placeholder="Type your search query in English..." onChange={onChangeInput} />
+                <div>search</div>
+                <input type="text" name="search" id="search" placeholder="type your search query in English..." onChange={onChangeInput} />
             </div>
-            {trigger && (
-                <StaticSeek query={query} indexUrl="/searchindex.json" suspense={<div>Loading index...</div>}>
-                    {StaticSeekResult}
-                </StaticSeek>
-            )}
+            {isLoading ? (<div>Loading index...</div>) : StaticSeekResult(result)}
         </main>
     );
 }
 ```
 
-The StaticSeek component handles index loading and search execution.
-- The component is loaded lazily using `lazy()`, ensuring that the search index is not loaded until the user types in the input field.
-- The `query` prop is passed to StaticSeek to perform searches.
-- The `indexUrl` prop points to the pre-generated search index JSON file.
-- The `suspense` prop defines the JSX element displayed while the index is loading.
-- The children of StaticSeek specifies a function that converts `SearchResult[]` into JSX elements.
-
 Important implementation details:
 - Mark the component with `"use client"` to enable React hooks and client-side functionality.
+- The search function `search_fn` is created by `createSearchFn` only once during component initialization using useEffect, with an empty dependency array [] to ensure it runs only on mount.
+- The created search function `search_fn` itself does not trigger re-renders, so it is stored in a useRef rather than useState.
+- Index is loaded at the first call of `search_fn` to prevent unused fetch of index.
+- Index loading state is triggered by callback function given to the `createSearchFn`.
 - Search results are sorted by relevance score.
 - Each result includes:
   - The key fields specified during index creation (title and slug).
   - Matched content context via `refs[*].wordaround`.
   - A link to the full post using the slug.
-
-### 3. Index Loading and Search Execution
-
-The `StaticSeek` React component, provided by the npm package [staticseek-react](https://github.com/osawa-naotaka/staticseek-react), is responsible for loading the search index and executing queries. The complete implementation is shown below:
-
-```typescript
-import { useEffect, useRef, useState } from "react";
-import type { JSX } from "react";
-import { StaticSeekError, createIndexFromObject, search } from "staticseek";
-import type { SearchResult, StaticSeekIndex } from "staticseek";
-
-type StaticSeekProps = {
-    query: string;
-    indexUrl: string;
-    suspense: JSX.Element;
-    children: (result: SearchResult[]) => JSX.Element;
-};
-
-export default function StaticSeek({ query, indexUrl, suspense, children }: StaticSeekProps) {
-    const index = useRef<StaticSeekIndex | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [result, setResult] = useState<SearchResult[]>([]);
-
-    const search_async = async () => {
-        if (index.current) {
-            const result = await search(index.current, query);
-            if (result instanceof StaticSeekError) {
-                console.error(`fail to search: ${result.message}`);
-                return;
-            }
-            setResult(result);
-        }
-    };
-
-    useEffect(() => {
-        const fetchIndex = async () => {
-            const response = await fetch(indexUrl);
-            if (!response.ok) {
-                console.error(`fail to fetch index: ${response.statusText}`);
-                return;
-            }
-            const response_json = await response.json();
-            const newIndex = createIndexFromObject(response_json);
-            if (newIndex instanceof StaticSeekError) {
-                console.error(`fail to create index: ${newIndex.message}`);
-                return;
-            }
-            index.current = newIndex;
-            setLoading(false);
-            search_async();
-        };
-
-        if (index.current === null) {
-            fetchIndex();
-        }
-
-        return () => {};
-    }, []);
-
-    useEffect(() => {
-        search_async();
-        return () => {};
-    }, [index, query]);
-
-    return loading ? suspense : children(result);
-}
-```
-
-Key Implementation Details:
-- The search index is loaded only once during component initialization using useEffect, with an empty dependency array [] to ensure it runs only on mount.
-- The search index does not trigger re-renders, so it is stored in a useRef rather than useState.
-- Since the search function is asynchronous, the useEffect dependency array includes query, ensuring that a new search is executed whenever the query changes.
-- The search results are passed to the render function, which converts them into JSX elements.

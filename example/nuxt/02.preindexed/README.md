@@ -34,16 +34,14 @@ Nuxt generates static HTML files by traversing links from the root (`/`) page. T
 Begin by creating a static index file. Here's how to implement this at `server/routes/searchindex.json.ts`:
 
 ```typescript
-import { HybridTrieBigramInvertedIndex, StaticSeekError, createIndex, indexToObject } from "staticseek";
-import type { IndexClass } from "staticseek";
+import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek";
 import matter from "gray-matter";
 
 export default defineEventHandler(async (event) => {
     const raw_posts = await queryCollection(event, "posts").all();
     const posts = raw_posts.map((post) => ({ path: post.path, body: matter(post.rawbody.replaceAll("\\n", "\n")) }));
 
-    const index_class: IndexClass = HybridTrieBigramInvertedIndex;
-    const index = createIndex(index_class, posts, { 
+    const index = createIndex(GPULinearIndex, posts, { 
         key_fields: ["path", "body.data.title"], 
         search_targets: ["body.data.title", "body.content"] 
     });
@@ -106,126 +104,71 @@ Essential configuration points:
 
 ### 2. Implementing the Search Interface
 
-Create a search interface page (e.g., in `pages/index.vue`) using the [StaticSeek component](https://github.com/osawa-naotaka/staticseek-vue):
+Create a search interface page (e.g., in `pages/index.vue`).
 
 ```vue
 <script setup lang="ts">
-import StaticSeek from "../component/StaticSeek.vue";
+import { createSearchFn, StaticSeekError } from "staticseek";
+import type { SearchResult } from "staticseek";
+import * as v from "valibot";
 
-// ad-hock solution. you might as well use zod or something like that to validate the key.
-function typedKey(key: Record<string, unknown>) {
-    return key as { path: string; body: { data: { title: string } } };
+const schema = v.object({
+    path: v.string(),
+    body: v.object({
+        data: v.object({
+            title: v.string(),
+        }),
+    }),
+});
+
+const search_fn = createSearchFn("/searchindex.json", (x) => { loading.value = x });
+const loading   = ref(false);
+const results   = ref<SearchResult[]>([]);
+const query     = ref("");
+
+async function onInputQuery(e: Event) {
+    if(e.target instanceof HTMLInputElement) {
+        const r = await search_fn(e.target.value);
+        if(!(r instanceof StaticSeekError)) {
+            results.value = r;
+        }
+    }
 }
-
-const query = ref("");
-const trigger = ref(false);
 </script>
 
 <template>
     <section>
         <div class="input-area">
             <div>search</div>
-            <input type="text" name="search" id="search" v-model="query" @input="() => { trigger = true }"/>
+            <input type="text" name="search" id="search" v-model="query" @input="onInputQuery"/>
         </div>
-        <StaticSeek v-if="trigger" :query="query" url="/searchindex.json">
-            <template #default="{ results }">
-                <h2>results</h2>
-                <ul class="search-results">
-                    <li v-if="results.length === 0 && query.length !== 0">No results found.</li>
-                    <template v-else>
-                        <li v-for="{refs, key} in results" :key="typedKey(key).path">
-                            <NuxtLink :to="typedKey(key).path" >
-                                <h3>{{ typedKey(key).body.data.title }}</h3>
-                            </NuxtLink>
-                            <p>{{ refs[0].wordaround }}</p>
-                        </li>
-                    </template>
-                </ul>
-            </template>
-            <template #suspence><div>loading index...</div></template>
-        </StaticSeek>
+        <div v-if="loading">
+            Loading index...
+        </div>
+        <template v-else>
+            <h2>results</h2>
+            <ul class="search-results">
+                <li v-if="results.length === 0 && query.length !== 0">No results found.</li>
+                <template v-else>
+                    <li v-for="{refs, key} in results" :key="v.parse(schema, key).path">
+                        <NuxtLink :to="v.parse(schema, key).path" >
+                            <h3>{{ v.parse(schema, key).body.data.title }}</h3>
+                        </NuxtLink>
+                        <p>{{ refs[0].wordaround }}</p>
+                    </li>
+                </template>
+            </ul>
+        </template>
     </section>
 </template>
 ```
 
-The StaticSeek component manages index loading and search execution efficiently:
-- Implements lazy loading via the `trigger` ref to prevent loading the search index until user interaction
-- Passes the `query` v-model from the input element to StaticSeek for search operations
-- Uses the `url` prop to reference the pre-generated search index JSON file
-- Provides a `suspense` slot for loading state visualization
-- Includes a `default` slot that transforms `SearchResult[]` into HTML elements via `#default="{ results }"`
-
 Key features:
+- Create search function once during component initialization.
+- Index is loaded at the first call of `search_fn` to prevent unused fetch of index.
+- Index loading state `loading` is triggered by callback function given to the `createSearchFn`.
 - Results are automatically sorted by relevance score
 - Each result entry contains:
   - Key fields specified during index creation (`title` and `path`)
   - Contextual content matches via `refs[*].wordaround`
   - Direct links to full posts using the `path` property
-
-### 3. Index Loading and Search Implementation
-
-The `StaticSeek` Vue component, available through [staticseek-vue](https://github.com/osawa-naotaka/staticseek-vue), handles index loading and search execution. Here's the complete implementation:
-
-```vue
-<script setup lang="tsx">
-import type { SearchResult, StaticSeekIndex } from "staticseek";
-import { StaticSeekError, createIndexFromObject, search } from "staticseek";
-
-interface Props {
-    query: string,
-    url: string,
-}
-const { query, url } = defineProps<Props>();
-
-const index = ref<StaticSeekIndex>();
-const loading = ref(true);
-const results = ref<SearchResult[]>([]);
-
-async function init() {
-    const { data } = await useFetch<StaticSeekIndex>(url);
-    if (!data.value) {
-        throw new Error("Failed to fetch search index.");
-    }
-    const newIndex = createIndexFromObject(data.value);
-
-    if (newIndex instanceof StaticSeekError) {
-        throw newIndex;
-    }
-
-    index.value = newIndex;
-    loading.value = false;
-}
-
-watch(() => query, async (q) => {
-    if (!index.value) {
-        results.value = [];
-        return ;
-    }
-    const searchResults = await search(index.value, q);
-    if (searchResults instanceof StaticSeekError) {
-        console.error(searchResults);
-        results.value = [];
-        return;
-    }
-
-    results.value = searchResults;
-});
-
-init();
-</script>
-
-<template>
-    <template v-if="loading">
-        <slot name="suspence"></slot>
-    </template>
-    <template v-else>
-        <slot name="default" :results="results"></slot>
-    </template>
-</template>
-```
-
-Implementation highlights:
-- Loads the search index once during component initialization via asynchronous `init()`
-- Implements reactive search using a watch dependency on `() => query`
-- Passes search results to the render template through the `results` prop
-- Provides comprehensive error handling for both index creation and search operations
