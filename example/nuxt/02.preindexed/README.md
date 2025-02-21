@@ -1,4 +1,6 @@
-# staticseek Example (Nuxt)
+# Prepare index at deployment and read index on-demand(Nuxt)
+
+Complete project files for this implementation is published on [Github staticseek repository](https://github.com/osawa-naotaka/staticseek/tree/main/example/nuxt/02.preindexed).
 
 Experience this implementation in action at [staticseek-nuxt.pages.dev](https://staticseek-nuxt.pages.dev/).
 
@@ -23,7 +25,7 @@ npm run generate
 # Deploy the generated ".output/public" directory to your HTTP server
 ```
 
-## Integration Guide: StaticSeek with Nuxt
+## Integration Guide: staticseek with Nuxt
 
 ### 0. Creating the Post Index Page
 
@@ -31,9 +33,10 @@ Nuxt generates static HTML files by traversing links from the root (`/`) page. T
 
 ### 1. Creating the Search Index
 
-Begin by creating a static index file. Here's how to implement this at `server/routes/searchindex.json.ts`:
+First, create a static index file. The following example demonstrates how to set this up at `server/routes/searchindex.json.ts`:
 
 ```typescript
+// server/routes/searchindex.json.ts
 import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek";
 import matter from "gray-matter";
 
@@ -56,10 +59,10 @@ export default defineEventHandler(async (event) => {
     return indexToObject(index);
 });
 ```
-
 To use `rawbody` of the posts, configure schema in `content.config.ts`:
 
 ```typescript
+// content.config.ts
 import { defineContentConfig, defineCollection, z } from "@nuxt/content";
 
 export default defineContentConfig({
@@ -80,6 +83,7 @@ export default defineContentConfig({
 To generate `searchindex.json` staticaly, configure `nitro` in `nuxt.config.ts`:
 
 ```typescript
+// nuxt.config.ts
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: ['@nuxt/content'],

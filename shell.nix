@@ -5,7 +5,6 @@ in pkgs.mkShell rec {
 
   buildInputs = with pkgs; [
     git
-    biome
     nodejs_22
     rustup
     wabt

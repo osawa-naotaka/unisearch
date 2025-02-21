@@ -1,4 +1,6 @@
-# staticseek Preindexed On-Demand Loading Example (Next.js)
+# Prepare index at deployment and read index on-demand (Next.js)
+
+Complete project files for this implementation are published on the [Github staticseek repository](https://github.com/osawa-naotaka/staticseek/tree/main/example/next/02.preindexed).
 
 A working demo of this implementation is available at [staticseek-next.pages.dev](https://staticseek-next.pages.dev/).
 
@@ -23,13 +25,14 @@ npm run build
 # Upload the generated "out" directory to your HTTP server
 ```
 
-## Integration Guide: StaticSeek with Next.js
+## Integration Guide: staticseek with Next.js
 
 ### 1. Creating the Search Index
 
 First, create a static index file. The following example demonstrates how to set this up at `src/app/searchindex.json/route.ts`:
 
 ```typescript
+// src/app/searchindex.json/route.ts
 import { getAllPosts } from "@/lib/posts";
 import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek";
 
@@ -46,7 +49,41 @@ export async function GET(request: Request) {
 }
 ```
 
-Key configuration points:
+```typescript
+// src/lib/posts.ts
+import fs from "node:fs";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import matter from "gray-matter";
+
+export type Post = {
+    slug: string;
+    data: Record<string, unknown>;
+    content: string;
+};
+
+const postsDirectory = path.join(path.resolve(), "..", "..", "posts");
+
+export function getPostSlugs(): string[] {
+    return fs
+        .readdirSync(postsDirectory)
+        .filter((file) => file.endsWith(".md"))
+        .map((file) => file.replace(/\.md$/, ""));
+}
+
+export async function getPostBySlug(slug: string): Promise<Post> {
+    const mdxpath = path.join(postsDirectory, `${slug}.md`);
+    const text = await readFile(mdxpath, { encoding: "utf-8" });
+    const { data, content } = matter(text);
+    return { slug, content, data };
+}
+
+export async function getAllPosts(): Promise<Post[]> {
+    return await Promise.all(getPostSlugs().map((slug) => getPostBySlug(slug)));
+}
+```
+
+### Key Configuration Points
 - Set `dynamic = "force-static"` to ensure static file generation.
 - Use `GPULinearIndex` for search functionality (other index types are available).
 - The `allPosts` variable contains an array of posts, each with title, slug, and content fields.
@@ -59,6 +96,7 @@ Key configuration points:
 Create a search page component (e.g., in `src/app/page.tsx`):
 
 ```typescript
+// src/app/page.tsx
 "use client";
 
 import Link from "next/link";
@@ -106,9 +144,9 @@ export default function Index() {
     }, [])
 
     async function onChangeInput(e: React.ChangeEvent<HTMLInputElement>) {
-        if(search_fn.current) {
+        if (search_fn.current) {
             const r = await search_fn.current(e.target.value);
-            if(!(r instanceof StaticSeekError)) {
+            if (!(r instanceof StaticSeekError)) {
                 setResult(r);
             }
         }
@@ -126,9 +164,10 @@ export default function Index() {
 }
 ```
 
-Important implementation details:
+### Implementation Details
+
 - Mark the component with `"use client"` to enable React hooks and client-side functionality.
-- The search function `search_fn` is created by `createSearchFn` only once during component initialization using useEffect, with an empty dependency array [] to ensure it runs only on mount.
+- The search function `search_fn` is created by `createSearchFn` only once during component initialization using `useEffect`, with an empty dependency array [] to ensure it runs only on mount.
 - The created search function `search_fn` itself does not trigger re-renders, so it is stored in a useRef rather than useState.
 - Index is loaded at the first call of `search_fn` to prevent unused fetch of index.
 - Index loading state is triggered by callback function given to the `createSearchFn`.

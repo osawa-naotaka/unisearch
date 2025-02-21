@@ -1,10 +1,12 @@
-# staticseek Example (Astro)
+# Basic Integration Guide for Astro
 
-A working demo of this implementation is available at [staticseek-astro-basic.pages.dev](https://staticseek-astro-basic.pages.dev/).
+This guide demonstrates how to integrate staticseek into a Astro application. 
+You can find the complete implementation in our [GitHub repository](https://github.com/osawa-naotaka/staticseek/tree/main/example/astro/01.basic) and
+see it in action at our [live demo](https://staticseek-astro-basic.pages.dev/).
 
 ## Getting Started
 
-To run the development server locally:
+To start the local development server:
 
 ```bash
 npm install
@@ -23,17 +25,15 @@ npm run build
 # Upload the generated "dist" directory to your HTTP server
 ```
 
-## Basic Usage of staticseek with Astro.js
+## Basic Usage of staticseek with Astro
 
-The following code (`src/pages/index.astro`) demonstrates the most basic usage of staticseek in a Single Page Application (SPA).
-This application extracts and displays matching keywords from a predefined array.
-For input queries of two or fewer characters, an exact match search is performed. For queries of three or more characters, a fuzzy search allowing one character mistake is executed.
+The following code (`src/pages/index.astro`) demonstrates the most basic usage of staticseek in a Single Page Application (SPA). This application extracts and displays matching keywords from a predefined array. For input queries of two or fewer characters, an exact match search is performed. For queries of three or more characters, a fuzzy search allowing one character mistake is executed.
 
 ```html
+// src/pages/index.astro
 ---
 import Html from "../layout/html.astro";
 import { getEntry } from "astro:content";
-
 const entry = await getEntry("contents", "sentences");
 if(!entry) throw new Error("No data found");
 ---
@@ -87,18 +87,20 @@ if(!entry) throw new Error("No data found");
 
 ### Implementation Details
 
-For simplicity, this example uses `innerHTML`. However, in production applications, you should use `createElement` and `appendChild` methods instead of `innerHTML` to mitigate security risks associated with direct HTML injection.
+- For simplicity, this example uses `innerHTML`. However, in production applications, you should use `createElement` and `appendChild` methods instead of `innerHTML` to mitigate security risks associated with direct HTML injection.
 
-While staticseek operates on the client side, code written in the Astro component's component script section only executes once during deployment. Therefore, staticseek is [implemented within a script element in the component template](https://docs.astro.build/en/guides/client-side-scripts/). 
+- While staticseek operates on the client side, code written in the Astro component's component script section only executes once during deployment. Therefore, staticseek is [implemented within a script element in the component template](https://docs.astro.build/en/guides/client-side-scripts/).
 
-This example retrieves search target data from Astro's Content Collections. The content collection directory structure and data schema are defined in `src/content.config.ts`. The sample uses the `getEntry()` function to fetch data from `sentences.json` within the `contents` directory.
+- This example retrieves search target data from Astro's Content Collections. The content collection directory structure and data schema are defined in `src/content.config.ts`. The sample uses the `getEntry()` function to fetch data from `sentences.json` within the `contents` directory.
 
-JavaScript objects retrieved via `getEntry()` can only be used within the component script section and HTML descriptions in the component template section. To use JavaScript objects within `script` elements, we leverage [HTML data attributes](https://docs.astro.build/en/guides/client-side-scripts/#pass-frontmatter-variables-to-scripts). These data attributes allow you to specify custom attributes on HTML elements, enabling the transfer of JavaScript objects as stringified data that can be retrieved and parsed within `script` elements.
+- JavaScript objects retrieved via `getEntry()` can only be used within the component script section and HTML descriptions in the component template section. To use JavaScript objects within `script` elements, we leverage [HTML data attributes](https://docs.astro.build/en/guides/client-side-scripts/#pass-frontmatter-variables-to-scripts). These data attributes allow you to specify custom attributes on HTML elements, enabling the transfer of JavaScript objects as stringified data that can be retrieved and parsed within `script` elements.
 
-When passing JavaScript objects through data attributes, the objects are bundled as attribute values in the final HTML file. Therefore, passing large objects can significantly increase the HTML file size, potentially slowing down browser loading times. When using this approach, carefully consider the size of the objects being transferred to maintain optimal performance.
+- When passing JavaScript objects through data attributes, the objects are bundled as attribute values in the final HTML file. Therefore, passing large objects can significantly increase the HTML file size, potentially slowing down browser loading times. When using this approach, carefully consider the size of the objects being transferred to maintain optimal performance.
 
 - The search index is created by passing the keyword array to `createIndex`.
+
 - The search query is input via a text field (`input:text`), and searches are executed on each `input` event.
+
 - Search results are displayed using the `id` field from the `SearchResult` type, which corresponds to the index of the keyword in the original `target` array.
 
 ### Additional Notes

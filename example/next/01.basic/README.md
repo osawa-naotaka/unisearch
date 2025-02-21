@@ -1,21 +1,21 @@
-# staticseek Basic Example (Next.js)
+# Basic Integration Guide for Next.js
 
-A working demo of this implementation is available at [staticseek-next-basic.pages.dev](https://staticseek-next-basic.pages.dev/).
+This guide demonstrates how to integrate staticseek into a Next.js application. You can find the complete implementation in our [GitHub repository](https://github.com/osawa-naotaka/staticseek/tree/main/example/next/01.basic) and see it in action at our [live demo](https://staticseek-next-basic.pages.dev/).
 
-## Getting Started
+## Development Setup
 
-To run the development server locally:
+To start the local development server:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Navigate to [http://localhost:3000](http://localhost:3000) in your browser to view the application.
+Visit [http://localhost:3000](http://localhost:3000) to view the application.
 
-## Deployment
+## Production Deployment
 
-This example is optimized for static file deployment. To generate and deploy the static files:
+This project is optimized for static file hosting. To generate and deploy static files:
 
 ```bash
 npm install
@@ -23,13 +23,13 @@ npm run build
 # Upload the generated "out" directory to your HTTP server
 ```
 
-## Basic Usage of StaticSeek with Next.js
+## Basic staticseek Implementation
 
-The following code (`src/app/page.tsx`) demonstrates the most basic usage of StaticSeek in a Single Page Application (SPA).
-This application extracts and displays matching keywords from a predefined array.
-For input queries of two or fewer characters, an exact match search is performed. For queries of three or more characters, a fuzzy search allowing one character mistake is executed.
+The following code (`src/app/page.tsx`) demonstrates the simplest implementation of staticseek in a Single Page Application (SPA). This application searches and displays matching keywords from a predefined array.
+
 
 ```typescript
+// src/app/page.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -51,7 +51,7 @@ export default function Index() {
     useEffect(() => {
         const newIndex = createIndex(LinearIndex, target);
         if (newIndex instanceof StaticSeekError) {
-            console.error(index);
+            console.error(newIndex);
             return;
         }
         index.current = newIndex;
@@ -82,7 +82,6 @@ export default function Index() {
                 </li>
                 {result.length === 0 && query === ""
                     ? target.map((r, idx) => (
-                          // biome-ignore lint: use index as key field.
                           <li key={idx}>
                               <div className="sentence">{r}</div>
                               <div />
@@ -102,15 +101,17 @@ export default function Index() {
 
 ### Implementation Details
 
-- The search index is created by passing the keyword array to `createIndex`.
-- Since index creation only needs to happen once per component lifecycle, it is executed inside a `useEffect` hook with an empty dependency array (`[]`).
-- The search index does not trigger re-renders, so it is stored in a `useRef` variable.
-- The search query is input via a text field (`input:text`), and searches are executed on each `onChange` event.
-- As the `search` function is asynchronous, the event handler is also an `async` function.
-- Search results are displayed using the `id` field from the `SearchResult` type, which corresponds to the index of the keyword in the original `target` array.
+#### Core Components
 
-### Additional Notes
+- The search index is created by passing the keyword array to `createIndex`
+- Index creation occurs once per component lifecycle through a `useEffect` hook with an empty dependency array (`[]`)
+- The search index is stored in a useRef variable to prevent triggering re-renders
+- Search queries are handled via a text field (`input:text`), with searches executing on each onChange event
+- The `search` function operates asynchronously, requiring an async event handler
+- Search results utilize the `id` field from the `SearchResult` type to reference the original `target` array index
 
-- The component is marked with `"use client"` to enable React hooks and client-side functionality.
-- Search results are sorted by relevance score.
-- Error handling is implemented for both index creation and search operations.
+#### Technical Considerations
+
+- The `"use client"` directive enables React hooks and client-side functionality
+- Search results are automatically sorted by relevance score
+- Error handling is implemented for both index creation and search operations
