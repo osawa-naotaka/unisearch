@@ -4,11 +4,16 @@ import Html from "../layout/Html.astro";
 <Html>
 	<section>
 		<div class="input-area">
-			<div>search</div>
-			<input type="text" name="search" id="input-text" placeholder="type your search query in English..." />
+			<div>Search</div>
+			<input type="text" name="search" id="input-text" placeholder="Type your search query in English..." />
 		</div>
-		<h2>results</h2>
-		<ul id="search-result"></ul>
+		<div class="loading">
+			Loading index...
+		</div>
+		<div class="result">
+			<h2>Results</h2>
+			<ul id="search-result"></ul>
+		</div>
 	</section>
 </Html>
 <script>
@@ -22,16 +27,22 @@ const schema = v.object({
 	}),
 });
 
-const search_fn = createSearchFn("/searchindex.json");
 const input_text = document.querySelector<HTMLInputElement>("#input-text");
 const search_result = document.querySelector<HTMLUListElement>("#search-result");
-if(search_result === null) throw new Error("cannot find search-result.");
+if (search_result === null) throw new Error("Cannot find search-result.");
+const search_fn = createSearchFn("/searchindex.json", (x) => {
+	if(x) {
+		search_result.classList.add("is-loading");
+	} else {
+		search_result.classList.remove("is-loading");
+	}
+} );
 
 input_text?.addEventListener("input", async () => {
 	const result = await search_fn(input_text.value);
 	search_result.innerText = "";
-	if(!(result instanceof StaticSeekError)) {
-		for(const item of result) {
+	if (!(result instanceof StaticSeekError)) {
+		for (const item of result) {
 			const key = v.parse(schema, item.key);
 			const li = document.createElement("li");
 			li.innerHTML = `<a href="/posts/${key.id}"><h3>${key.data.title}</h3></a><p>${item.refs[0].wordaround}</p>`;
@@ -40,3 +51,14 @@ input_text?.addEventListener("input", async () => {
 	}
 });
 </script>
+<style>
+.result:has(#search-result.is-loading) {
+	display: none;
+}
+.loading {
+	display: none;
+}
+section:has(#search-result.is-loading) > .loading {
+	display: block;
+}
+</style>

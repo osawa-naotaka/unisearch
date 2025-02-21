@@ -12,17 +12,20 @@ const target = data.value?.data ?? [];
 const index = createIndex(LinearIndex, target);
 if (index instanceof StaticSeekError) throw index;
 
-watch(query, async (q) => {
-    const searchResults = await search(index, q);
-    if (searchResults instanceof StaticSeekError) {
-        console.error(searchResults);
-        result.value = [];
-        return;
-    }
+watch(
+    query,
+    async (q) => {
+        const searchResults = await search(index, q);
+        if (searchResults instanceof StaticSeekError) {
+            console.error(searchResults);
+            result.value = [];
+            return;
+        }
 
-    result.value = searchResults;
-}, { immediate: true });
-
+        result.value = searchResults;
+    },
+    { immediate: true },
+);
 </script>
 
 <template>
