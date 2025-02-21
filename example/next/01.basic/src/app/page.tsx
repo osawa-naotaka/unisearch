@@ -55,7 +55,7 @@ export default function Index() {
     useEffect(() => {
         const newIndex = createIndex(LinearIndex, target);
         if (newIndex instanceof StaticSeekError) {
-            console.error(index);
+            console.error(newIndex);
             return;
         }
         index.current = newIndex;

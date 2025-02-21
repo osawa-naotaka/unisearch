@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { JSX } from "react";
-import { createSearchFn, SearchResult, StaticSeekError } from "staticseek";
+import { StaticSeekError, createSearchFn } from "staticseek";
+import type { SearchResult } from "staticseek";
 import type { SearchFn } from "staticseek";
 import * as v from "valibot";
 
@@ -19,8 +20,8 @@ function StaticSeekResult(result: SearchResult[]): JSX.Element {
         const key = v.parse(schema, item.key);
         return (
             <li key={key.slug}>
-                <Link href={`/posts/${key.slug as string}`}>
-                    <h3>{key.data.title as string}</h3>
+                <Link href={`/posts/${key.slug}`}>
+                    <h3>{key.data.title}</h3>
                 </Link>
                 <p>{item.refs[0].wordaround}</p>
             </li>
@@ -42,12 +43,12 @@ export default function Index() {
 
     useEffect(() => {
         search_fn.current = createSearchFn("/searchindex.json", setIsLoading);
-    }, [])
+    }, []);
 
     async function onChangeInput(e: React.ChangeEvent<HTMLInputElement>) {
-        if(search_fn.current) {
+        if (search_fn.current) {
             const r = await search_fn.current(e.target.value);
-            if(!(r instanceof StaticSeekError)) {
+            if (!(r instanceof StaticSeekError)) {
                 setResult(r);
             }
         }
@@ -59,7 +60,7 @@ export default function Index() {
                 <div>search</div>
                 <input type="text" name="search" id="search" placeholder="type your search query in English..." onChange={onChangeInput} />
             </div>
-            {isLoading ? (<div>Loading index...</div>) : StaticSeekResult(result)}
+            {isLoading ? <div>Loading index...</div> : StaticSeekResult(result)}
         </main>
     );
 }

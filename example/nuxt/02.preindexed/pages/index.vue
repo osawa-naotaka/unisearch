@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { createSearchFn, StaticSeekError } from "staticseek";
+import { StaticSeekError, createSearchFn } from "staticseek";
 import type { SearchResult } from "staticseek";
 import * as v from "valibot";
 
@@ -12,15 +12,17 @@ const schema = v.object({
     }),
 });
 
-const search_fn = createSearchFn("/searchindex.json", (x) => { loading.value = x });
-const loading   = ref(false);
-const results   = ref<SearchResult[]>([]);
-const query     = ref("");
+const search_fn = createSearchFn("/searchindex.json", (x) => {
+    loading.value = x;
+});
+const loading = ref(false);
+const results = ref<SearchResult[]>([]);
+const query = ref("");
 
 async function onInputQuery(e: Event) {
-    if(e.target instanceof HTMLInputElement) {
+    if (e.target instanceof HTMLInputElement) {
         const r = await search_fn(e.target.value);
-        if(!(r instanceof StaticSeekError)) {
+        if (!(r instanceof StaticSeekError)) {
             results.value = r;
         }
     }
