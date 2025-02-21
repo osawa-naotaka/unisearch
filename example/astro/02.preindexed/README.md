@@ -1,21 +1,23 @@
-# staticseek Example (Astro)
+# Prepare index at deployment and read index on-demand (Astro)
 
-A working demo of this implementation is available at [staticseek-astro.pages.dev](https://staticseek-astro.pages.dev/).
+This guide demonstrates how to integrate staticseek into a Astro application. 
+You can find the complete implementation in our [GitHub repository](https://github.com/osawa-naotaka/staticseek/tree/main/example/astro/02.preindexed) and
+see it in action at our [live demo](https://staticseek-astro.pages.dev/).
 
 ## Getting Started
 
-To run the development server locally:
+To run the development server locally, execute the following commands:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Navigate to [http://localhost:4321](http://localhost:4321) in your browser to view the application.
+Once the server is running, navigate to [http://localhost:4321](http://localhost:4321) in your browser to view the application.
 
 ## Deployment
 
-This example is optimized for static file deployment. To generate and deploy the static files:
+This example is optimized for static file deployment. To generate and deploy the static files, use the following commands:
 
 ```bash
 npm install
@@ -23,13 +25,14 @@ npm run build
 # Upload the generated "dist" directory to your HTTP server
 ```
 
-## Integration Guide: StaticSeek with Astro
+## Integration Guide: staticseek with Astro
 
 ### 1. Creating the Search Index
 
 First, create a static index file. The following example demonstrates how to set this up at `src/pages/searchindex.json.ts`:
 
 ```typescript
+// src/pages/searchindex.json.ts
 import { getCollection } from "astro:content";
 import { GPULinearIndex, StaticSeekError, createIndex, indexToObject } from "staticseek";
 
@@ -41,36 +44,52 @@ export async function GET() {
     });
 
     if (linear_index instanceof StaticSeekError) {
-        return new Response(null, { status: 500, statusText: linear_index.message });
+        return new Response(linear_index.message, { status: 500 });
     }
 
     return new Response(JSON.stringify(indexToObject(linear_index)));
 }
 ```
 
-Key configuration points:
-- Use `GPULinearIndex` for search functionality (other index types are available)
-- Posts are retrieved using Astro's `getCollection` function from the content collection
-- Collection directory and schema are defined in `src/content.config.ts`
-- Configure `key_fields` to specify which fields should be available in search results (title and id in this example)
-- Use `search_targets` to define which fields should be searchable (body and title in this example)
-- Index is converted to JSON using `indexToObject` before being returned
+```typescript
+// src/content.config.ts
+import { defineCollection, z } from "astro:content";
+import { glob } from "astro/loaders";
+
+const posts = defineCollection({
+    loader: glob({ pattern: "./[^_]*.md", base: "../../posts" }),
+    schema: z.object({
+        title: z.string(),
+    }),
+});
+
+export const collections = { posts };
+```
+
+### Key Configuration Points
+- Use `GPULinearIndex` for search functionality (other index types are available).
+- Posts are retrieved using Astro's `getCollection` function from the content collection.
+- The collection directory and schema are defined in `src/content.config.ts`.
+- Configure `key_fields` to specify which fields are available in search results (title and slug in this example).
+- Use `search_targets` to define which fields are searchable (title and content in this example).
+- The index is converted to JSON using `indexToObject` before being returned.
 
 ### 2. Implementing the Search Interface
 
-Create a search page (e.g., in `src/index.astro`):
+_Create a search page (e.g., in `src/pages/index.astro`):_
 
 ```html
+// src/pages/index.astro
 ---
 import Html from "../layout/Html.astro";
 ---
 <Html>
 	<section>
 		<div class="input-area">
-			<div>search</div>
-			<input type="text" name="search" id="input-text" placeholder="type your search query in English..." />
+			<div>Search</div>
+			<input type="text" name="search" id="input-text" placeholder="Type your search query in English..." />
 		</div>
-		<h2>results</h2>
+		<h2>Results</h2>
 		<ul id="search-result"></ul>
 	</section>
 </Html>
@@ -88,13 +107,13 @@ const schema = v.object({
 const search_fn = createSearchFn("/searchindex.json");
 const input_text = document.querySelector<HTMLInputElement>("#input-text");
 const search_result = document.querySelector<HTMLUListElement>("#search-result");
-if(search_result === null) throw new Error("cannot find search-result.");
+if (search_result === null) throw new Error("Cannot find search-result.");
 
 input_text?.addEventListener("input", async () => {
 	const result = await search_fn(input_text.value);
 	search_result.innerText = "";
-	if(!(result instanceof StaticSeekError)) {
-		for(const item of result) {
+	if (!(result instanceof StaticSeekError)) {
+		for (const item of result) {
 			const key = v.parse(schema, item.key);
 			const li = document.createElement("li");
 			li.innerHTML = `<a href="/posts/${key.id}"><h3>${key.data.title}</h3></a><p>${item.refs[0].wordaround}</p>`;
@@ -105,15 +124,16 @@ input_text?.addEventListener("input", async () => {
 </script>
 ```
 
+### Implementation Details
+
 For simplicity, this example uses `innerHTML`. However, in production applications, you should use `createElement` and `appendChild` methods instead of `innerHTML` to mitigate security risks associated with direct HTML injection.
 
-While staticseek operates on the client side, code written in the Astro component's component script section only executes once during deployment. Therefore, staticseek is [implemented within a script element in the component template](https://docs.astro.build/en/guides/client-side-scripts/). 
+While staticseek operates on the client side, code written in the Astro component's script section only executes once during deployment. Therefore, staticseek is [implemented within a script element in the component template](https://docs.astro.build/en/guides/client-side-scripts/).
 
-Important implementation details:
-- The search index is loaded only once during first call of `search_fn` generated by `createSearchFn`.
+- The search index is loaded only once during the first call of `search_fn` generated by `createSearchFn`.
 - Search results are sorted by relevance score.
 - Each result includes:
   - The key fields specified during index creation (title and slug).
   - The key is parsed using `valibot`.
-  - A link to the full post using the id and title of the key fileds.
+  - A link to the full post using the id and title of the key fields.
   - Matched content context via `refs[*].wordaround`.
