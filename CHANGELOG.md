@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.6.0] - 2025-02-24
+### Added
+- search_targes parameter now supports intermediate field.
+
+### Removed
+- remove HybridBigramInvertedIndex.
+
+
 ## [2.5.1] - 2025-02-21
 ### Added
 - add type export SearchFn, SearchFnResult and SearchFnCallback
@@ -141,7 +149,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - search frontend, google-like syntax
 - sorting search result based on TF-IDF
 
-[Unreleased]: https://github.com/osawa-naotaka/staticseek/compare/v2.5.1...HEAD
+[Unreleased]: https://github.com/osawa-naotaka/staticseek/compare/v2.6.0...HEAD
+[2.6.0]: https://github.com/osawa-naotaka/staticseek/compare/v2.5.1...v2.6.0
 [2.5.1]: https://github.com/osawa-naotaka/staticseek/compare/v2.5.0...v2.5.1
 [2.5.0]: https://github.com/osawa-naotaka/staticseek/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/osawa-naotaka/staticseek/compare/v2.3.0...v2.4.0
