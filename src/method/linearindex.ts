@@ -163,8 +163,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             const tf = r.refs
                 .map(
                     (v) =>
-                        this.getWeight(env.weights, v.path) *
-                        v.token.length /
+                        (this.getWeight(env.weights, v.path) * v.token.length) /
                         (content_size.get(r.id)?.get(v.path) || Number.POSITIVE_INFINITY) /
                         (v.distance + 1),
                 )
