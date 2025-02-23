@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - search_targes parameter now supports intermediate field.
 - add weights parameter in IndexOpt.
+- allow to specify full path to the from: parameter.
 
 ### Fixed
 - fix incomplete type exports.

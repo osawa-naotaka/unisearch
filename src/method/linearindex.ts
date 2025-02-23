@@ -198,7 +198,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
     }
 
     private getWeight(weights: [string, number][], path: string): number {
-        const w = weights.find(([p, _]) => p === path);
+        const w = weights.find(([p, _]) => path.startsWith(p));
         return w ? w[1] : weights[weights.length - 1][1]; // last element is default
     }
 }

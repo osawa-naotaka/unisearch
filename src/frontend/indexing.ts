@@ -77,7 +77,7 @@ export function createIndex<T>(
                 return {
                     version: Version,
                     type: key,
-                    env: {
+                    env: { // search_targets is not included because only specified fields are indexed
                         field_names: field_names,
                         distance: opt.distance || 1,
                         weights: weights

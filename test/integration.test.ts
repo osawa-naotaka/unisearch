@@ -625,6 +625,16 @@ describe("from: search", async () => {
     );
 });
 
+describe("from: search, miss-spelled field specify", async () => {
+    const index = createIndex(LinearIndex, array_of_articles);
+    if(index instanceof StaticSeekError) throw index;
+
+    const result1 = await search(index, "from:slag guide");
+    test("matches single english article", () => 
+        expect(result1).toStrictEqual([])
+    );
+});
+
 describe("from: weighted search", async () => {
     const index = createIndex(LinearIndex, array_of_articles, { weights: [["slug", 2.5]] });
     if(index instanceof StaticSeekError) throw index;
@@ -649,6 +659,122 @@ describe("from: weighted search", async () => {
         ])
     );
 });
+
+describe("and search with weights (full path)", async () => {
+    const index = createIndex(LinearIndex, array_of_articles, {
+        weights: [
+            ["data.title", 2],
+        ],
+    });
+    if(index instanceof StaticSeekError) throw index;
+
+    const result2 = await search(index, "from:title 概要 ユーザーインターフェース");
+    test("matches single japanese article", () => 
+        expect(result2).toStrictEqual([
+            {
+                id: 7,
+                key: {},
+                score: 1.3790948530409255,
+                refs: [
+                    {
+                        token: "概要",
+                        path: "data.title",
+                        pos: 6,
+                        wordaround: "reactの概要",
+                        distance: 0,
+                    },
+                    {
+                        token: "ユーザーインターフェース",
+                        path: "content",
+                        pos: 6,
+                        wordaround: "reactはユーザーインターフェースを構築するためのjavascriptライブラリです。コンポーネントベースの設計により、開発者は再利用可能なコードを効率的に作成できます。また、動的なコンテンツのレンダリングが容易になります。",
+                        distance: 0,
+                    },
+                ],
+            },
+        ])
+    );
+});
+
+describe("and search with weights (leaf name only)", async () => {
+    const index = createIndex(LinearIndex, array_of_articles, {
+        weights: [
+            ["title", 2],
+        ],
+    });
+    if(index instanceof StaticSeekError) throw index;
+
+    const result2 = await search(index, "from:title 概要 ユーザーインターフェース");
+    test("matches single japanese article", () => 
+        expect(result2).toStrictEqual([
+            {
+                id: 7,
+                key: {},
+                score: 1.3790948530409255,
+                refs: [
+                    {
+                        token: "概要",
+                        path: "data.title",
+                        pos: 6,
+                        wordaround: "reactの概要",
+                        distance: 0,
+                    },
+                    {
+                        token: "ユーザーインターフェース",
+                        path: "content",
+                        pos: 6,
+                        wordaround: "reactはユーザーインターフェースを構築するためのjavascriptライブラリです。コンポーネントベースの設計により、開発者は再利用可能なコードを効率的に作成できます。また、動的なコンテンツのレンダリングが容易になります。",
+                        distance: 0,
+                    },
+                ],
+            },
+        ])
+    );
+});
+
+describe("and search with weight (intermediate node)", async () => {
+    const index = createIndex(LinearIndex, array_of_articles, {
+        weights: [
+            ["data", 2],
+        ],
+    });
+    if(index instanceof StaticSeekError) throw index;
+
+    const result2 = await search(index, "概要 ユーザーインターフェース");
+    test("matches single japanese article", () => 
+        expect(result2).toStrictEqual([
+            {
+                id: 7,
+                key: {},
+                score: 2.0088013685626214,
+                refs: [
+                    {
+                        token: "概要",
+                        path: "slug",
+                        pos: 5,
+                        wordaround: "react概要",
+                        distance: 0,
+                    },
+                    {
+                        token: "概要",
+                        path: "data.title",
+                        pos: 6,
+                        wordaround: "reactの概要",
+                        distance: 0,
+                    },
+                    {
+                        token: "ユーザーインターフェース",
+                        path: "content",
+                        pos: 6,
+                        wordaround: "reactはユーザーインターフェースを構築するためのjavascriptライブラリです。コンポーネントベースの設計により、開発者は再利用可能なコードを効率的に作成できます。また、動的なコンテンツのレンダリングが容易になります。",
+                        distance: 0,
+                    },
+                ],
+            },
+        ])
+    );
+});
+
 
 describe("long query search", async () => {
     const index = createIndex(LinearIndex, array_of_articles);
@@ -1028,6 +1154,74 @@ describe("Hybrid trie bigram inverted index fuzzy search, with alphabet and kanj
                     {
                         token: "可能",
                         path: "content",
+                        distance: 0,
+                    },
+                ],
+            },
+        ])
+    );
+});
+
+describe("Hybrid trie bigram inverted index with field-specify from:", async () => {
+    const index = createIndex(HybridTrieBigramInvertedIndex, array_of_articles, {
+        // weights are ignored.
+        weights: [["content", 0.5], ["title", 4], ["data.description", 2]],
+    });
+    if(index instanceof StaticSeekError) throw index;
+
+    const result1 = await search(index, "from:title 概");
+    test("matches multiple japanese articles, single letter query with field:title", () => 
+        expect(result1).toStrictEqual([
+            {
+                id: 7,
+                key: {},
+                score: 1,
+                refs: [
+                    {
+                        token: "概要",
+                        path: "data.title",
+                        distance: 0,
+                    },
+                ],
+            },
+            {
+                id: 9,
+                key: {},
+                score: 1,
+                refs: [
+                    {
+                        token: "概要",
+                        path: "data.title",
+                        distance: 0,
+                    },
+                ],
+            },
+        ])
+    );
+
+    const result2 = await search(index, "from:data.title 概");
+    test("matches multiple japanese articles, single letter query with field:data.title", () => 
+        expect(result2).toStrictEqual([
+            {
+                id: 7,
+                key: {},
+                score: 1,
+                refs: [
+                    {
+                        token: "概要",
+                        path: "data.title",
+                        distance: 0,
+                    },
+                ],
+            },
+            {
+                id: 9,
+                key: {},
+                score: 1,
+                refs: [
+                    {
+                        token: "概要",
+                        path: "data.title",
                         distance: 0,
                     },
                 ],
