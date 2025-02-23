@@ -9,10 +9,9 @@ export { StaticSeekError } from "@src/frontend/base";
 export type {
     StaticSeekIndex,
     StaticSeekIndexObject,
-    SearchEnv,
+    IndexOpt,
     FieldName,
     Path,
-    FieldNameMap,
     Reference,
     SearchResult,
     SearchFn,

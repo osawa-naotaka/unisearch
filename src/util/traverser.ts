@@ -27,7 +27,8 @@ export function extractStringsAll(path: Path, obj: unknown): [Path, string][] {
         return [[path, obj]];
     }
     if (Array.isArray(obj)) {
-        return [[path, obj.join(" ")]];
+        const is_string_array = obj.every((x) => typeof x === "string");
+        return is_string_array ? [[path, obj.join(" ")]] : [];
     }
     if (isPlainObject(obj)) {
         return Object.keys(obj)

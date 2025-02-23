@@ -1,11 +1,11 @@
-import type { SearchEnv, SearchIndex, SearchResult, StaticIndex } from "ref/method/base";
+import type { SearchEnv, SearchIndex, SearchResult, StaticSeekIndexRoot } from "ref/method/base";
 import { StaticSeekError } from "@ref/method/base";
 import type { ASTNode } from "@ref/method/parse";
 import { expr } from "@ref/method/parse";
 import { defaultNormalizer, splitBySpace } from "@src/util/preprocess";
 
 export async function search<T>(
-    index: StaticIndex<SearchIndex<T>>,
+    index: StaticSeekIndexRoot<SearchIndex<T>>,
     query: string,
 ): Promise<SearchResult[] | StaticSeekError> {
     try {

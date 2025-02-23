@@ -29,14 +29,14 @@ export const SearchEnv_v = v.object({
 
 export type SearchEnv = v.InferOutput<typeof SearchEnv_v>;
 
-export const StaticIndex_v = v.object({
+export const StaticSeekIndexRoot_v = v.object({
     version: v.string(),
     type: v.string(),
     env: SearchEnv_v,
     index_entry: v.unknown(),
 });
 
-export type StaticIndex<T> = {
+export type StaticSeekIndexRoot<T> = {
     version: string;
     type: string;
     env: SearchEnv;
@@ -69,7 +69,7 @@ export interface SearchIndex<T> {
     search(env: SearchEnv, keyword: string[]): Promise<SearchResult[]>;
 }
 
-export type StaticSeekIndex = StaticIndex<SearchIndex<unknown>>;
-export type StaticSeekIndexObject = StaticIndex<unknown>;
+export type StaticSeekIndex = StaticSeekIndexRoot<SearchIndex<unknown>>;
+export type StaticSeekIndexObject = StaticSeekIndexRoot<unknown>;
 export type SearchFnResult = Promise<SearchResult[] | StaticSeekError>;
 export type SearchFn = (query: string) => SearchFnResult;

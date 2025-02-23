@@ -12,7 +12,7 @@ export type FieldNameMap = Record<FieldName, Path>;
 export class StaticSeekError extends Error {}
 
 // index
-export type StaticIndex<T> = {
+export type StaticSeekIndexRoot<T> = {
     version: string;
     type: string;
     env: SearchEnv;
@@ -52,5 +52,5 @@ export interface SearchIndex<T> {
     search(env: SearchEnv, keyword: string): Promise<SearchResult[]>;
 }
 
-export type StaticSeekIndex = StaticIndex<SearchIndex<unknown>>;
-export type StaticSeekIndexObject = StaticIndex<unknown>;
+export type StaticSeekIndex = StaticSeekIndexRoot<SearchIndex<unknown>>;
+export type StaticSeekIndexObject = StaticSeekIndexRoot<unknown>;

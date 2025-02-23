@@ -210,6 +210,35 @@ describe("index with key_field", async () => {
     );
 });
 
+describe("index with key_field of all leaf of a node", async () => {
+    const index = createIndex(LinearIndex, array_of_articles, { key_fields: ["slug", "data"] });
+    if(index instanceof StaticSeekError) throw index;
+    const result1 = await search(index, "maintainability");
+    test("matches single english article", () => 
+        expect(result1).toStrictEqual([
+            {
+                id: 2,
+                key: { slug: "typescript-guide", "data": {
+                    "description": "A beginner's guide to TypeScript and its benefits over plain JavaScript.",
+                    "tags": ["typescript", "javascript", "static"],
+                    "title": "TypeScript Guide"
+                }},
+                score: 0.13830942998767318,
+                refs: [
+                    {
+                        token: "maintainability",
+                        path: "content",
+                        pos: 142,
+                        wordaround: "atic typing, making it easier to catch errors during development. this improves the reliability and maintainability of codebases. typescript is widely used in modern web development alongside libraries like react an",
+                        distance: 0,
+                    },
+                ],
+            },
+        ])
+    );
+});
+
+
 describe("index with search_targets", async () => {
     const index = createIndex(LinearIndex, array_of_articles, {search_targets: ['data.title','data.description','data.tags']});
     if(index instanceof StaticSeekError) throw index;
