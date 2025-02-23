@@ -11,7 +11,7 @@
     "homepage": "https://staticseek.lulliecat.com",
     "repository": {
         "type": "git",
-        "url": "https://github.com/osawa-naotaka/staticseek.git"
+        "url": "git+https://github.com/osawa-naotaka/staticseek.git"
     },
     "type": "module",
     "scripts": {
