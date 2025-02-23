@@ -123,7 +123,7 @@ export const float: Parser<number> = map(cat(int, char("."), frac), (x) => x[0] 
 <token>   ::= <exact> | <fuzzy>
 <term>    ::= <token> | '-' <token>
 <group>   ::= <term> | '(' <space>* <expr> <space>* (')' | <eos>)
-<adj>     ::= 'from:' <nstr> <space>+ <adj> | 'weight:' <number> <space>+ <adj> | group
+<adj>     ::= 'from:' <nstr> <space>+ <adj> | group
 <and>     ::= <adj> (<space>+ <adj>)*
 <expr>    ::= <and> [<space>+ 'or' <space>+ <and>]*
 */
@@ -149,12 +149,6 @@ export type From = {
     node: ASTNode;
 };
 
-export type Weight = {
-    type: "weight";
-    weight: number;
-    node: ASTNode;
-};
-
 export type Distance = {
     type: "distance";
     distance: number;
@@ -171,7 +165,7 @@ export type Or = {
     nodes: ASTNode[];
 };
 
-export type ASTNode = Exact | Fuzzy | Not | From | Weight | Distance | And | Or;
+export type ASTNode = Exact | Fuzzy | Not | From | Distance | And | Or;
 
 export const escgetc: Parser<Char> = or(
     map(cat(char("\\"), getc), (x) => x[1]),
@@ -197,18 +191,13 @@ export const from: Parser<ASTNode> = map(cat(str("from:"), nstr, space1, adj), (
     field: x[1].join(""),
     node: x[3],
 }));
-export const weight: Parser<ASTNode> = map(cat(str("weight:"), or(float, int), space1, adj), (x) => ({
-    type: "weight",
-    weight: x[1],
-    node: x[3],
-}));
 export const distance: Parser<ASTNode> = map(cat(str("distance:"), int, space1, adj), (x) => ({
     type: "distance",
     distance: x[1],
     node: x[3],
 }));
 export function adj(s: Str): ParserOut<ASTNode> {
-    return or(from, weight, distance, group)(s);
+    return or(from, distance, group)(s);
 }
 export const and: Parser<ASTNode> = map(cat(adj, rep(map(cat(space1, adj), (x) => x[1]))), (x) => ({
     type: "and",

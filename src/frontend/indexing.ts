@@ -1,5 +1,5 @@
-import type { IndexOpt, Path, SearchIndex, StaticIndex } from "@src/frontend/base";
-import { StaticIndex_v, StaticSeekError, Version } from "@src/frontend/base";
+import type { IndexOpt, Path, SearchIndex, StaticSeekIndexRoot } from "@src/frontend/base";
+import { StaticSeekError, StaticSeekIndexRoot_v, Version } from "@src/frontend/base";
 import { IndexTypes } from "@src/frontend/indextypes";
 import { defaultNormalizer, splitByGrapheme } from "@src/util/preprocess";
 import { extractStringsAll, getValueByPath, setObject } from "@src/util/traverser";
@@ -12,33 +12,42 @@ export function createIndex<T>(
     index_class: IndexClass,
     contents: unknown[],
     opt: IndexOpt = {},
-): StaticIndex<SearchIndex<T>> | StaticSeekError {
+): StaticSeekIndexRoot<SearchIndex<T>> | StaticSeekError {
     try {
         if (!Array.isArray(contents)) throw new StaticSeekError("staticseek: contents must be array.");
         if (contents.length === 0) throw new StaticSeekError("staticseek: contents must not be empty.");
 
-        // indexing for search
         const search_index = new index_class();
+        const field_names: Record<string, string> = {};
 
+        // indexing for search
         contents.forEach((content, id) => {
             if (opt.search_targets) {
                 opt.search_targets.sort();
                 // indexing required filed only
                 for (const path of opt.search_targets) {
-                    const obj = getValueByPath(path, content);
-                    if (obj === undefined) continue;
-                    if (typeof obj === "string") {
-                        search_index.setToIndex(id, path, splitByGrapheme(defaultNormalizer(obj)));
-                    } else if (Array.isArray(obj)) {
-                        search_index.setToIndex(id, path, splitByGrapheme(defaultNormalizer(obj.join(" "))));
-                    } else {
-                        throw new StaticSeekError(`staticseek: ${path} is not string or array of string.`);
+                    const path_obj = getValueByPath(path, content);
+                    if (path_obj === undefined) continue;
+                    for (const [single_path, single_obj] of extractStringsAll(path, path_obj)) {
+                        search_index.setToIndex(id, single_path, splitByGrapheme(defaultNormalizer(single_obj)));
+
+                        // register field name map
+                        const name = nameOf(path);
+                        if (name !== undefined) {
+                            field_names[name] = path;
+                        }
                     }
                 }
             } else {
                 // indexing all
                 for (const [path, obj] of extractStringsAll("", content)) {
                     search_index.setToIndex(id, path, splitByGrapheme(defaultNormalizer(obj)));
+
+                    // register field name map
+                    const name = nameOf(path);
+                    if (name !== undefined) {
+                        field_names[name] = path;
+                    }
                 }
             }
 
@@ -56,21 +65,24 @@ export function createIndex<T>(
         // fix index
         search_index.fixIndex();
 
-        // create field name map
-        const field_names: Record<string, string> = {};
-        for (const path of extractStringsAll("", contents[0]).map(([p]) => p)) {
-            const name = nameOf(path);
-            if (name !== undefined) {
-                field_names[name] = path;
-            }
-        }
-
+        // create index object
         for (const [key, value] of Object.entries(IndexTypes)) {
             if (value === index_class) {
+                // create weights array
+                const weights = (opt.weights || []).map(([path, weight]): [Path, number] => [
+                    field_names[path] || path,
+                    weight,
+                ]);
+                weights.push(["", 1]); // default weight is last element
                 return {
                     version: Version,
                     type: key,
-                    env: { field_names: field_names, distance: opt.distance || 1, weight: 1 },
+                    env: {
+                        // search_targets is not included because only specified fields are indexed
+                        field_names: field_names,
+                        distance: opt.distance || 1,
+                        weights: weights,
+                    },
                     index_entry: search_index,
                 };
             }
@@ -87,9 +99,11 @@ export function createIndex<T>(
     }
 }
 
-export function createIndexFromObject<T>(index: StaticIndex<T>): StaticIndex<SearchIndex<T>> | StaticSeekError {
+export function createIndexFromObject<T>(
+    index: StaticSeekIndexRoot<T>,
+): StaticSeekIndexRoot<SearchIndex<T>> | StaticSeekError {
     try {
-        const parsed_index = v.parse(StaticIndex_v, index);
+        const parsed_index = v.parse(StaticSeekIndexRoot_v, index);
         if (parsed_index.version !== Version)
             return new StaticSeekError(
                 `Older versions of the index are used. Please rebuild the index with version ${Version}.`,
@@ -111,7 +125,7 @@ export function createIndexFromObject<T>(index: StaticIndex<T>): StaticIndex<Sea
     }
 }
 
-export function indexToObject<T>(index: StaticIndex<SearchIndex<T>>): StaticIndex<T> {
+export function indexToObject<T>(index: StaticSeekIndexRoot<SearchIndex<T>>): StaticSeekIndexRoot<T> {
     return {
         version: index.version,
         type: index.type,

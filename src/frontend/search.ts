@@ -1,11 +1,11 @@
-import type { SearchEnv, SearchIndex, SearchResult, StaticIndex } from "@src/frontend/base";
+import type { SearchEnv, SearchIndex, SearchResult, StaticSeekIndexRoot } from "@src/frontend/base";
 import { StaticSeekError } from "@src/frontend/base";
 import type { ASTNode } from "@src/frontend/parse";
 import { expr } from "@src/frontend/parse";
 import { defaultNormalizer, splitByGrapheme, splitBySpace } from "@src/util/preprocess";
 
 export async function search<T>(
-    index: StaticIndex<SearchIndex<T>>,
+    index: StaticSeekIndexRoot<SearchIndex<T>>,
     query: string,
 ): Promise<SearchResult[] | StaticSeekError> {
     try {
@@ -51,14 +51,9 @@ const evalQuery =
                 return { type: "excludes", results: r.results };
             }
             case "from": {
-                const path = env.field_names[ast.field];
-                if (path) {
-                    return evalQuery(index, createWithProp(env, "search_targets", [path]))(ast.node);
-                }
-                return evalQuery(index, env)(ast.node);
+                const path = env.field_names[ast.field] || ast.field;
+                return evalQuery(index, createWithProp(env, "search_targets", [path]))(ast.node);
             }
-            case "weight":
-                return evalQuery(index, createWithProp(env, "weight", ast.weight))(ast.node);
             case "distance":
                 return evalQuery(index, createWithProp(env, "distance", ast.distance))(ast.node);
             case "and":

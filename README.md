@@ -74,7 +74,6 @@ const index = createIndex(HybridTrieBigramInvertedIndex, array_of_articles);
 - **OR Search**: `term1 OR term2`
 - **NOT Search**: `-term1 term2`
 - **Field-Specific**: `from:title searchterm`
-- **Custom Weights**: `from:title weight:2.5 searchterm`
 
 ### Index Types
 
@@ -96,6 +95,7 @@ const index = createIndex(HybridTrieBigramInvertedIndex, array_of_articles);
      - Higher false positive rate for CJK-like languages
      - Less precise fuzzy search for CJK-like languages
      - Limited result metadata
+     - The score is a simple TF, and the weight is not reflected.
 
 ## Performance
 

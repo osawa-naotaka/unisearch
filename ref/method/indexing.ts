@@ -1,4 +1,4 @@
-import type { SearchEnv, SearchIndex, StaticIndex } from "@ref/method/base";
+import type { SearchEnv, SearchIndex, StaticSeekIndexRoot } from "@ref/method/base";
 import { type Path, StaticSeekError, Version } from "@ref/method/base";
 import { IndexTypes } from "@ref/method/indextypes";
 import { defaultNormalizer } from "@src/util/preprocess";
@@ -11,7 +11,7 @@ export function createIndex<T>(
     index_class: IndexClass,
     contents: unknown[],
     env: SearchEnv = {},
-): StaticIndex<SearchIndex<T>> | StaticSeekError {
+): StaticSeekIndexRoot<SearchIndex<T>> | StaticSeekError {
     try {
         if (!Array.isArray(contents)) throw new StaticSeekError("staticseek: contents must be array.");
         if (contents.length === 0) throw new StaticSeekError("staticseek: contents must not be empty.");
@@ -84,7 +84,7 @@ export function createIndex<T>(
     }
 }
 
-export function createIndexFromObject<T>(index: StaticIndex<T>): StaticIndex<SearchIndex<T>> {
+export function createIndexFromObject<T>(index: StaticSeekIndexRoot<T>): StaticSeekIndexRoot<SearchIndex<T>> {
     return {
         version: index.version,
         type: index.type,
@@ -93,7 +93,7 @@ export function createIndexFromObject<T>(index: StaticIndex<T>): StaticIndex<Sea
     };
 }
 
-export function indexToObject<T>(index: StaticIndex<SearchIndex<T>>): StaticIndex<T> {
+export function indexToObject<T>(index: StaticSeekIndexRoot<SearchIndex<T>>): StaticSeekIndexRoot<T> {
     return {
         version: index.version,
         type: index.type,

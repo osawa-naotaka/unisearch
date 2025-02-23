@@ -1,7 +1,7 @@
 {
     "name": "staticseek",
-    "version": "2.5.1",
-    "description": "A Lightweight, Fast Full-text Search Engine for Static Sites",
+    "version": "2.6.0",
+    "description": "A Lightweight, Fast Full-text Search Engine Supporting All Unicode Languages",
     "main": "dist/staticseek.js",
     "types": "dist/staticseek.d.ts",
     "author": {
@@ -11,7 +11,7 @@
     "homepage": "https://staticseek.lulliecat.com",
     "repository": {
         "type": "git",
-        "url": "https://github.com/osawa-naotaka/staticseek.git"
+        "url": "git+https://github.com/osawa-naotaka/staticseek.git"
     },
     "type": "module",
     "scripts": {
@@ -35,7 +35,6 @@
         "vitest": "^3.0.5"
     },
     "dependencies": {
-        "staticseek": "^2.5.0",
         "valibot": "^1.0.0-rc.1"
     }
 }

@@ -163,12 +163,12 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             const tf = r.refs
                 .map(
                     (v) =>
-                        v.token.length /
+                        (this.getWeight(env.weights, v.path) * v.token.length) /
                         (content_size.get(r.id)?.get(v.path) || Number.POSITIVE_INFINITY) /
                         (v.distance + 1),
                 )
                 .reduce((x, y) => x + y);
-            r.score = tf * idf * env.weight;
+            r.score = tf * idf;
         }
 
         return Array.from(result.values());
@@ -194,5 +194,10 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         );
         if (index === null) throw new StaticSeekError("staticseek: getReference internal error.");
         return this.index_entry.toc[index];
+    }
+
+    private getWeight(weights: [string, number][], path: string): number {
+        const w = weights.find(([p, _]) => path.startsWith(p));
+        return w ? w[1] : weights[weights.length - 1][1]; // last element is default
     }
 }

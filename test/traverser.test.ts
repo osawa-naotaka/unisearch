@@ -36,4 +36,8 @@ describe("extractStringsAll", () => {
     test('check if number field is not extracted.', () =>
         expect(extractStringsAll("", {field1: ["string1", "string2"], field2: {field3: "string3", field4: 10}}))
         .toStrictEqual([["field1", "string1 string2"], ["field2.field3", "string3"]]));
+
+    test('extract nothing because array includes non-string object', () =>
+        expect(extractStringsAll("", ["string1", 1, "string2"]))
+        .toStrictEqual([]));
 });
