@@ -16,9 +16,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [2.6.0] - 2025-02-24
 ### Added
 - search_targes parameter now supports intermediate field.
+- add weights parameter in IndexOpt.
+
+### Fixed
+- fix incomplete type exports.
 
 ### Removed
 - remove HybridBigramInvertedIndex.
+- remove "weight:" parameter setting in query.
 
 
 ## [2.5.1] - 2025-02-21

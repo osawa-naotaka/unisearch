@@ -77,7 +77,6 @@ const index = createIndex(HybridTrieBigramInvertedIndex, array_of_articles);
 - **OR検索**: `検索語1 OR 検索語2`
 - **NOT検索**: `-検索語1 検索語2`
 - **検索対象の限定**: `from:title 検索語`
-- **重み付け**: `from:title weight:2.5 検索語`
 
 ### インデックスの種類
 
@@ -99,6 +98,7 @@ const index = createIndex(HybridTrieBigramInvertedIndex, array_of_articles);
      - CJK言語の擬陽性(検索結果に無関係な結果が表示される)が増える
      - CJK言語のあいまい検索の精度が低い
      - 検索結果のメタデータが限られている
+     - スコアは単純なTFで、weightが反映されない
 
 ## 検索速度・インデックス作成速度
 

@@ -68,10 +68,20 @@ export function createIndex<T>(
         // create index object
         for (const [key, value] of Object.entries(IndexTypes)) {
             if (value === index_class) {
+
+                // create weights array
+                const weights = (opt.weights || []).map(([path, weight]): [Path, number] => 
+                    [field_names[path] || path, weight]
+                );
+                weights.push(["", 1]); // default weight is last element
                 return {
                     version: Version,
                     type: key,
-                    env: { field_names: field_names, distance: opt.distance || 1, weight: 1 },
+                    env: {
+                        field_names: field_names,
+                        distance: opt.distance || 1,
+                        weights: weights
+                    },
                     index_entry: search_index,
                 };
             }

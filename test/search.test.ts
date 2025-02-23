@@ -110,26 +110,6 @@ describe("search test", async () => {
         ])
     );
 
-    test("weight: search 1", async () =>
-        expect(await search(index, 'weight:2 "タイトル2"'))
-        .toStrictEqual([
-            {
-                id: 1,
-                key: { title: "タイトル２" },
-                score: 1.4054651081081644 * 2,
-                refs: [
-                    {
-                        token: "タイトル2",
-                        path: "title",
-                        pos: 0,
-                        wordaround: "タイトル2",
-                        distance: 0,
-                    }
-                ]
-            }
-        ])
-    );
-
     test("distance: search 1", async () =>
         expect(await search(index, 'from:title distance:3 エエエル2'))
         .toStrictEqual([
@@ -276,6 +256,39 @@ describe("search test", async () => {
                     },
                 ]
             },
+        ])
+    );
+});
+
+describe("search test 2", async () => {
+    const contents = [
+        { title: "タイトル１", text: "テキスト１．１テキスト１．２テキスト１．３"},
+        { title: "タイトル２", text: "テキスト２．１テキスト２．２テキスト２．３"},
+        { title: "タイトル３", text: "テキスト３．１テキスト３．２テキスト３．３"},
+    ];
+
+    const index = createIndex(LinearIndex, contents, { key_fields: ["title"], weights: [["title", 2]] });
+    if(index instanceof StaticSeekError) {
+        throw index;
+    }
+
+    test("weight: search 1", async () =>
+        expect(await search(index, '"タイトル2"'))
+        .toStrictEqual([
+            {
+                id: 1,
+                key: { title: "タイトル２" },
+                score: 1.4054651081081644 * 2,
+                refs: [
+                    {
+                        token: "タイトル2",
+                        path: "title",
+                        pos: 0,
+                        wordaround: "タイトル2",
+                        distance: 0,
+                    }
+                ]
+            }
         ])
     );
 });

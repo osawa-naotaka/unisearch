@@ -625,11 +625,11 @@ describe("from: search", async () => {
     );
 });
 
-describe("from: weight: search", async () => {
-    const index = createIndex(LinearIndex, array_of_articles);
+describe("from: weighted search", async () => {
+    const index = createIndex(LinearIndex, array_of_articles, { weights: [["slug", 2.5]] });
     if(index instanceof StaticSeekError) throw index;
 
-    const result1 = await search(index, "from:slug weight:2.5 guide");
+    const result1 = await search(index, "from:slug guide");
     test("matches single english article", () => 
         expect(result1).toStrictEqual([
             {

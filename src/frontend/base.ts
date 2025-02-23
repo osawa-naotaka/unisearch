@@ -15,15 +15,16 @@ export class StaticSeekError extends Error {}
 
 // index
 export type IndexOpt = {
-    key_fields?: string[];
-    search_targets?: string[];
+    key_fields?: Path[];
+    search_targets?: Path[];
     distance?: number;
+    weights?: [Path, number][];
 };
 
 export const SearchEnv_v = v.object({
     search_targets: v.optional(v.array(v.string())),
     field_names: v.record(v.string(), v.string()),
-    weight: v.number(),
+    weights: v.array(v.tuple([v.string(), v.number()])),
     distance: v.number(),
 });
 
@@ -44,7 +45,6 @@ export type StaticSeekIndexRoot<T> = {
 };
 
 // query
-
 export type Reference = {
     token: string;
     path: Path;

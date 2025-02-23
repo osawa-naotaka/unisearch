@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { getc, eos, is, char, cat, rep, space, str, digit, int, frac, float, escgetc } from '@src/frontend/parse';
-import { fuzzy, exact, token, not, term, paren, group, from, weight, adj, and, expr } from '@src/frontend/parse';
+import { fuzzy, exact, token, not, term, paren, group, from, adj, and, expr } from '@src/frontend/parse';
 
 describe("parser elements", () => {
     test("getc", () => 
@@ -271,46 +271,11 @@ describe("staticseek query parser", () => {
         .toStrictEqual(null)
     );
 
-    test("weight 1", () =>
-        expect(weight([...'weight:1 def ghi']))
-        .toStrictEqual({val: {type: 'weight', weight: 1, node: {type: 'fuzzy', str: [..."def"]}}, rest: [..." ghi"]})
-    );
-
-    test("weight 2", () =>
-        expect(weight([...'weight:1.2 def ghi']))
-        .toStrictEqual({val: {type: 'weight', weight: 1.2, node: {type: 'fuzzy', str: [..."def"]}}, rest: [..." ghi"]})
-    );
-
-    test("weight 3", () =>
-        expect(weight([...'weight:1']))
-        .toStrictEqual(null)
-    );
-
-    test("weight 4", () =>
-        expect(weight([...'weight: 1 abc']))
-        .toStrictEqual(null)
-    );
-
-    test("weight 5", () =>
-        expect(weight([...'weight:1. abc']))
-        .toStrictEqual({val: {type: 'weight', weight: 1, node: {type: 'fuzzy', str: [..."abc"]}}, rest: []})
-    );
-
     test("adj 1", () =>
         expect(adj([...'from:title def ghi']))
         .toStrictEqual({val: {type: 'from', field: "title", node: {type: 'fuzzy', str: [..."def"]}}, rest: [..." ghi"]})
     );
   
-    test("adj 2", () =>
-        expect(adj([...'weight:1.23 def ghi']))
-        .toStrictEqual({val: {type: 'weight', weight: 1.23, node: {type: 'fuzzy', str: [..."def"]}}, rest: [..." ghi"]})
-    );
-
-    test("adj 3", () =>
-        expect(adj([...'weight:1 -def ghi']))
-        .toStrictEqual({val: {type: 'weight', weight: 1, node: {type: 'not', node: {type: 'fuzzy', str: [..."def"]}}}, rest: [..." ghi"]})
-    );
-
     test("adj 4", () =>
         expect(adj([...'def ghi']))
         .toStrictEqual({val: {type: 'fuzzy', str: [..."def"]}, rest: [..." ghi"]})

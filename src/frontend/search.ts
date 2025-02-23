@@ -57,8 +57,6 @@ const evalQuery =
                 }
                 return evalQuery(index, env)(ast.node);
             }
-            case "weight":
-                return evalQuery(index, createWithProp(env, "weight", ast.weight))(ast.node);
             case "distance":
                 return evalQuery(index, createWithProp(env, "distance", ast.distance))(ast.node);
             case "and":
