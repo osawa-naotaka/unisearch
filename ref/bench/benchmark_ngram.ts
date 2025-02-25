@@ -155,26 +155,6 @@ async function runHybrid(wikipedia_articles: WikipediaArticle[], wikipedia_keywo
     };
     await runner("HYBRID en:SORTED-ARRAY ja:BIGRAM SORTED-ARRAY", hybrid_bigram_set);
 
-    const hybrid_bigram_record_set: SearcherSet<HybridIndex<RecordIndex, RecordIndex>> = {
-        index_fn: generateHybridIndexFn(
-            addToRecordIndex,
-            (x) => generateNgramTrie(2, x),
-            addToRecordIndex,
-            tokenIsTerm,
-        ),
-        post_fn: generateHybridPostprocessFn(noPostProcess, noPostProcess),
-        search_fn: generateHybridSearchFn(
-            searchExactRecord,
-            (x) => generateNgram(2, x),
-            intersectAll,
-            searchExactRecord,
-            tokenIsTerm,
-            intersectAll,
-        ),
-        index: { ja: { }, en: {  }, numtoken: {} },
-    };
-    await runner("HYBRID en:RECORD ja:BIGRAM RECORD", hybrid_bigram_record_set);
-
     const hybrid_trigram_set: SearcherSet<HybridIndex<SortedArrayIndex, SortedArrayIndex>> = {
         index_fn: generateHybridIndexFn(
             addToSortedArrayIndex,
