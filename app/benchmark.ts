@@ -1,13 +1,13 @@
 import type { WikipediaArticle } from "@ref/bench/benchmark_common";
 import { calculateGzipedJsonSize, calculateJsonSize } from "@ref/util";
-import { createIndex, search, indexToObject, createIndexFromObject, StaticSeekError, LinearIndex, GPULinearIndex, HybridTrieBigramInvertedIndex } from "@src/main";
-import type { IndexClass } from "@src/main";
+import { createIndex, search, indexToObject, createIndexFromObject, StaticSeekError, LinearIndex, GPULinearIndex, HybridTrieBigramInvertedIndex, HybridTrieTrigramInvertedIndex } from "@src/main";
+import type { IndexClass, SearchResult } from "@src/main";
 import { getAllKeywords } from "@ref/bench/benchmark_common";
 import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
 import { wikipedia_ja_keyword_long } from "@test/wikipedia_ja_keyword_long";
 import { wikipedia_en_extracted_1000 } from "@test/wikipedia_en_extracted_1000";
 import { wikipedia_en_keyword } from "@test/wikipedia_en_keyword";
-
+import { zipWith, intersect, difference } from "@ref/algo";
 
 export type BenchmarkResult = {
     type: string;
@@ -16,6 +16,8 @@ export type BenchmarkResult = {
     exact_search_time: number;
     fuzzy_search_time: number;
     gziped_index_size: number;
+    exact_search_results: SearchResult[][];
+    fuzzy_search_results: SearchResult[][];
 };
 export type BenchmarkResultAll = {
     index_size: number;
@@ -36,6 +38,8 @@ export async function execBenchmark(
         exact_search_time: 0,
         fuzzy_search_time: 0,
         gziped_index_size: 0,
+        exact_search_results: [],
+        fuzzy_search_results: [],
     };
 
     for (let i = 0; i < num_trials; i++) {
@@ -73,6 +77,7 @@ export async function execBenchmark(
         const exact_search_time = (exact_search_end - exact_search_start) / exact_search_results.length;
         console.log(`exact search time: ${exact_search_time} ms/query`);
         benchmark_results.exact_search_time += exact_search_time;
+        benchmark_results.exact_search_results = exact_search_results;
 
         const fuzzy_search_start = performance.now();
         const fuzzy_search_results = [];
@@ -86,6 +91,7 @@ export async function execBenchmark(
         const fuzzy_search_time = (fuzzy_search_end - fuzzy_search_start) / fuzzy_search_results.length;
         console.log(`fuzzy search time: ${fuzzy_search_time} ms/query`);
         benchmark_results.fuzzy_search_time += fuzzy_search_time;
+        benchmark_results.fuzzy_search_results = fuzzy_search_results;
     }
 
     benchmark_results.indexing_time /= num_trials;
@@ -104,65 +110,124 @@ export async function benchmarkMethod(keywords: string[], articles: WikipediaArt
     };
     result.results.set("Linear", await execBenchmark(LinearIndex, {}, articles, keywords, num_trials));
     result.results.set("GPU", await execBenchmark(GPULinearIndex, {}, articles, keywords, num_trials));
-    result.results.set("Inverted", await execBenchmark(HybridTrieBigramInvertedIndex, {}, articles, keywords, num_trials));
+    result.results.set("Bigram", await execBenchmark(HybridTrieBigramInvertedIndex, {}, articles, keywords, num_trials));
+    result.results.set("Trigram", await execBenchmark(HybridTrieTrigramInvertedIndex, {}, articles, keywords, num_trials));
     return result;
 }
 
-export function result_markdown(result_en: BenchmarkResultAll[], result_ja: BenchmarkResultAll[]): string {
+function result_header(header: string, method: string[]): string {
     let markdown = "";
-    markdown += "#### **Exact Search Time (ms) (English)**\n";
-    markdown += "| Text Size | Linear | GPU | Inverted |\n";
-    markdown += "|-----------|--------|-----|----------|\n";
+    markdown += "\n---\n\n";
+    markdown += `#### **${header}**\n`;
+    markdown += ["Text Size", ...method].map((m) => `| ${m} `).join("") + "|\n";
+    markdown += ["Text Size", ...method].map((m) => "| " + "-".repeat(m.length) + " ").join("") + "|\n";
+    return markdown;
+}
 
+export function result_markdown(result_en: BenchmarkResultAll[], result_ja: BenchmarkResultAll[]): string {
+    const method = ["Linear", "GPU", "Bigram", "Trigram"];
+    let markdown = "";
+
+    markdown += result_header("Exact Search Time (ms) (English)", method);
     for(const en of result_en) {
-        markdown += `| ${(en.index_size / 1000).toFixed(0)} | ${en.results.get("Linear")?.exact_search_time.toFixed(2)} | ${en.results.get("GPU")?.exact_search_time.toFixed(2)} | ${en.results.get("Inverted")?.exact_search_time.toFixed(2)} |\n`;
+        markdown += `| ${(en.index_size / 1000).toFixed(0)} |`;
+        markdown += method.map((m) => ` ${en.results.get(m)?.exact_search_time.toFixed(2)} |`).join("");
+        markdown += "\n";
     }
 
-    markdown += "\n---\n\n";
-    markdown += "#### **Fuzzy Search Time (ms) (English)**\n";
-    markdown += "| Text Size | Linear | GPU | Inverted |\n";
-    markdown += "|-----------|--------|-----|----------|\n";
-
+    markdown += result_header("Fuzzy Search Time (ms) (English)", method);
     for(const en of result_en) {
-        markdown += `| ${(en.index_size / 1000).toFixed(0)} | ${en.results.get("Linear")?.fuzzy_search_time.toFixed(2)} | ${en.results.get("GPU")?.fuzzy_search_time.toFixed(2)} | ${en.results.get("Inverted")?.fuzzy_search_time.toFixed(2)} |\n`;
+        markdown += `| ${(en.index_size / 1000).toFixed(0)} |`;
+        markdown += method.map((m) => ` ${en.results.get(m)?.fuzzy_search_time.toFixed(2)} |`).join("");
+        markdown += "\n";
     }
 
-    markdown += "\n---\n\n";
-    markdown += "#### **Fuzzy Search Time (ms) (Japanese)**\n";
-    markdown += "| Text Size | Linear | GPU | Inverted |\n";
-    markdown += "|-----------|--------|-----|----------|\n";
-
+    markdown += result_header("Fuzzy Search Time (ms) (Japanese)", method);
     for(const ja of result_ja) {
-        markdown += `| ${(ja.index_size / 1000).toFixed(0)} | ${ja.results.get("Linear")?.fuzzy_search_time.toFixed(2)} | ${ja.results.get("GPU")?.fuzzy_search_time.toFixed(2)} | ${ja.results.get("Inverted")?.fuzzy_search_time.toFixed(2)} |\n`;
+        markdown += `| ${(ja.index_size / 1000).toFixed(0)} |`;
+        markdown += method.map((m) => ` ${ja.results.get(m)?.fuzzy_search_time.toFixed(2)} |`).join("");
+        markdown += "\n";
     }
 
-    markdown += "\n---\n\n";
-    markdown += "#### **Indexing Time (ms) (English)**\n";
-    markdown += "| Text Size | Linear | GPU | Inverted |\n";
-    markdown += "|-----------|--------|-----|----------|\n";
-
+    markdown += result_header("Indexing Time (ms) (English)", method);
     for(const en of result_en) {
-        markdown += `| ${(en.index_size / 1000).toFixed(0)} | ${en.results.get("Linear")?.indexing_time.toFixed(2)} | ${en.results.get("GPU")?.indexing_time.toFixed(2)} | ${en.results.get("Inverted")?.indexing_time.toFixed(0)} |\n`;
+        markdown += `| ${(en.index_size / 1000).toFixed(0)} |`;
+        markdown += method.map((m) => ` ${en.results.get(m)?.indexing_time.toFixed(2)} |`).join("");
+        markdown += "\n";
     }
 
-    markdown += "\n---\n\n";
-    markdown += "#### **Index Size (Gzipped, kbyte) (English)**\n";
-    markdown += "| Text Size | Linear | GPU | Inverted |\n";
-    markdown += "|-----------|--------|-----|----------|\n";
-
+    markdown += result_header("Index Size (Gzipped, kbyte) (English)", method);
     for(const en of result_en) {
-        markdown += `| ${(en.index_size / 1000).toFixed(0)} | ${((en.results.get("Linear")?.gziped_index_size || 0) / 1000).toFixed(0)} | ${((en.results.get("GPU")?.gziped_index_size || 0) / 1000).toFixed(0)} | ${((en.results.get("Inverted")?.gziped_index_size || 0) / 1000).toFixed(0)} |\n`;
+        markdown += `| ${(en.index_size / 1000).toFixed(0)} |`;
+        markdown += method.map((m) => ` ${((en.results.get(m)?.gziped_index_size || 0) / 1000).toFixed(0)} |`).join("");
+        markdown += "\n";
     }
 
-    markdown += "\n---\n\n";
-    markdown += "#### **Index Size (Gzipped, kbyte) (Japanese)**\n";
-    markdown += "| Text Size | Linear | GPU | Inverted |\n";
-    markdown += "|-----------|--------|-----|----------|\n";
-
+    markdown += result_header("Index Size (Gzipped, kbyte) (Japanese)", method);
     for(const ja of result_ja) {
-        markdown += `| ${(ja.index_size / 1000).toFixed(0)} | ${((ja.results.get("Linear")?.gziped_index_size || 0) / 1000).toFixed(0)} | ${((ja.results.get("GPU")?.gziped_index_size || 0) / 1000).toFixed(0)} | ${((ja.results.get("Inverted")?.gziped_index_size || 0) / 1000).toFixed(0)} |\n`;
+        markdown += `| ${(ja.index_size / 1000).toFixed(0)} |`;
+        markdown += method.map((m) => ` ${((ja.results.get(m)?.gziped_index_size || 0) / 1000).toFixed(0)} |`).join("");
+        markdown += "\n";
     }
 
+    return markdown;
+}
+
+type SearchCorrectness<T> = {
+    keyword: string;
+    match: T;
+    false_positive: T;
+    false_negative: T;
+};
+
+function checkResult(ref: SearchResult[][], target: SearchResult[][]): SearchCorrectness<SearchResult[]>[] {
+    return zipWith(ref, target, (r, t) => {
+        const equals = (a: SearchResult, b: SearchResult) => a.id === b.id;
+        return {
+            keyword: "",
+            match: intersect(r, t, equals),
+            false_positive: difference(t, r, equals),
+            false_negative: difference(r, t, equals),
+        };
+    });
+}
+
+function countResults<R>(results: SearchCorrectness<R[]>[]): SearchCorrectness<number> {
+    const count: SearchCorrectness<number> = {
+        keyword: "",
+        match: 0,
+        false_positive: 0,
+        false_negative: 0,
+    };
+    for (let i = 0; i < results.length; i++) {
+        count.match += results[i].match.length;
+        count.false_positive += results[i].false_positive.length;
+        count.false_negative += results[i].false_negative.length;
+    }
+    return count;
+}
+
+export function check_result_false(results: BenchmarkResultAll[]): string {
+    let markdown = "";
+    const method = ["GPU", "Bigram", "Trigram"];
+    for(const m of method) {
+        for(const result of results) {
+            const ref_exact = result.results.get("Linear")?.exact_search_results || [];
+            const res = result.results.get(m)?.exact_search_results || [];
+            const matching = checkResult(ref_exact, res);
+            const count = countResults(matching);
+            markdown += `| ${m} | Exact |${result.index_size} | ${count.match} | ${count.false_positive} | ${count.false_negative} |\n`;
+        }
+    }
+    for(const m of method) {
+        for(const result of results) {
+            const ref_exact = result.results.get("Linear")?.fuzzy_search_results || [];
+            const res = result.results.get(m)?.fuzzy_search_results || [];
+            const matching = checkResult(ref_exact, res);
+            const count = countResults(matching);
+            markdown += `| ${m} | Fuzzy |${result.index_size} | ${count.match} | ${count.false_positive} | ${count.false_negative} |\n`;
+        }
+    }
     return markdown;
 }
 
@@ -187,4 +252,8 @@ for(const num of run_nums) {
     benchmark_results_all_en.push(await benchmarkMethod(keywords_en, wikipedia_en_extracted_1000.slice(0, num), num_trials));
 }
 
-console.log(result_markdown(await Promise.all(benchmark_results_all_en), await Promise.all(benchmark_results_all_ja)));
+console.log(result_markdown(benchmark_results_all_en, benchmark_results_all_ja));
+console.log(benchmark_results_all_en);
+console.log(check_result_false(benchmark_results_all_en));
+console.log(benchmark_results_all_ja);
+console.log(check_result_false(benchmark_results_all_ja));

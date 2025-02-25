@@ -2,6 +2,7 @@ export { createIndex, indexToObject, createIndexFromObject } from "@src/frontend
 export { search } from "@src/frontend/search";
 export { createSearchFn } from "@src/frontend/util";
 export { HybridTrieBigramInvertedIndex } from "@src/method/hybridtriebigraminvertedindex";
+export { HybridTrieTrigramInvertedIndex } from "@src/method/hybridtrietrigraminvertedindex";
 export { LinearIndex } from "@src/method/linearindex";
 export { GPULinearIndex } from "@src/method/gpulinearindex";
 export { StaticSeekError } from "@src/frontend/base";
