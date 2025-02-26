@@ -3,7 +3,7 @@ import { calculateGzipedJsonSize, calculateJsonSize } from "@ref/util";
 import { createIndex, search, indexToObject, createIndexFromObject, StaticSeekError } from "@src/main";
 import type { IndexClass, SearchResult } from "@src/main";
 import { countResults } from "@ref/bench/benchmark_common";
-import { zipWith, intersect, difference } from "@ref/algo";
+import { intersect, difference, zipWith3 } from "@ref/algo";
 
 export type BenchmarkResult = {
     type: string;
@@ -169,11 +169,11 @@ export function result_markdown(methods: BenchmarkMethods, result_en: BenchmarkR
     return markdown;
 }
 
-export function checkResult(ref: SearchResult[][], target: SearchResult[][]): SearchCorrectness<SearchResult[]>[] {
-    return zipWith(ref, target, (r, t) => {
+export function checkResult(keyword: string[], ref: SearchResult[][], target: SearchResult[][]): SearchCorrectness<SearchResult[]>[] {
+    return zipWith3(keyword, ref, target, (k, r, t) => {
         const equals = (a: SearchResult, b: SearchResult) => a.id === b.id;
         return {
-            keyword: "",
+            keyword: k,
             match: intersect(r, t, equals),
             false_positive: difference(t, r, equals),
             false_negative: difference(r, t, equals),
@@ -181,14 +181,14 @@ export function checkResult(ref: SearchResult[][], target: SearchResult[][]): Se
     });
 }
 
-export function check_result_false(methods: BenchmarkMethods, results: BenchmarkResultAll[]): string {
+export function check_result_false(methods: BenchmarkMethods, keyword: string[], results: BenchmarkResultAll[]): string {
     let markdown = "";
     const method = methods.map(({ name }) => name).filter((m) => m !== "Linear");
     for(const m of method) {
         for(const result of results) {
             const ref_exact = result.results.get("Linear")?.exact_search_results || [];
             const res = result.results.get(m)?.exact_search_results || [];
-            const matching = checkResult(ref_exact, res);
+            const matching = checkResult(keyword, ref_exact, res);
             const count = countResults(matching);
             markdown += `| ${m} | Exact |${result.index_size} | ${count.match} | ${count.false_positive} | ${count.false_negative} |\n`;
         }
@@ -197,7 +197,7 @@ export function check_result_false(methods: BenchmarkMethods, results: Benchmark
         for(const result of results) {
             const ref_exact = result.results.get("Linear")?.fuzzy_search_results || [];
             const res = result.results.get(m)?.fuzzy_search_results || [];
-            const matching = checkResult(ref_exact, res);
+            const matching = checkResult(keyword, ref_exact, res);
             const count = countResults(matching);
             markdown += `| ${m} | Fuzzy |${result.index_size} | ${count.match} | ${count.false_positive} | ${count.false_negative} |\n`;
         }
