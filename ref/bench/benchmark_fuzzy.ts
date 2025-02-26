@@ -4,7 +4,7 @@ import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
 import { wikipedia_ja_keyword_long } from "@test/wikipedia_ja_keyword_long";
 import { wikipedia_en_extracted_1000 } from "@test/wikipedia_en_extracted_1000";
 import { wikipedia_en_keyword } from "@test/wikipedia_en_keyword";
-import { benchmarkMethod, BenchmarkMethods, BenchmarkResultAll, checkResult } from "@ref/bench/benchmark_prod_common";
+import { benchmarkMethod, BenchmarkMethods, BenchmarkResultAll, checkResult, fuzzy_result_markdown } from "@ref/bench/benchmark_prod_common";
 
 function fuzzy_keyword_of(inschar: string, keywords: string[]): string[] {
     const result: string[] = [];
@@ -30,8 +30,7 @@ function fuzzy_keyword_of(inschar: string, keywords: string[]): string[] {
     return result;
 }
 
-function output_fuzzy_result_false(methods: BenchmarkMethods, keywords: string[], ref:BenchmarkResultAll, test: BenchmarkResultAll): string {
-    let markdown = "";
+function output_fuzzy_result_false(methods: BenchmarkMethods, keywords: string[], ref:BenchmarkResultAll, test: BenchmarkResultAll): void {
     const method = methods.map(({ name }) => name);
     const ref_exact = ref.results.get("Linear")?.exact_search_results || [];
     for(const m of method) {
@@ -42,7 +41,6 @@ function output_fuzzy_result_false(methods: BenchmarkMethods, keywords: string[]
         console.log(matching);
         console.log(count);
     }
-    return markdown;
 }
 
 // benchmark body
@@ -84,7 +82,9 @@ for(const num of run_nums) {
 
 console.log("English Results");
 console.log(benchmark_results_all_en);
+console.log(fuzzy_result_markdown(methods, keywords_en_fuzzy, benchmark_results_reference_en[0], benchmark_results_all_en[0]));
 output_fuzzy_result_false(methods, keywords_en, benchmark_results_reference_en[0], benchmark_results_all_en[0]);
 console.log("Japanese Results");
 console.log(benchmark_results_all_ja);
+console.log(fuzzy_result_markdown(methods, keywords_ja_fuzzy, benchmark_results_reference_ja[0], benchmark_results_all_ja[0]));
 output_fuzzy_result_false(methods, keywords_ja, benchmark_results_reference_ja[0], benchmark_results_all_ja[0]);

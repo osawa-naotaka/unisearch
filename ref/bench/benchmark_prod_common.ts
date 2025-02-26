@@ -169,6 +169,32 @@ export function result_markdown(methods: BenchmarkMethods, result_en: BenchmarkR
     return markdown;
 }
 
+function fuzzy_result_header(header: string): string {
+    let markdown = "";
+    markdown += "\n---\n\n";
+    markdown += `#### **${header}**\n`;
+    markdown += "| Method | Creation Time | Index size | Gziped size | Search Time | match | false positive | false negative |";
+    markdown += "| ------ | ------------- | ---------- | ----------- | ----------- | ----- | -------------- | -------------- |";
+    return markdown;
+}
+
+export function fuzzy_result_markdown(methods: BenchmarkMethods, keywords: string[], ref:BenchmarkResultAll, test: BenchmarkResultAll): string {
+    let markdown = "";
+    const method = methods.map(({ name }) => name);
+
+    markdown += fuzzy_result_header("Fuzzy Search");
+
+    const ref_exact = ref.results.get("Linear")?.exact_search_results || [];
+    for(const m of method) {
+        const target = test.results.get(m);
+        if(target === undefined) throw new Error("fuzzy_result_markdown internal error.");
+        const matching = checkResult(keywords, ref_exact, target.fuzzy_search_results);
+        const count = countResults(matching);
+        markdown += `| ${m} | ${target.indexing_time + target.reindexing_time} [ms] | ${test.index_size} [kbyte] | ${target.gziped_index_size} [kbyte] | ${target.fuzzy_search_time} [ms/query] | ${count.match} | ${count.false_positive} | ${count.false_negative} |\n`;
+    }
+    return markdown;
+}
+
 export function checkResult(keyword: string[], ref: SearchResult[][], target: SearchResult[][]): SearchCorrectness<SearchResult[]>[] {
     return zipWith3(keyword, ref, target, (k, r, t) => {
         const equals = (a: SearchResult, b: SearchResult) => a.id === b.id;
