@@ -1,12 +1,8 @@
-import type { WikipediaArticle } from "@ref/bench/benchmark_common";
+import type { SearchCorrectness, WikipediaArticle } from "@ref/bench/benchmark_common";
 import { calculateGzipedJsonSize, calculateJsonSize } from "@ref/util";
-import { createIndex, search, indexToObject, createIndexFromObject, StaticSeekError, LinearIndex, GPULinearIndex, HybridTrieBigramInvertedIndex, HybridTrieTrigramInvertedIndex } from "@src/main";
+import { createIndex, search, indexToObject, createIndexFromObject, StaticSeekError } from "@src/main";
 import type { IndexClass, SearchResult } from "@src/main";
-import { getAllKeywords } from "@ref/bench/benchmark_common";
-import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
-import { wikipedia_ja_keyword_long } from "@test/wikipedia_ja_keyword_long";
-import { wikipedia_en_extracted_1000 } from "@test/wikipedia_en_extracted_1000";
-import { wikipedia_en_keyword } from "@test/wikipedia_en_keyword";
+import { countResults } from "@ref/bench/benchmark_common";
 import { zipWith, intersect, difference } from "@ref/algo";
 
 export type BenchmarkResult = {
@@ -23,6 +19,7 @@ export type BenchmarkResultAll = {
     index_size: number;
     results: Map<string, BenchmarkResult>;
 };
+export type BenchmarkMethods = { name: string; index: IndexClass }[];
 
 export async function execBenchmark(
     index_class: IndexClass,
@@ -103,15 +100,14 @@ export async function execBenchmark(
     return benchmark_results;
 }
 
-export async function benchmarkMethod(keywords: string[], articles: WikipediaArticle[], num_trials: number) {
+export async function benchmarkMethod(methods: BenchmarkMethods, keywords: string[], articles: WikipediaArticle[], num_trials: number) {
     const result: BenchmarkResultAll = {
         index_size: calculateJsonSize(articles),
         results: new Map<string, BenchmarkResult>(),
     };
-    result.results.set("Linear", await execBenchmark(LinearIndex, {}, articles, keywords, num_trials));
-    result.results.set("GPU", await execBenchmark(GPULinearIndex, {}, articles, keywords, num_trials));
-    result.results.set("Bigram", await execBenchmark(HybridTrieBigramInvertedIndex, {}, articles, keywords, num_trials));
-    result.results.set("Trigram", await execBenchmark(HybridTrieTrigramInvertedIndex, {}, articles, keywords, num_trials));
+    for(const method of methods) {
+        result.results.set(method.name, await execBenchmark(method.index, {}, articles, keywords, num_trials));
+    }
     return result;
 }
 
@@ -124,9 +120,9 @@ function result_header(header: string, method: string[]): string {
     return markdown;
 }
 
-export function result_markdown(result_en: BenchmarkResultAll[], result_ja: BenchmarkResultAll[]): string {
-    const method = ["Linear", "GPU", "Bigram", "Trigram"];
+export function result_markdown(methods: BenchmarkMethods, result_en: BenchmarkResultAll[], result_ja: BenchmarkResultAll[]): string {
     let markdown = "";
+    const method = methods.map(({ name }) => name);
 
     markdown += result_header("Exact Search Time (ms) (English)", method);
     for(const en of result_en) {
@@ -173,14 +169,7 @@ export function result_markdown(result_en: BenchmarkResultAll[], result_ja: Benc
     return markdown;
 }
 
-type SearchCorrectness<T> = {
-    keyword: string;
-    match: T;
-    false_positive: T;
-    false_negative: T;
-};
-
-function checkResult(ref: SearchResult[][], target: SearchResult[][]): SearchCorrectness<SearchResult[]>[] {
+export function checkResult(ref: SearchResult[][], target: SearchResult[][]): SearchCorrectness<SearchResult[]>[] {
     return zipWith(ref, target, (r, t) => {
         const equals = (a: SearchResult, b: SearchResult) => a.id === b.id;
         return {
@@ -192,24 +181,9 @@ function checkResult(ref: SearchResult[][], target: SearchResult[][]): SearchCor
     });
 }
 
-function countResults<R>(results: SearchCorrectness<R[]>[]): SearchCorrectness<number> {
-    const count: SearchCorrectness<number> = {
-        keyword: "",
-        match: 0,
-        false_positive: 0,
-        false_negative: 0,
-    };
-    for (let i = 0; i < results.length; i++) {
-        count.match += results[i].match.length;
-        count.false_positive += results[i].false_positive.length;
-        count.false_negative += results[i].false_negative.length;
-    }
-    return count;
-}
-
-export function check_result_false(results: BenchmarkResultAll[]): string {
+export function check_result_false(methods: BenchmarkMethods, results: BenchmarkResultAll[]): string {
     let markdown = "";
-    const method = ["GPU", "Bigram", "Trigram"];
+    const method = methods.map(({ name }) => name).filter((m) => m !== "Linear");
     for(const m of method) {
         for(const result of results) {
             const ref_exact = result.results.get("Linear")?.exact_search_results || [];
@@ -230,30 +204,3 @@ export function check_result_false(results: BenchmarkResultAll[]): string {
     }
     return markdown;
 }
-
-
-// benchmark body
-// const run_nums = [100];
-const run_nums = [10, 20, 40, 80, 100];
-const run_keywords = 100;
-const num_trials = 5;
-
-const keywords_ja = getAllKeywords(wikipedia_ja_keyword_long).slice(0, run_keywords);
-const benchmark_results_all_ja: BenchmarkResultAll[] = []
-
-for(const num of run_nums) {
-    benchmark_results_all_ja.push(await benchmarkMethod(keywords_ja, wikipedia_ja_extracted_1000.slice(0, num), num_trials));
-}
-
-const keywords_en = getAllKeywords(wikipedia_en_keyword).slice(0, run_keywords);
-const benchmark_results_all_en: BenchmarkResultAll[] = []
-
-for(const num of run_nums) {
-    benchmark_results_all_en.push(await benchmarkMethod(keywords_en, wikipedia_en_extracted_1000.slice(0, num), num_trials));
-}
-
-console.log(result_markdown(benchmark_results_all_en, benchmark_results_all_ja));
-console.log(benchmark_results_all_en);
-console.log(check_result_false(benchmark_results_all_en));
-console.log(benchmark_results_all_ja);
-console.log(check_result_false(benchmark_results_all_ja));
