@@ -173,8 +173,8 @@ function fuzzy_result_header(header: string): string {
     let markdown = "";
     markdown += "\n---\n\n";
     markdown += `#### **${header}**\n`;
-    markdown += "| Method | Creation Time | Index size | Gziped size | Search Time | match | false positive | false negative |";
-    markdown += "| ------ | ------------- | ---------- | ----------- | ----------- | ----- | -------------- | -------------- |";
+    markdown += "| Method | Creation Time [ms] | Index size [kbyte] | Gziped size [kbyte] | Search Time [ms/query] | match | false positive | false negative |\n";
+    markdown += "| ------ | ------------- | ---------- | ----------- | ----------- | ----- | -------------- | -------------- |\n";
     return markdown;
 }
 
@@ -184,13 +184,15 @@ export function fuzzy_result_markdown(methods: BenchmarkMethods, keywords: strin
 
     markdown += fuzzy_result_header("Fuzzy Search");
 
-    const ref_exact = ref.results.get("Linear")?.exact_search_results || [];
+    const ref_exact = ref.results.get("Linear");
+    if(ref_exact === undefined) throw new Error("fuzzy_result_markdown internal error.");
+    markdown += `| Linear(Exact) | ${ref_exact.indexing_time.toFixed()} | ${(ref.index_size / 1000).toFixed()} | ${(ref_exact.gziped_index_size / 1000).toFixed()} | ${ref_exact.exact_search_time.toFixed(2)} |  |  |  |\n`;
     for(const m of method) {
         const target = test.results.get(m);
         if(target === undefined) throw new Error("fuzzy_result_markdown internal error.");
-        const matching = checkResult(keywords, ref_exact, target.fuzzy_search_results);
+        const matching = checkResult(keywords, ref_exact.exact_search_results, target.fuzzy_search_results);
         const count = countResults(matching);
-        markdown += `| ${m} | ${target.indexing_time + target.reindexing_time} [ms] | ${test.index_size} [kbyte] | ${target.gziped_index_size} [kbyte] | ${target.fuzzy_search_time} [ms/query] | ${count.match} | ${count.false_positive} | ${count.false_negative} |\n`;
+        markdown += `| ${m} | ${target.indexing_time.toFixed()} | ${(test.index_size / 1000).toFixed()} | ${(target.gziped_index_size / 1000).toFixed()} | ${target.fuzzy_search_time.toFixed(2)} | ${count.match} | ${count.false_positive} | ${count.false_negative} |\n`;
     }
     return markdown;
 }

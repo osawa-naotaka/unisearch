@@ -1,4 +1,4 @@
-import { LinearIndex, HybridTrieBigramInvertedIndex, GPULinearIndex, HybridTrieTrigramInvertedIndex } from "@src/main";
+import { LinearIndex, HybridTrieBigramInvertedIndex, GPULinearIndex } from "@src/main";
 import { countResults, getAllKeywords } from "@ref/bench/benchmark_common";
 import { wikipedia_ja_extracted_1000 } from "@test/wikipedia_ja_extracted_1000";
 import { wikipedia_ja_keyword_long } from "@test/wikipedia_ja_keyword_long";
@@ -14,7 +14,7 @@ function fuzzy_keyword_of(inschar: string, keywords: string[]): string[] {
         switch(count % 3) {
             case 0:
                 const deletion = k.slice(0, pos) + k.slice(pos + 1);
-                result.push(k.length > 3 ? deletion : k);
+                result.push(deletion);
                 break;
             case 1:
                 const insertion = k.slice(0, pos) + inschar + k.slice(pos);
@@ -44,47 +44,36 @@ function output_fuzzy_result_false(methods: BenchmarkMethods, keywords: string[]
 }
 
 // benchmark body
-const run_nums = [100];
-const run_keywords = 100;
+const run_nums = 100;
 const num_trials = 1;
 
 const methods = [
     { name: "Linear", index: LinearIndex },
     { name: "GPU", index: GPULinearIndex },
     { name: "Bigram", index: HybridTrieBigramInvertedIndex },
-    { name: "Trigram", index: HybridTrieTrigramInvertedIndex },
 ];
-const reference_methods = [
+
+const exact_methods = [
     { name: "Linear", index: LinearIndex },
 ];
 
-const keywords_ja = getAllKeywords(wikipedia_ja_keyword_long).slice(0, run_keywords);
-const keywords_ja_fuzzy = fuzzy_keyword_of("い", keywords_ja);
-const benchmark_results_all_ja: BenchmarkResultAll[] = [];
-const benchmark_results_reference_ja: BenchmarkResultAll[] = [];
-
-
-for(const num of run_nums) {
-    benchmark_results_reference_ja.push(await benchmarkMethod(reference_methods, keywords_ja, wikipedia_ja_extracted_1000.slice(0, num), num_trials));
-    benchmark_results_all_ja.push(await benchmarkMethod(methods, keywords_ja_fuzzy, wikipedia_ja_extracted_1000.slice(0, num), num_trials));
-}
-
-const keywords_en = getAllKeywords(wikipedia_en_keyword).slice(0, run_keywords);
+const keywords_en = getAllKeywords(wikipedia_en_keyword);
 const keywords_en_fuzzy = fuzzy_keyword_of("a", keywords_en);
-const benchmark_results_all_en: BenchmarkResultAll[] = []
-const benchmark_results_reference_en: BenchmarkResultAll[] = [];
+const benchmark_results_reference_en = await benchmarkMethod(exact_methods, keywords_en, wikipedia_en_extracted_1000.slice(0, run_nums), num_trials);
+const benchmark_results_target_en = await benchmarkMethod(methods, keywords_en_fuzzy, wikipedia_en_extracted_1000.slice(0, run_nums), num_trials);
 
-for(const num of run_nums) {
-    benchmark_results_reference_en.push(await benchmarkMethod(reference_methods, keywords_en, wikipedia_en_extracted_1000.slice(0, num), num_trials));
-    benchmark_results_all_en.push(await benchmarkMethod(methods, keywords_en_fuzzy, wikipedia_en_extracted_1000.slice(0, num), num_trials));
-}
-
+const keywords_ja = getAllKeywords(wikipedia_ja_keyword_long);
+const keywords_ja_fuzzy = fuzzy_keyword_of("い", keywords_ja);
+const benchmark_results_reference_ja = await benchmarkMethod(exact_methods, keywords_ja, wikipedia_ja_extracted_1000.slice(0, run_nums), num_trials)
+const benchmark_results_target_ja = await benchmarkMethod(methods, keywords_ja_fuzzy, wikipedia_ja_extracted_1000.slice(0, run_nums), num_trials)
 
 console.log("English Results");
-console.log(benchmark_results_all_en);
-console.log(fuzzy_result_markdown(methods, keywords_en_fuzzy, benchmark_results_reference_en[0], benchmark_results_all_en[0]));
-output_fuzzy_result_false(methods, keywords_en, benchmark_results_reference_en[0], benchmark_results_all_en[0]);
+console.log(keywords_en_fuzzy);
+console.log(benchmark_results_target_en);
+console.log(fuzzy_result_markdown(methods, keywords_en_fuzzy, benchmark_results_reference_en, benchmark_results_target_en));
+output_fuzzy_result_false(methods, keywords_en, benchmark_results_target_en, benchmark_results_target_en);
 console.log("Japanese Results");
-console.log(benchmark_results_all_ja);
-console.log(fuzzy_result_markdown(methods, keywords_ja_fuzzy, benchmark_results_reference_ja[0], benchmark_results_all_ja[0]));
-output_fuzzy_result_false(methods, keywords_ja, benchmark_results_reference_ja[0], benchmark_results_all_ja[0]);
+console.log(keywords_ja_fuzzy);
+console.log(benchmark_results_target_ja);
+console.log(fuzzy_result_markdown(methods, keywords_ja_fuzzy, benchmark_results_reference_ja, benchmark_results_target_ja));
+output_fuzzy_result_false(methods, keywords_ja, benchmark_results_target_ja, benchmark_results_target_ja);
