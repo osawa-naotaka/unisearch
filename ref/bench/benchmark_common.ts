@@ -23,7 +23,7 @@ export type WikipediaArticle = {
     text: string;
 };
 
-type SearchCorrectness<T> = {
+export type SearchCorrectness<T> = {
     keyword: string;
     match: T;
     false_positive: T;
@@ -79,7 +79,7 @@ export async function execBenchmark<T>(
     return result_search.results;
 }
 
-function checkResult(correct: Result[], test: Result[]): SearchCorrectness<Reference[]>[] {
+export function checkResult(correct: Result[], test: Result[]): SearchCorrectness<Reference[]>[] {
     const equals = (a: Reference, b: Reference) => a.id === b.id;
     return zipWith(correct, test, (a, b) => ({
         keyword: a.keyword,
@@ -89,7 +89,7 @@ function checkResult(correct: Result[], test: Result[]): SearchCorrectness<Refer
     }));
 }
 
-function countResults<R>(results: SearchCorrectness<R[]>[]): SearchCorrectness<number> {
+export function countResults<R>(results: SearchCorrectness<R[]>[]): SearchCorrectness<number> {
     const count: SearchCorrectness<number> = {
         keyword: "",
         match: 0,

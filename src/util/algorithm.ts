@@ -136,7 +136,7 @@ export function bitapSearch<T, S extends string | number>(
             state[distance] = next_state;
 
             if (key.and(state[distance], matchbit) !== zero) {
-                result.push([i - key.length + 1, distance]);
+                result.push([Math.max(i - key.length + 1, 0), distance]);
                 break;
             }
         }
@@ -159,7 +159,7 @@ export function bitapSearch<T, S extends string | number>(
             state[distance] = next_state;
 
             if (key.and(state[distance], matchbit) !== zero) {
-                result.push([text.length - key.length, distance]);
+                result.push([Math.max(text.length - key.length, 0), distance]);
                 break;
             }
         }

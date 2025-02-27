@@ -2,6 +2,19 @@
 
 staticseekの詳しい使い方は、[オフィシャルサイト](https://staticseek.lulliecat.com/)をご覧ください。
 
+このパッケージはNode.js v22を利用して開発しています。
+staticseekをビルドするには以下のコマンドを実行してください。
+
+```shell
+git clone https://github.com/osawa-naotaka/staticseek.git
+cd staticseek
+npm install
+npm run build
+```
+
+`dist`ディレクトリにビルド結果のJavaScriptファイルが生成されます。
+また、`npm run dev`コマンドを実行することで、アプリケーションやベンチマークを実行できます。`index.html`のコメントをご覧ください。
+
 ## 概要
 staticseekは、静的ウェブサイト向けに特化して設計されたクライアントサイドの全文検索エンジンです。文字列または文字列配列を含むJavaScriptオブジェクトの配列を検索できます。記事をJavaScriptオブジェクトに変換することで、サーバーサイドの実装なしに静的サイトで全文検索機能を実装できます。
 

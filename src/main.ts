@@ -9,7 +9,6 @@ export type {
     StaticSeekIndex,
     StaticSeekIndexObject,
     IndexOpt,
-    FieldName,
     Path,
     Reference,
     SearchResult,

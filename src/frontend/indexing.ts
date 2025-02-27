@@ -1,4 +1,4 @@
-import type { IndexOpt, Path, SearchIndex, StaticSeekIndexRoot } from "@src/frontend/base";
+import type { FieldNameMap, IndexOpt, Path, SearchIndex, StaticSeekIndexRoot } from "@src/frontend/base";
 import { StaticSeekError, StaticSeekIndexRoot_v, Version } from "@src/frontend/base";
 import { IndexTypes } from "@src/frontend/indextypes";
 import { defaultNormalizer, splitByGrapheme } from "@src/util/preprocess";
@@ -18,7 +18,7 @@ export function createIndex<T>(
         if (contents.length === 0) throw new StaticSeekError("staticseek: contents must not be empty.");
 
         const search_index = new index_class();
-        const field_names: Record<string, string> = {};
+        const field_names: FieldNameMap = {};
 
         // indexing for search
         contents.forEach((content, id) => {
