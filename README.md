@@ -2,6 +2,21 @@
 
 For detailed instructions on how to use staticseek, please visit the [official website](https://staticseek.lulliecat.com/).
 
+This package is developed using Node.js v22.  
+
+To build staticseek, execute the following command:
+
+```shell
+git clone https://github.com/osawa-naotaka/staticseek.git
+cd staticseek
+npm install
+npm run build
+```
+
+The JavaScript files will be generated in the `dist` directory.  
+
+Additionally, by running the `npm run dev` command, you can execute the application and benchmark. Please refer to the comments in `index.html`.
+
 ## Overview
 staticseek is a client-side full-text search engine designed specifically for static websites. It enables searching through arrays of JavaScript objects containing strings or string arrays. By converting your articles into JavaScript objects, you can implement full-text search functionality on static sites without any server-side implementation.
 
