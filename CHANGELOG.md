@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-## [2.6.1] - 2025-02-07
+## [2.6.1] - 2025-02-27
 ### Fixed
 - fix fuzzy search bug that sometime search results in out of range error.
 
