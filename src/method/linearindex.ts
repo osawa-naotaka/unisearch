@@ -140,14 +140,14 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
                 refs: [],
             };
 
+            const wa_begin = Math.max(pos[0] - 100, cref.start);
+            const wa_end = Math.min(pos[0] + keyword.length + 100, cref.end + 1);
             r.refs.push({
                 token: keyword,
                 path: cref.path,
                 pos: find_pos,
-                wordaround: this.index_entry.content.slice(
-                    Math.max(pos[0] - 100, cref.start),
-                    Math.min(pos[0] + keyword.length + 100, cref.end + 1),
-                ),
+                wordaround: this.index_entry.content.slice(wa_begin, wa_end),
+                keyword_range: [pos[0] - wa_begin, pos[0] - wa_begin + keyword.length],
                 distance: pos[1],
             });
 

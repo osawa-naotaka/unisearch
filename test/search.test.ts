@@ -29,6 +29,7 @@ describe("search test", async () => {
                         path: "title",
                         pos: 0,
                         wordaround: "タイトル2",
+                        keyword_range: [0, 5],
                         distance: 0,
                     }
                 ]
@@ -49,6 +50,7 @@ describe("search test", async () => {
                         path: "text",
                         pos: 0,
                         wordaround: "テキスト3.1テキスト3.2テキスト3.3",
+                        keyword_range: [0, 5],
                         distance: 0,
                     },
                     {
@@ -56,6 +58,7 @@ describe("search test", async () => {
                         path: "text",
                         pos: 7,
                         wordaround: "テキスト3.1テキスト3.2テキスト3.3",
+                        keyword_range: [7, 12],
                         distance: 0,
                     },
                     {
@@ -63,6 +66,7 @@ describe("search test", async () => {
                         path: "text",
                         pos: 14,
                         wordaround: "テキスト3.1テキスト3.2テキスト3.3",
+                        keyword_range: [14, 19],
                         distance: 0,
                     },
                 ]
@@ -83,6 +87,7 @@ describe("search test", async () => {
                         path: "title",
                         pos: 0,
                         wordaround: "タイトル2",
+                        keyword_range: [0, 5],
                         distance: 1,
                     }
                 ]
@@ -103,6 +108,7 @@ describe("search test", async () => {
                         path: "title",
                         pos: 4,
                         wordaround: "タイトル2",
+                        keyword_range: [4, 5],
                         distance: 0,
                     }
                 ]
@@ -123,6 +129,7 @@ describe("search test", async () => {
                         path: "title",
                         pos: 0,
                         wordaround: "タイトル2",
+                        keyword_range: [0, 5],
                         distance: 3,
                     }
                 ]
@@ -143,6 +150,7 @@ describe("search test", async () => {
                         path: "title",
                         pos: 0,
                         wordaround: "タイトル3",
+                        keyword_range: [0, 5],
                         distance: 0,
                     },
                     {
@@ -150,6 +158,7 @@ describe("search test", async () => {
                         path: "text",
                         pos: 0,
                         wordaround: "テキスト3.1テキスト3.2テキスト3.3",
+                        keyword_range: [0, 7],
                         distance: 0,
                     },
                 ]
@@ -170,6 +179,7 @@ describe("search test", async () => {
                         path: "title",
                         pos: 0,
                         wordaround: "タイトル3",
+                        keyword_range: [0, 5],
                         distance: 0,
                     },
                 ]
@@ -184,6 +194,7 @@ describe("search test", async () => {
                         path: "title",
                         pos: 0,
                         wordaround: "タイトル2",
+                        keyword_range: [0, 5],
                         distance: 0,
                     },
                 ]
@@ -204,6 +215,7 @@ describe("search test", async () => {
                         path: "text",
                         pos: 0,
                         wordaround: "テキスト3.1テキスト3.2テキスト3.3",
+                        keyword_range: [0, 4],
                         distance: 0,
                     },
                     {
@@ -211,6 +223,7 @@ describe("search test", async () => {
                         path: "text",
                         pos: 7,
                         wordaround: "テキスト3.1テキスト3.2テキスト3.3",
+                        keyword_range: [7, 11],
                         distance: 0,
                     },
                     {
@@ -218,6 +231,7 @@ describe("search test", async () => {
                         path: "text",
                         pos: 14,
                         wordaround: "テキスト3.1テキスト3.2テキスト3.3",
+                        keyword_range: [14, 18],
                         distance: 0,
                     },
                 ]
@@ -238,6 +252,7 @@ describe("search test", async () => {
                         path: "text",
                         pos: 0,
                         wordaround: "テキスト3.1テキスト3.2テキスト3.3",
+                        keyword_range: [0, 4],
                         distance: 0,
                     },
                     {
@@ -245,6 +260,7 @@ describe("search test", async () => {
                         path: "text",
                         pos: 7,
                         wordaround: "テキスト3.1テキスト3.2テキスト3.3",
+                        keyword_range: [7, 11],
                         distance: 0,
                     },
                     {
@@ -252,6 +268,7 @@ describe("search test", async () => {
                         path: "text",
                         pos: 14,
                         wordaround: "テキスト3.1テキスト3.2テキスト3.3",
+                        keyword_range: [14, 18],
                         distance: 0,
                     },
                 ]
@@ -285,6 +302,7 @@ describe("search test 2", async () => {
                         path: "title",
                         pos: 0,
                         wordaround: "タイトル2",
+                        keyword_range: [0, 5],
                         distance: 0,
                     }
                 ]
