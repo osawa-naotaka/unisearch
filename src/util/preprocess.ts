@@ -1,6 +1,8 @@
 import { StaticSeekError } from "@src/frontend/base";
 import { pipe } from "@src/util/algorithm";
 
+type CharRange = [number, number][];
+
 export const normalizeJapanese = (input: string) =>
     input
         .replace(/[\uFF66-\uFF9D]/gu, (c) => String.fromCharCode(c.charCodeAt(0) + 0x60)) // 半角カナ → 全角カナ
@@ -14,22 +16,40 @@ export const normalizeUnicode = (input: string) => input.normalize("NFKC");
 
 export const toLowerCase = (input: string) => input.toLocaleLowerCase("en-US");
 
-export function splitBySpace(text: string[]): string[] {
-    const separators =
-        // biome-ignore lint: ignore control charactor \u000D
-        /[\u0020\u00A0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u0009\u000A\u000B\u000C\u000D\u0085\u2028\u2029\u200B]/u;
-    return text.flatMap((t) => t.split(separators).filter(Boolean));
-}
+const spaceRanges: CharRange = [
+    [0x0020, 0x0020],
+    [0x00a0, 0x00a0],
+    [0x1680, 0x1680],
+    [0x2000, 0x200a],
+    [0x202f, 0x202f],
+    [0x205f, 0x205f],
+    [0x3000, 0x3000],
+    [0x0009, 0x000d],
+    [0x0085, 0x0085],
+    [0x2028, 0x2029],
+    [0x200b, 0x200b],
+];
 
-export function splitByDelimiter(text: string[]): string[] {
-    const separators =
-        // biome-ignore lint: ignore control charactor \u0000 ?
-        /[\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007F\u0080-\u00BF\u02B0-\u02FF\u2000-\u206F\u3000-\u3004\u3007-\u303F\u30fb\uFF00-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\uFFE0-\uFFFF]/u;
-    return text.flatMap((t) => t.split(separators).filter(Boolean));
-}
+const delimiterRanges: CharRange = [
+    [0x0000, 0x002f],
+    [0x003a, 0x0040],
+    [0x005b, 0x0060],
+    [0x007b, 0x007f],
+    [0x0080, 0x00bf],
+    [0x02b0, 0x02ff],
+    [0x2000, 0x206f],
+    [0x3000, 0x3004],
+    [0x3007, 0x303f],
+    [0x30fb, 0x30fb],
+    [0xff00, 0xff0f],
+    [0xff1a, 0xff20],
+    [0xff3b, 0xff40],
+    [0xff5b, 0xff65],
+    [0xffe0, 0xffff],
+];
 
 // Unicode ranges for non-space-separated scripts
-const nonSpaceSeparatedRanges = [
+const nonSpaceSeparatedRanges: CharRange = [
     // CJK Scripts
     [0x2e80, 0x31ff], // CJK Radicals, Kangxi Radicals, etc.
     [0x3400, 0x9fff], // CJK Unified Ideographs Extension A, CJK Unified Ideographs
@@ -60,35 +80,74 @@ const nonSpaceSeparatedRanges = [
     [0x0d00, 0x0d7f], // Malayalam
 ];
 
-export function isNonSpaceSeparatedChar(char: string): boolean {
-    if (char.length === 0) throw new StaticSeekError("staticseek: internal error on isNonSpaceSeparatedChar 1.");
-    const codePoint = Array.from(char)[0].codePointAt(0);
-    if (codePoint === undefined) throw new StaticSeekError("staticseek: internal error on isNonSpaceSeparatedChar 2.");
-
-    return nonSpaceSeparatedRanges.some(([start, end]) => codePoint >= start && codePoint <= end);
+function isRange(range: [number, number][], grapheme: string): boolean {
+    const codePoint = grapheme.codePointAt(0);
+    if (codePoint === undefined) throw new StaticSeekError("staticseek internal error: isRange.");
+    return range.some(([start, end]) => codePoint >= start && codePoint <= end);
 }
 
-export function splitByNonSpaceSeparatedChar(text: string[]): string[] {
-    const segmenter = new Intl.Segmenter("und", { granularity: "grapheme" });
-    const result: string[] = [];
+function splitByRange(range: CharRange, text: string[][]): string[][] {
+    const result = [];
+
+    for (const sentence of text) {
+        let term = [];
+        for (const char of sentence) {
+            if (isRange(range, char)) {
+                if (term.length !== 0) {
+                    result.push(term);
+                    term = [];
+                }
+            } else {
+                term.push(char);
+            }
+        }
+        if (term.length !== 0) {
+            result.push(term);
+        }
+    }
+
+    return result;
+}
+
+export function isNonSpaceSeparatedChar(grapheme: string): boolean {
+    return isRange(nonSpaceSeparatedRanges, grapheme);
+}
+
+export function splitBySpace(text: string[][]): string[][] {
+    return splitByRange(spaceRanges, text);
+}
+
+export function splitBySpaceString(text: string): string[] {
+    const separators =
+        // biome-ignore lint: ignore control charactor \u000D
+        /[\u0020\u00A0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u0009\u000A\u000B\u000C\u000D\u0085\u2028\u2029\u200B]/u;
+    return text.split(separators).filter(Boolean);
+}
+
+export function splitByDelimiter(text: string[][]): string[][] {
+    return splitByRange(delimiterRanges, text);
+}
+
+export function splitByNonSpaceSeparatedChar(text: string[][]): string[][] {
+    const result = [];
 
     for (const t of text) {
-        let currentGroup = "";
+        let currentGroup = [];
         let isCurrentNonSpaceSeparated: boolean | null = null;
 
         // Iterate through grapheme clusters
-        for (const { segment } of segmenter.segment(t)) {
-            const isNonSpaceSeparated = isNonSpaceSeparatedChar(segment);
+        for (const grapheme of t) {
+            const isNonSpaceSeparated = isNonSpaceSeparatedChar(grapheme);
 
             // Start a new group if the separation type changes
             if (isCurrentNonSpaceSeparated !== null && isCurrentNonSpaceSeparated !== isNonSpaceSeparated) {
-                if (currentGroup) {
+                if (currentGroup.length !== 0) {
                     result.push(currentGroup);
                 }
-                currentGroup = "";
+                currentGroup = [];
             }
 
-            currentGroup += segment;
+            currentGroup.push(grapheme);
             isCurrentNonSpaceSeparated = isNonSpaceSeparated;
         }
 
@@ -99,12 +158,6 @@ export function splitByNonSpaceSeparatedChar(text: string[]): string[] {
     }
 
     return result;
-}
-
-export function splitByKatakana(text: string[]): string[] {
-    const regex = /[\u30A0-\u30FF]+|[^ \u30A0-\u30FF]+/g;
-    const matches = text.flatMap((t) => t.match(regex)).filter((x) => x !== null);
-    return matches;
 }
 
 export function splitByGrapheme(str: string): string[] {

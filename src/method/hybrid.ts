@@ -2,7 +2,7 @@ import { StaticSeekError } from "@src/frontend/base";
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
 import type { IndexClass } from "@src/frontend/indexing";
 import { adjastDistance, intersectResults } from "@src/frontend/search";
-import { hybridSpritter, isNonSpaceSeparatedChar, splitByGrapheme } from "@src/util/preprocess";
+import { hybridSpritter, isNonSpaceSeparatedChar } from "@src/util/preprocess";
 
 export type HybridIndexEntry<T1, T2> = { ja: T1; en: T2 };
 
@@ -33,12 +33,12 @@ export function Hybrid<T1, T2>(name: string, ja: IndexClass, en: IndexClass): In
             }
 
             public setToIndex(id: number, path: Path, str: string[]): void {
-                const tokens = hybridSpritter([str.join("")]);
+                const tokens = hybridSpritter([str]);
                 for (const t of tokens) {
-                    if (isNonSpaceSeparatedChar(t)) {
-                        this.ja.setToIndex(id, path, splitByGrapheme(t));
+                    if (isNonSpaceSeparatedChar(t[0])) {
+                        this.ja.setToIndex(id, path, t);
                     } else {
-                        this.en.setToIndex(id, path, splitByGrapheme(t));
+                        this.en.setToIndex(id, path, t);
                     }
                 }
             }
@@ -54,12 +54,11 @@ export function Hybrid<T1, T2>(name: string, ja: IndexClass, en: IndexClass): In
             }
 
             public async search(env: SearchEnv, keyword: string[]): Promise<SearchResult[]> {
-                const tokens = hybridSpritter([keyword.join("")]);
+                const tokens = hybridSpritter([keyword]);
                 const results = [];
-                for (const t of tokens) {
-                    const grapheme = splitByGrapheme(t);
+                for (const grapheme of tokens) {
                     const adj_env = adjastDistance(env, grapheme);
-                    if (isNonSpaceSeparatedChar(t)) {
+                    if (isNonSpaceSeparatedChar(grapheme[0])) {
                         results.push(await this.ja.search(adj_env, grapheme));
                     } else {
                         results.push(await this.en.search(adj_env, grapheme));
