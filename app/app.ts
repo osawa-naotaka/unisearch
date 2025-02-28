@@ -1,10 +1,10 @@
 import { getAllKeywords } from "@ref/bench/benchmark_common";
-import { createIndex, search, GPULinearIndex, StaticSeekError, indexToObject, HybridTrieBigramInvertedIndex } from "@src/main";
+import { createIndex, search, GPULinearIndex, StaticSeekError, indexToObject } from "@src/main";
 import { wikipedia_en_extracted } from "@test/wikipedia_en_extracted";
 import { wikipedia_en_keyword } from "@test/wikipedia_en_keyword";
 
 const index_start = performance.now();
-const index = createIndex(HybridTrieBigramInvertedIndex, wikipedia_en_extracted.slice(0, 100), { key_fields: ["title"]});
+const index = createIndex(GPULinearIndex, wikipedia_en_extracted.slice(0, 100), { key_fields: ["title"]});
 if(index instanceof StaticSeekError) throw index;
 console.log(`indexing time: ${performance.now() - index_start} ms`);
 console.log(`index size: ${new Blob([JSON.stringify(indexToObject(index))]).size} byte`);
