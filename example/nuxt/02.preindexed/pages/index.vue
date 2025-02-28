@@ -47,7 +47,11 @@ async function onInputQuery(e: Event) {
                         <NuxtLink :to="v.parse(schema, key).path" >
                             <h3>{{ v.parse(schema, key).body.data.title }}</h3>
                         </NuxtLink>
-                        <p>{{ refs[0].wordaround }}</p>
+                        <template v-if="refs[0].wordaround && refs[0].keyword_range">
+                            <p>
+                                {{ refs[0].wordaround.slice(0, refs[0].keyword_range[0]) }}<em>{{ refs[0].wordaround.slice(refs[0].keyword_range[0], refs[0].keyword_range[1]) }}</em>{{ refs[0].wordaround.slice(refs[0].keyword_range[1]) }}
+                            </p>
+                        </template>
                     </li>
                 </template>
             </ul>

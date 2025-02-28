@@ -45,6 +45,11 @@ p {
     text-indent: 1rem;
 }
 
+em {
+    font-style: normal;
+    font-weight: bold;
+}
+
 body {
     color: var(--color-main);
     background-color: var(--color-background);

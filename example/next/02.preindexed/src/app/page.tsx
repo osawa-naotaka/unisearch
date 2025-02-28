@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { JSX } from "react";
 import { StaticSeekError, createSearchFn } from "staticseek";
-import type { SearchResult } from "staticseek";
-import type { SearchFn } from "staticseek";
+import type { SearchResult, Reference, SearchFn } from "staticseek";
 import * as v from "valibot";
 
 const schema = v.object({
@@ -15,6 +14,24 @@ const schema = v.object({
     }),
 });
 
+function emphasizeKeyword(refs: Reference[]): JSX.Element {
+    const ref = refs[0]
+    if(ref.wordaround && ref.keyword_range) {
+        const wa_pre = ref.wordaround.slice(0, ref.keyword_range[0]);
+        const wa_kwd = ref.wordaround.slice(ref.keyword_range[0], ref.keyword_range[1]);
+        const wa_post = ref.wordaround.slice(ref.keyword_range[1]);
+        return (
+            <>
+                {wa_pre}
+                <em>{wa_kwd}</em>
+                {wa_post}
+            </>
+        );
+    }
+
+    return <></>;
+}
+
 function StaticSeekResult(result: SearchResult[]): JSX.Element {
     const lis = result.map((item) => {
         const key = v.parse(schema, item.key);
@@ -23,7 +40,7 @@ function StaticSeekResult(result: SearchResult[]): JSX.Element {
                 <Link href={`/posts/${key.slug}`}>
                     <h3>{key.data.title}</h3>
                 </Link>
-                <p>{item.refs[0].wordaround}</p>
+                <p>{emphasizeKeyword(item.refs)}</p>
             </li>
         );
     });

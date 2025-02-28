@@ -15,7 +15,7 @@
         "next-mdx-remote": "^5.0.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
-        "staticseek": "^2.6.1",
+        "staticseek": "^2.7.0",
         "valibot": "^1.0.0-rc.1"
     },
     "devDependencies": {
