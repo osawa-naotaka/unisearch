@@ -1,6 +1,6 @@
 {
     "name": "staticseek",
-    "version": "2.6.1",
+    "version": "2.6.2",
     "description": "A Lightweight, Fast Full-text Search Engine Supporting All Unicode Languages",
     "main": "dist/staticseek.js",
     "types": "dist/staticseek.d.ts",
