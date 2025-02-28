@@ -50,6 +50,7 @@ export type Reference = {
     path: Path;
     pos?: number;
     wordaround?: string;
+    keyword_range?: [number, number];
     distance: number;
 };
 

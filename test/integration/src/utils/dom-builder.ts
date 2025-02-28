@@ -31,6 +31,12 @@ function createWithClass<T extends HTMLElement = HTMLElement>(e: string, attr: A
     return elem as T;
 }
 
+export function genBasicElemFn<T extends HTMLElement>(elem_name: string): (attr: Attr, ...elem: Node[]) => T {
+    return (attr: Attr, ...elem: Node[]): T => {
+        return createWithClass<T>(elem_name, attr, elem);
+    };
+}
+
 function sanitizeInternalUrl(url: string) {
     return url.startsWith("/") ? url : "/";
 }
@@ -39,19 +45,16 @@ export function text(str: string): Node {
     return document.createTextNode(str);
 }
 
-export function div(attr: Attr, ...elem: Node[]): HTMLDivElement {
-    return createWithClass<HTMLDivElement>("div", attr, elem);
-}
+export const div = genBasicElemFn<HTMLDivElement>("div");
+export const li = genBasicElemFn<HTMLLIElement>("li");
+export const span = genBasicElemFn<HTMLSpanElement>("span");
+export const em = genBasicElemFn<HTMLElement>("em");
+export const strong = genBasicElemFn<HTMLElement>("stroing");
 
 export function a(attr: AAttr, ...elem: Node[]): HTMLAnchorElement {
     const a = createWithClass<HTMLAnchorElement>("a", attr, elem);
     a.setAttribute("href", sanitizeInternalUrl(attr.href));
     return a;
-}
-
-export function li(attr: Attr, ...elem: Node[]): HTMLLIElement {
-    const li = createWithClass<HTMLLIElement>("li", attr, elem);
-    return li;
 }
 
 export function time(attr: Attr, date: Date | string): HTMLTimeElement {
