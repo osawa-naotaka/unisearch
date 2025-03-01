@@ -13,6 +13,7 @@ export async function run_1char(device: GPUDevice, buffers: Record<string, GPUBu
         layout: "auto",
         compute: {
             module,
+            entryPoint: "cs",
         },
     });
 
