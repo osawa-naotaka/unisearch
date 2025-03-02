@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "astro": "^5.2.3",
-    "staticseek": "^2.7.0"
+    "staticseek": "^2.7.1"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4"

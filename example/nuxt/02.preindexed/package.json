@@ -15,7 +15,7 @@
     "@nuxt/content": "^3.1.0",
     "gray-matter": "^4.0.3",
     "nuxt": "^3.15.4",
-    "staticseek": "^2.7.0",
+    "staticseek": "^2.7.1",
     "valibot": "^1.0.0-rc.1",
     "vue": "latest",
     "vue-router": "latest"
