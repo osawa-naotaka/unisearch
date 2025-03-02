@@ -43,6 +43,11 @@ export function Hybrid<T1, T2>(name: string, ja: IndexClass, en: IndexClass): In
                 }
             }
 
+            public setDocumentLength(id: number, path: Path, length: number): void {
+                this.ja.setDocumentLength(id, path, length);
+                this.en.setDocumentLength(id, path, length);
+            }
+
             public addKey(id: number, key: Record<Path, unknown>): void {
                 this.ja.addKey(id, key);
                 this.en.addKey(id, key);

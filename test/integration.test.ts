@@ -842,7 +842,7 @@ describe("Hybrid trie bigram inverted index creation and search", async () => {
             {
                 id: 2,
                 key: {},
-                score: 1,
+                score: 0.13830942998767315,
                 refs: [
                     {
                         token: "maintainability",
@@ -865,7 +865,7 @@ describe("Hybrid trie bigram inverted index creation and search", async () => {
             {
                 id: 2,
                 key: {},
-                score: 1,
+                score: 0.06915471499383657,
                 refs: [
                     {
                         token: "maintainability",
@@ -884,7 +884,7 @@ describe("Hybrid trie bigram inverted index creation and search", async () => {
             {
                 id: 2,
                 key: {},
-                score: 1,
+                score: 0.06454440066091414,
                 refs: [
                     {
                         token: "maintaiability",
@@ -902,7 +902,7 @@ describe("Hybrid trie bigram inverted index creation and search", async () => {
             {
                 id: 2,
                 key: {},
-                score: 1,
+                score: 0.06454440066091414,
                 refs: [
                     {
                         token: "aintainability",
@@ -920,7 +920,7 @@ describe("Hybrid trie bigram inverted index creation and search", async () => {
             {
                 id: 7,
                 key: {},
-                score: 2,
+                score: 1.18069971660318,
                 refs: [
                     {
                         token: "概要",
@@ -937,7 +937,7 @@ describe("Hybrid trie bigram inverted index creation and search", async () => {
             {
                 id: 9,
                 key: {},
-                score: 2,
+                score: 0.9917877619466712,
                 refs: [
                     {
                         token: "概要",
@@ -960,7 +960,7 @@ describe("Hybrid trie bigram inverted index creation and search", async () => {
             {
                 id: 7,
                 key: {},
-                score: 4,
+                score: 0.17756259365713695,
                 refs: [
                     {
                         token: "再利",
@@ -998,7 +998,7 @@ describe("Hybrid trie bigram inverted index fuzzy search", async () => {
             {
                 id: 7,
                 key: {},
-                score: 2,
+                score: 0.0851931100311511,
                 refs: [
                     {
                         token: "用可",
@@ -1015,7 +1015,7 @@ describe("Hybrid trie bigram inverted index fuzzy search", async () => {
             {
                 id: 6,
                 key: {},
-                score: 1,
+                score: 0.03799953110906786,
                 refs: [
                     {
                         token: "可能",
@@ -1033,7 +1033,7 @@ describe("Hybrid trie bigram inverted index fuzzy search", async () => {
             {
                 id: 7,
                 key: {},
-                score: 3,
+                score: 0.13137785184414402,
                 refs: [
                     {
                         token: "再利",
@@ -1061,7 +1061,7 @@ describe("Hybrid trie bigram inverted index fuzzy search", async () => {
             {
                 id: 7,
                 key: {},
-                score: 2,
+                score: 0.0851931100311511,
                 refs: [
                     {
                         token: "再利",
@@ -1089,7 +1089,7 @@ describe("Hybrid trie bigram inverted index fuzzy search", async () => {
             {
                 id: 7,
                 key: {},
-                score: 1,
+                score: 0.04618474181299293,
                 refs: [
                     {
                         token: "再利",
@@ -1112,7 +1112,7 @@ describe("Hybrid trie bigram inverted index fuzzy search", async () => {
             {
                 id: 7,
                 key: {},
-                score: 2,
+                score: 0.09236948362598586,
                 refs: [
                     {
                         token: "再利",
@@ -1140,7 +1140,7 @@ describe("Hybrid trie bigram inverted index fuzzy search, with alphabet and kanj
             {
                 id: 7,
                 key: {},
-                score: 5,
+                score: 0.27538210831712157,
                 refs: [
                     {
                         token: "再利",
@@ -1178,7 +1178,7 @@ describe("Hybrid trie bigram inverted index fuzzy search, with alphabet and kanj
             {
                 id: 7,
                 key: {},
-                score: 4,
+                score: 0.22919736650412864,
                 refs: [
                     {
                         token: "再利",
@@ -1219,7 +1219,7 @@ describe("Hybrid trie bigram inverted index with field-specify from:", async () 
             {
                 id: 7,
                 key: {},
-                score: 1,
+                score: 2.203972804325936,
                 refs: [
                     {
                         token: "概要",
@@ -1231,7 +1231,7 @@ describe("Hybrid trie bigram inverted index with field-specify from:", async () 
             {
                 id: 9,
                 key: {},
-                score: 1,
+                score: 1.7631782434607488,
                 refs: [
                     {
                         token: "概要",
@@ -1249,7 +1249,7 @@ describe("Hybrid trie bigram inverted index with field-specify from:", async () 
             {
                 id: 7,
                 key: {},
-                score: 1,
+                score: 2.203972804325936,
                 refs: [
                     {
                         token: "概要",
@@ -1261,7 +1261,7 @@ describe("Hybrid trie bigram inverted index with field-specify from:", async () 
             {
                 id: 9,
                 key: {},
-                score: 1,
+                score: 1.7631782434607488,
                 refs: [
                     {
                         token: "概要",

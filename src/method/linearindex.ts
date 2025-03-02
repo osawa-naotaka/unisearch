@@ -1,5 +1,6 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
 import { StaticSeekError } from "@src/frontend/base";
+import { getWeight } from "@src/frontend/indexing";
 import {
     BinarySearchType,
     binarySearch,
@@ -60,6 +61,8 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         this.index_entry.toc.push({ id: id, path: path, start: start, end: end });
         this.index_entry.num_id = Math.max(this.index_entry.num_id, id + 1);
     }
+
+    public setDocumentLength(_id: number, _path: Path, _length: number): void {}
 
     public addKey(id: number, key: Record<string, unknown>): void {
         this.index_entry.key[id] = key;
@@ -163,7 +166,7 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
             const tf = r.refs
                 .map(
                     (v) =>
-                        (this.getWeight(env.weights, v.path) * v.token.length) /
+                        (getWeight(env.weights, v.path) * v.token.length) /
                         (content_size.get(r.id)?.get(v.path) || Number.POSITIVE_INFINITY) /
                         (v.distance + 1),
                 )
@@ -194,10 +197,5 @@ export class LinearIndex implements SearchIndex<LinearIndexEntry> {
         );
         if (index === null) throw new StaticSeekError("staticseek: getReference internal error.");
         return this.index_entry.toc[index];
-    }
-
-    private getWeight(weights: [string, number][], path: string): number {
-        const w = weights.find(([p, _]) => path.startsWith(p));
-        return w ? w[1] : weights[weights.length - 1][1]; // last element is default
     }
 }

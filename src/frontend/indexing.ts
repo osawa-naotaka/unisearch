@@ -29,7 +29,9 @@ export function createIndex<T>(
                     const path_obj = getValueByPath(path, content);
                     if (path_obj === undefined) continue;
                     for (const [single_path, single_obj] of extractStringsAll(path, path_obj)) {
-                        search_index.setToIndex(id, single_path, splitByGrapheme(defaultNormalizer(single_obj)));
+                        const str = splitByGrapheme(defaultNormalizer(single_obj));
+                        search_index.setToIndex(id, single_path, str);
+                        search_index.setDocumentLength(id, single_path, str.length);
 
                         // register field name map
                         const name = nameOf(path);
@@ -41,7 +43,9 @@ export function createIndex<T>(
             } else {
                 // indexing all
                 for (const [path, obj] of extractStringsAll("", content)) {
-                    search_index.setToIndex(id, path, splitByGrapheme(defaultNormalizer(obj)));
+                    const str = splitByGrapheme(defaultNormalizer(obj));
+                    search_index.setToIndex(id, path, str);
+                    search_index.setDocumentLength(id, path, str.length);
 
                     // register field name map
                     const name = nameOf(path);
@@ -132,6 +136,11 @@ export function indexToObject<T>(index: StaticSeekIndexRoot<SearchIndex<T>>): St
         env: index.env,
         index_entry: index.index_entry.index_entry,
     };
+}
+
+export function getWeight(weights: [string, number][], path: string): number {
+    const w = weights.find(([p, _]) => path.startsWith(p));
+    return w ? w[1] : weights[weights.length - 1][1]; // last element is default
 }
 
 function nameOf(path: Path): string | undefined {

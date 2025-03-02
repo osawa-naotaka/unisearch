@@ -13,13 +13,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.7.1] - 2025-03-02
+### Fixed
+- fix tf-idf based score formula of HybridTrieBigramInvertedIndex.
+
 ## [2.7.0] - 2025-02-28
 ### Added
 - add keyword_range value to the Reference to slice keyword from wordaround.
 
 ## [2.6.2] - 2025-02-28
 ### Fixed
-- fix performance problem when indexing in HybridBigramInvertedIndex.
+- fix performance problem when indexing in HybridTrieBigramInvertedIndex.
 
 ## [2.6.1] - 2025-02-27
 ### Fixed
@@ -167,7 +171,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - search frontend, google-like syntax
 - sorting search result based on TF-IDF
 
-[Unreleased]: https://github.com/osawa-naotaka/staticseek/compare/v2.7.0...HEAD
+[Unreleased]: https://github.com/osawa-naotaka/staticseek/compare/v2.7.1...HEAD
+[2.7.1]: https://github.com/osawa-naotaka/staticseek/compare/v2.7.0...v2.7.1
 [2.7.0]: https://github.com/osawa-naotaka/staticseek/compare/v2.6.2...v2.7.0
 [2.6.2]: https://github.com/osawa-naotaka/staticseek/compare/v2.6.1...v2.6.2
 [2.6.1]: https://github.com/osawa-naotaka/staticseek/compare/v2.6.0...v2.6.1

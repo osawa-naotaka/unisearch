@@ -1,13 +1,14 @@
 import type { Path, SearchEnv, SearchIndex, SearchResult } from "@src/frontend/base";
+import { getWeight } from "@src/frontend/indexing";
 import * as v from "valibot";
 
 const Id_v = v.number();
-const TF_v = v.number();
-const PostingListEntry_v = v.tuple([Id_v, TF_v]);
+const TFIDF_v = v.number();
+const PostingListEntry_v = v.tuple([Id_v, TFIDF_v]);
 const PostingList_v = v.array(PostingListEntry_v);
 
 type Id = v.InferOutput<typeof Id_v>;
-type TF = v.InferOutput<typeof TF_v>;
+type TFIDF = v.InferOutput<typeof TFIDF_v>;
 type Distance = number;
 type PostingListEntry = v.InferOutput<typeof PostingListEntry_v>;
 type PostingList = v.InferOutput<typeof PostingList_v>;
@@ -33,16 +34,18 @@ const TrieIndexEntry_v = v.object({
 });
 
 type TrieIndexEntry = v.InferOutput<typeof TrieIndexEntry_v>;
+type DocumentLength = Map<Path, number>[];
 
 type TrieSearchResult = {
     id: Id;
-    tf: TF;
+    tfidf: TFIDF;
     term: string;
     distance_left: number;
 };
 
 export class TrieIndex implements SearchIndex<TrieIndexEntry> {
     public readonly index_entry: TrieIndexEntry;
+    private readonly document_length: DocumentLength = [];
 
     constructor(index?: TrieIndexEntry) {
         this.index_entry = index ? v.parse(TrieIndexEntry_v, index) : { key: [], index: {} };
@@ -53,11 +56,20 @@ export class TrieIndex implements SearchIndex<TrieIndexEntry> {
         this.index_entry.index[path] = this.updateTrieNode(base_node, str, id);
     }
 
+    public setDocumentLength(id: number, path: Path, length: number): void {
+        this.document_length[id] = this.document_length[id] || new Map();
+        this.document_length[id].set(path, length);
+    }
+
     public addKey(id: number, key: Record<Path, unknown>): void {
         this.index_entry.key[id] = key;
     }
 
-    public fixIndex(): void {}
+    public fixIndex(): void {
+        for (const path in this.index_entry.index) {
+            this.index_entry.index[path] = this.updateTFIDF(path, "", this.index_entry.index[path]);
+        }
+    }
 
     public async search(env: SearchEnv, keyword: string[]): Promise<SearchResult[]> {
         if (keyword.length === 0) {
@@ -89,7 +101,7 @@ export class TrieIndex implements SearchIndex<TrieIndexEntry> {
                 for (const res of tsr) {
                     const distance = env.distance - res.distance_left;
                     r.refs.push({ token: res.term, path: path, distance: distance });
-                    r.score += res.tf;
+                    r.score += (res.tfidf * getWeight(env.weights, path) * res.term.length) / (distance + 1);
                     results.set(res.id, r);
                 }
             }
@@ -174,7 +186,7 @@ export class TrieIndex implements SearchIndex<TrieIndexEntry> {
             result = result.concat(
                 node.postinglist.map((p) => ({
                     id: p[0],
-                    tf: p[1],
+                    tfidf: p[1],
                     term: matched.join(""),
                     distance_left: distance_left,
                 })),
@@ -190,5 +202,25 @@ export class TrieIndex implements SearchIndex<TrieIndexEntry> {
         }
 
         return result;
+    }
+
+    private updateTFIDF(path: string, term: string, node: TrieNode): TrieNode {
+        const new_plist: PostingList = [];
+        const idf = Math.log(this.document_length.length / ((node.postinglist?.length || 0) + 1)) + 1;
+        for (const p of node.postinglist || []) {
+            const id = p[0];
+            const tf_tmp = p[1];
+            const tf = tf_tmp / (this.document_length[id].get(path) || Number.POSITIVE_INFINITY);
+            new_plist.push([id, tf * idf]);
+        }
+        const new_children: Record<string, TrieNode> = {};
+        for (const char in node.children) {
+            new_children[char] = this.updateTFIDF(path, term + char, node.children[char]);
+        }
+
+        return {
+            postinglist: new_plist,
+            children: new_children,
+        };
     }
 }
