@@ -107,7 +107,6 @@ const index = createIndex(HybridTrieBigramInvertedIndex, array_of_articles);
    - ~100倍の高速な検索速度
    - 大規模なデータセットに最適
    - トレードオフ：
-     - インデックス生成が遅い
      - CJK言語の擬陽性(検索結果に無関係な結果が表示される)が増える
      - CJK言語のあいまい検索の精度が低い
      - 検索結果のメタデータが限られている

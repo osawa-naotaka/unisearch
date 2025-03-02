@@ -106,7 +106,6 @@ const index = createIndex(HybridTrieBigramInvertedIndex, array_of_articles);
    - ~100x faster search performance
    - Ideal for larger datasets
    - Trade-offs:
-     - Slower index generation
      - Higher false positive rate for CJK-like languages
      - Less precise fuzzy search for CJK-like languages
      - Limited result metadata
