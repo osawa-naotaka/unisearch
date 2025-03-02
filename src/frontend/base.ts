@@ -1,7 +1,7 @@
 import * as v from "valibot";
 
 // version
-export const Version = "2.3.0";
+export const Version = "2.7.1";
 
 // types
 
@@ -65,6 +65,7 @@ export type SearchResult = {
 export interface SearchIndex<T> {
     index_entry: T;
     setToIndex(id: number, path: Path, str: string[]): void;
+    setDocumentLength(id: number, path: Path, length: number): void;
     addKey(id: number, key: Record<string, unknown>): void;
     fixIndex(): void;
     search(env: SearchEnv, keyword: string[]): Promise<SearchResult[]>;

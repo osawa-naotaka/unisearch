@@ -28,6 +28,10 @@ export function Ngram<T>(num_gram: number, index_class: IndexClass): IndexClass 
                 }
             }
 
+            public setDocumentLength(id: number, path: Path, length: number): void {
+                this.ngram_index.setDocumentLength(id, path, length);
+            }
+
             public addKey(id: number, key: Record<Path, unknown>): void {
                 this.ngram_index.addKey(id, key);
             }
