@@ -110,7 +110,6 @@ const index = createIndex(HybridTrieBigramInvertedIndex, array_of_articles);
      - Higher false positive rate for CJK-like languages
      - Less precise fuzzy search for CJK-like languages
      - Limited result metadata
-     - The score is a simple TF, and the weight is not reflected.
 
 ## Performance
 
